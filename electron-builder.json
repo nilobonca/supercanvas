@@ -8,7 +8,7 @@
   "publish": {
     "provider": "github",
     "owner": "nilobonca",
-    "repo": "RPGSA"
+    "repo": "supercanvas"
   },
   "files": [
     "electron/**/*",
