@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RPGSA Vault + File System Access + Desktop Windows</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg-primary: #0a0a0b;
+    --bg-secondary: #111113;
+    --bg-tertiary: #18181b;
+    --bg-card: #1a1a1f;
+    --bg-card-hover: #222228;
+    --border: #27272a;
+    --border-accent: #3f3f46;
+    --text-primary: #fafafa;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #71717a;
+    --accent: #8b5cf6;
+    --accent-dim: #7c3aed;
+    --accent-glow: rgba(139, 92, 246, 0.15);
+    --accent-glow-strong: rgba(139, 92, 246, 0.3);
+    --green: #22c55e;
+    --green-dim: rgba(34, 197, 94, 0.15);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --cyan: #06b6d4;
+    --cyan-dim: rgba(6, 182, 212, 0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59, 130, 246, 0.12);
+    --purple-win: #a855f7;
+    --purple-win-dim: rgba(168, 85, 247, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ── */
+  .hero {
+    position: relative;
+    padding: 80px 0 60px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; left: 50%; transform: translateX(-50%);
+    width: 900px; height: 900px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 100px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    font-size: 13px; font-weight: 500; color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .hero h1 {
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800; letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, #38bdf8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 18px; color: var(--text-secondary);
+    max-width: 760px; margin: 0 auto;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── Phase Sections ── */
+  .phase {
+    padding: 64px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase:last-child { border-bottom: none; }
+
+  .phase-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 40px;
+  }
+  .phase-number {
+    display: flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 14px;
+    font-size: 20px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .phase-number.p1 { background: var(--accent-glow-strong); color: var(--accent); border: 1px solid rgba(139,92,246,0.3); }
+  .phase-number.p2 { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .phase-number.p3 { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,158,11,0.25); }
+  .phase-number.p4 { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.25); }
+  .phase-number.p5 { background: var(--purple-win-dim); color: var(--purple-win); border: 1px solid rgba(168,85,247,0.3); }
+
+  .phase-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .phase-subtitle { font-size: 14px; color: var(--text-tertiary); margin-top: 2px; }
+
+  /* ── Cards ── */
+  .cards { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .cards.two-col { grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .card:hover {
+    border-color: var(--border-accent);
+    background: var(--bg-card-hover);
+  }
+  .card-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 4px 10px;
+    border-radius: 6px; margin-bottom: 16px;
+  }
+  .card-label.new { background: var(--green-dim); color: var(--green); }
+  .card-label.modify { background: var(--amber-dim); color: var(--amber); }
+  .card-label.extend { background: var(--cyan-dim); color: var(--cyan); }
+  .card-label.integrate { background: var(--accent-glow); color: var(--accent); }
+  .card-label.native { background: var(--purple-win-dim); color: var(--purple-win); }
+
+  .card h3 {
+    font-size: 18px; font-weight: 600;
+    margin-bottom: 8px; letter-spacing: -0.01em;
+  }
+  .card .filepath {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; color: var(--text-tertiary);
+    background: var(--bg-primary);
+    padding: 4px 10px; border-radius: 6px;
+    display: inline-block; margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .card p { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+  .card ul { padding-left: 20px; margin-bottom: 12px; }
+  .card li {
+    font-size: 13px; color: var(--text-secondary);
+    margin-bottom: 6px; line-height: 1.6;
+  }
+  .card li code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; background: var(--bg-primary);
+    padding: 2px 6px; border-radius: 4px;
+    border: 1px solid var(--border); color: var(--accent);
+  }
+
+  /* ── Code Blocks ── */
+  .code-block {
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .code-block pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; line-height: 1.8;
+    color: var(--text-secondary);
+  }
+  .code-block .comment { color: var(--text-tertiary); }
+  .code-block .keyword { color: var(--accent); }
+  .code-block .type { color: var(--cyan); }
+  .code-block .string { color: var(--green); }
+  .code-block .prop { color: var(--amber); }
+
+  /* ── Architecture Diagram ── */
+  .arch-diagram {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    margin: 32px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    overflow-x: auto;
+    color: var(--text-secondary);
+  }
+  .arch-diagram .dir { color: var(--accent); font-weight: 600; }
+  .arch-diagram .new-file { color: var(--green); }
+  .arch-diagram .mod-file { color: var(--amber); }
+  .arch-diagram .native-file { color: var(--purple-win); }
+  .arch-diagram .existing { color: var(--text-tertiary); }
+
+  /* ── Timeline ── */
+  .timeline {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+    margin: 32px 0; border-radius: 12px; overflow: hidden;
+  }
+  .timeline-item {
+    padding: 22px 14px; text-align: center;
+  }
+  .timeline-item.p1 { background: rgba(139, 92, 246, 0.08); }
+  .timeline-item.p2 { background: rgba(6, 182, 212, 0.08); }
+  .timeline-item.p3 { background: rgba(245, 158, 11, 0.08); }
+  .timeline-item.p4 { background: rgba(34, 197, 94, 0.08); }
+  .timeline-item.p5 { background: rgba(168, 85, 247, 0.12); border-left: 2px solid rgba(168, 85, 247, 0.4); }
+  
+  .timeline-item .label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; margin-bottom: 6px;
+  }
+  .timeline-item.p1 .label { color: var(--accent); }
+  .timeline-item.p2 .label { color: var(--cyan); }
+  .timeline-item.p3 .label { color: var(--amber); }
+  .timeline-item.p4 .label { color: var(--green); }
+  .timeline-item.p5 .label { color: var(--purple-win); }
+  .timeline-item .title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .timeline-item .meta { font-size: 11px; color: var(--text-tertiary); }
+
+  /* ── Info Blocks ── */
+  .info-block {
+    display: flex; gap: 16px;
+    padding: 20px 24px;
+    border-radius: 12px;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+  .info-block.warning {
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,158,11,0.2);
+    color: var(--amber);
+  }
+  .info-block.info {
+    background: var(--blue-dim);
+    border: 1px solid rgba(59,130,246,0.2);
+    color: var(--blue);
+  }
+  .info-block.success {
+    background: var(--green-dim);
+    border: 1px solid rgba(34,197,94,0.2);
+    color: var(--green);
+  }
+  .info-block.native {
+    background: var(--purple-win-dim);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: var(--purple-win);
+  }
+  .info-block .icon { font-size: 20px; flex-shrink: 0; }
+
+  /* ── Dependency Table ── */
+  .dep-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+  }
+  .dep-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 2px solid var(--border);
+    font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+  }
+  .dep-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+  .dep-table tr:hover td { background: var(--bg-card); }
+  .dep-table code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; background: var(--bg-primary);
+    padding: 2px 8px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Section Titles ── */
+  .section-title {
+    font-size: 14px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--text-tertiary);
+    margin: 48px 0 20px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .timeline { grid-template-columns: 1fr; }
+    .cards.two-col { grid-template-columns: 1fr; }
+    .container { padding: 0 16px; }
+    .hero { padding: 48px 0 40px; }
+    .phase { padding: 40px 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ HERO ════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="container">
+    <div class="hero-badge"><span class="dot"></span> Arquitetura Híbrida: Web (FSA API) + Desktop (.EXE)</div>
+    <h1>RPGSA + Obsidian Vault</h1>
+    <p>Knowledge Base integrado com TipTap, sincronização bidirecional com o Canvas de Áudio e suporte universal a <strong>pastas locais no navegador (File System Access API)</strong> e <strong>instalador Windows (.exe com Electron)</strong>.</p>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════ OVERVIEW ════════════════════════════════════════════ -->
+<section class="container" style="padding-top: 48px;">
+
+  <!-- Timeline -->
+  <div class="timeline">
+    <div class="timeline-item p1">
+      <div class="label">Fase 1</div>
+      <div class="title">Fundação & Storage</div>
+      <div class="meta">TipTap · Pasta Local (FSA) · IDB</div>
+    </div>
+    <div class="timeline-item p2">
+      <div class="label">Fase 2</div>
+      <div class="title">Core Obsidian</div>
+      <div class="meta">Wikilinks · Backlinks · Search</div>
+    </div>
+    <div class="timeline-item p3">
+      <div class="label">Fase 3</div>
+      <div class="title">Integração</div>
+      <div class="meta">Canvas ↔ Vault · P2P · Backup</div>
+    </div>
+    <div class="timeline-item p4">
+      <div class="label">Fase 4</div>
+      <div class="title">Avançado</div>
+      <div class="meta">Graph View · Templates · Embeds</div>
+    </div>
+    <div class="timeline-item p5">
+      <div class="label">Fase 5</div>
+      <div class="title">Desktop Windows</div>
+      <div class="meta">Electron · Hotkeys · .EXE</div>
+    </div>
+  </div>
+
+  <!-- Unified Storage Diagram -->
+  <div class="section-title">Arquitetura de Armazenamento Universal</div>
+  <div class="info-block success">
+    <span class="icon">⚡</span>
+    <div>
+      <strong>3 Modos de Acesso ao Vault com a Mesma Interface:</strong>
+      <ol style="margin-top: 8px; padding-left: 20px;">
+        <li><strong>Navegador Web + Pasta Local (File System Access API):</strong> O usuário clica em "Abrir Pasta" no Chrome/Edge e o app lê/grava diretamente nos arquivos <code>.md</code> do HD.</li>
+        <li><strong>Navegador Web + IndexedDB (Fallback Seguro):</strong> Armazenamento interno no banco local do navegador.</li>
+        <li><strong>Desktop Windows (.exe com Electron):</strong> Acesso total ao disco rígido nativo via Node.js <code>fs</code> sem diálogos de permissão do navegador.</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Architecture Tree -->
+  <div class="section-title">Estrutura de Arquivos</div>
+  <div class="arch-diagram">
+<pre>
+<span class="existing">supercanvas/</span>
+<span class="native-file">├── electron/</span>                                      <span class="native-file">← Processo Principal e Nativos Windows</span>
+<span class="native-file">│   ├── main.ts</span>                                    <span class="native-file">← Entry point Electron, BrowserWindow, IPCs</span>
+<span class="native-file">│   ├── preload.ts</span>                                 <span class="native-file">← ContextBridge seguro</span>
+<span class="native-file">│   ├── fileSystemBridge.ts</span>                        <span class="native-file">← Leitura/Escrita nativa no HD</span>
+<span class="native-file">│   └── globalShortcuts.ts</span>                         <span class="native-file">← Hotkeys globais da Soundboard</span>
+<span class="native-file">├── electron-builder.json</span>                          <span class="native-file">← Gerador de instalador .exe (NSIS)</span>
+<span class="existing">│</span>
+<span class="existing">├── src/</span>
+<span class="new-file">│   ├── modules/</span>
+<span class="new-file">│   │   └── vault/</span>
+<span class="new-file">│   │       ├── storage/</span>                           <span class="new-file">← [NEW] Camada de Storage Universal</span>
+<span class="new-file">│   │       │   ├── VaultStorageAdapter.ts</span>         <span class="new-file">← Interface unificada (read/write/list)</span>
+<span class="new-file">│   │       │   ├── FSAStorageProvider.ts</span>          <span class="new-file">← File System Access API (Pasta Local no Browser)</span>
+<span class="new-file">│   │       │   ├── IDBStorageProvider.ts</span>          <span class="new-file">← IndexedDB Provider (Modo Banco do Browser)</span>
+<span class="new-file">│   │       │   └── ElectronStorageProvider.ts</span>     <span class="new-file">← Electron IPC Provider (Modo .exe)</span>
+<span class="new-file">│   │       ├── components/</span>
+<span class="new-file">│   │       │   ├── VaultLayout.tsx</span>                 <span class="new-file">← Shell: sidebar + editor + panels</span>
+<span class="new-file">│   │       │   ├── VaultSidebar.tsx</span>                <span class="new-file">← Tree de pastas/arquivos</span>
+<span class="new-file">│   │       │   ├── VaultEditor.tsx</span>                 <span class="new-file">← Editor TipTap WYSIWYG</span>
+<span class="new-file">│   │       │   ├── VaultFolderPickerModal.tsx</span>      <span class="new-file">← Modal "Abrir Pasta Local do PC"</span>
+<span class="new-file">│   │       │   ├── BacklinksPanel.tsx</span>              <span class="new-file">← Painel de backlinks</span>
+<span class="new-file">│   │       │   └── VaultCommandPalette.tsx</span>         <span class="new-file">← Quick switcher (Ctrl+P)</span>
+<span class="new-file">│   │       ├── hooks/</span>
+<span class="new-file">│   │       │   ├── useVaultStore.ts</span>                <span class="new-file">← Zustand store (docs, storage mode, UI)</span>
+<span class="new-file">│   │       │   ├── useVaultStorage.ts</span>              <span class="new-file">← Hook unificado de CRUD no Storage ativo</span>
+<span class="new-file">│   │       │   ├── useWikilinks.ts</span>                 <span class="new-file">← Parser [[wikilinks]] + autocomplete</span>
+<span class="new-file">│   │       │   └── useBacklinks.ts</span>                 <span class="new-file">← Cálculo reverso de referências</span>
+<span class="new-file">│   │       └── interfaces/</span>
+<span class="new-file">│   │           └── vault.ts</span>                        <span class="new-file">← Tipagens</span>
+<span class="existing">│</span>
+<span class="new-file">│   ├── pages/vault/</span>
+<span class="new-file">│   │   ├── index.tsx</span>                               <span class="new-file">← Dashboard de vaults / Abrir Pasta</span>
+<span class="new-file">│   │   └── [vaultId]/index.tsx</span>                     <span class="new-file">← Workspace do editor</span>
+</pre>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ FASE 1: FUNDAÇÃO ════════════════════════════════════════ -->
+<section class="phase">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number p1">01</div>
+      <div>
+        <div class="phase-title">Fundação — Storage Adapter, Pasta Local no Navegador & TipTap</div>
+        <div class="phase-subtitle">Acesso a pastas físicas do computador diretamente pelo Chrome/Edge</div>
+      </div>
+    </div>
+
+    <div class="cards two-col">
+      <!-- Storage Adapter -->
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Storage Adapter Universal</h3>
+        <div class="filepath">src/modules/vault/storage/VaultStorageAdapter.ts</div>
+        <p>Interface única para salvar e ler notas independentemente de onde elas residem (HD físico via navegador, IndexedDB ou Electron).</p>
+        <div class="code-block"><pre>
+<span class="keyword">export interface</span> <span class="type">VaultStorageProvider</span> {
+  <span class="prop">type</span>: <span class="string">'fsa'</span> | <span class="string">'idb'</span> | <span class="string">'electron'</span>;
+  <span class="prop">readDocument</span>(path: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="type">string</span>&gt;;
+  <span class="prop">writeDocument</span>(path: <span class="type">string</span>, content: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="keyword">void</span>&gt;;
+  <span class="prop">listDirectory</span>(path?: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="type">VaultNode</span>[]&gt;;
+  <span class="prop">createFolder</span>(path: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="keyword">void</span>&gt;;
+  <span class="prop">deleteItem</span>(path: <span class="type">string</span>): <span class="type">Promise</span>&lt;<span class="keyword">void</span>&gt;;
+}
+</pre></div>
+      </div>
+
+      <!-- File System Access API -->
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>FSAStorageProvider (File System Access API)</h3>
+        <div class="filepath">src/modules/vault/storage/FSAStorageProvider.ts</div>
+        <p>Permite ao usuário abrir uma pasta do Windows diretamente pelo navegador com <code>window.showDirectoryPicker()</code>.</p>
+        <ul>
+          <li>Lê todos os arquivos <code>.md</code> existentes na pasta do Windows.</li>
+          <li>Grava alterações de volta no arquivo físico instantaneamente.</li>
+          <li>Armazena o <code>FileSystemDirectoryHandle</code> no IndexedDB para reconexão automática sem pedir a pasta novamente.</li>
+        </ul>
+      </div>
+
+      <!-- TipTap Editor -->
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>VaultEditor (TipTap WYSIWYG)</h3>
+        <div class="filepath">src/modules/vault/components/VaultEditor.tsx</div>
+        <p>Editor com suporte a Markdown, tabelas, tarefas e toolbar flutuante, conectado diretamente ao Storage Provider ativo.</p>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>VaultSidebar (Árvore de Pastas e Arquivos)</h3>
+        <div class="filepath">src/modules/vault/components/VaultSidebar.tsx</div>
+        <p>Renderiza a hierarquia de pastas físicas do HD com suporte a criar novas subpastas, renomear e arrastar arquivos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ FASE 2: CORE OBSIDIAN ══════════════════════════════════════ -->
+<section class="phase">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number p2">02</div>
+      <div>
+        <div class="phase-title">Core Obsidian — Wikilinks, Backlinks, Busca</div>
+        <div class="phase-subtitle">O sistema de conexões inteligentes e navegação por teclado</div>
+      </div>
+    </div>
+
+    <div class="cards two-col">
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Extensão TipTap: [[Wikilinks]]</h3>
+        <div class="filepath">src/modules/vault/hooks/useWikilinks.ts</div>
+        <p>Digite <code>[[</code> para autocompletar nomes de notas. Se o arquivo não existir, cria o novo <code>.md</code> na pasta física.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Backlinks Engine & Painel Lateral</h3>
+        <div class="filepath">src/modules/vault/components/BacklinksPanel.tsx</div>
+        <p>Indexador que mapeia referências cruzadas entre todos os arquivos Markdown da pasta em tempo real.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Command Palette (Ctrl + P)</h3>
+        <div class="filepath">src/modules/vault/components/VaultCommandPalette.tsx</div>
+        <p>Busca rápida fuzzy (Fuse.js) por títulos, tags e aliases de notas com navegação 100% pelo teclado.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Full-Text Search & Sistema de Tags</h3>
+        <div class="filepath">src/modules/vault/hooks/useVaultSearch.ts</div>
+        <p>Busca dentro do conteúdo de todos os arquivos <code>.md</code> da pasta e filtro por <code>#tags</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FASE 3: INTEGRAÇÃO ══════════════════════════════════════════ -->
+<section class="phase">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number p3">03</div>
+      <div>
+        <div class="phase-title">Integração — Canvas ↔ Vault · P2P · Backup</div>
+        <div class="phase-subtitle">Conectando o mapa acústico aos arquivos Markdown</div>
+      </div>
+    </div>
+
+    <div class="cards two-col">
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>VaultLinkItem no Canvas</h3>
+        <div class="filepath">src/components/Canva/itens/vault-link-item.tsx</div>
+        <p>Card arrastável no mapa de áudio representando um documento Markdown do seu HD.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label modify">● MODIFY</div>
+        <h3>Link Bidirecional Pin ↔ Documento</h3>
+        <div class="filepath">src/components/PinManager/index.tsx</div>
+        <p>Vincule pins do mapa (NPCs, pistas) a arquivos <code>.md</code> do Vault com 1 clique.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label modify">● MODIFY</div>
+        <h3>Backup ZIP Unificado</h3>
+        <div class="filepath">src/utils/exportSystem/exportUtils.ts</div>
+        <p>Empacota o Canvas, áudios, imagens e a pasta de arquivos <code>.md</code> em um único arquivo <code>.zip</code>.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label modify">● MODIFY</div>
+        <h3>Compartilhamento P2P via WebRTC</h3>
+        <div class="filepath">src/hooks/useWebRTCHostSession.ts</div>
+        <p>Transmita handouts e notas diretamente para a tela dos jogadores conectados via P2P.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FASE 4: AVANÇADO ═══════════════════════════════════════════ -->
+<section class="phase">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number p4">04</div>
+      <div>
+        <div class="phase-title">Avançado — Graph View · Templates · Embeds</div>
+        <div class="phase-subtitle">Visualização de redes de conexões e automações de RPG</div>
+      </div>
+    </div>
+
+    <div class="cards two-col">
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Graph View Interativo (D3 Force)</h3>
+        <div class="filepath">src/modules/vault/components/VaultGraphView.tsx</div>
+        <p>Grafo dinâmico mapeando todas as conexões <code>[[link]]</code> entre arquivos com física de repulsão.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Templates Especializados para RPG</h3>
+        <p>Criação com 1 clique de Fichas de NPC, Registros de Missão, Locais e Diários de Sessão.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>Transclusão de Conteúdo (Embeds)</h3>
+        <p>Sintaxe <code>![[NomeDaNota]]</code> para embutir o conteúdo de um arquivo Markdown dentro de outro em tempo real.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label integrate">● INTEGRATE</div>
+        <h3>Imagens do Canvas dentro das Notas</h3>
+        <p>Arraste imagens dos mapas direto para o editor de texto Markdown.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FASE 5: DESKTOP WINDOWS ═══════════════════════════════════════ -->
+<section class="phase">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number p5">05</div>
+      <div>
+        <div class="phase-title">Desktop Windows — Electron & Instalador .exe</div>
+        <div class="phase-subtitle">Aplicativo nativo para Windows (.exe) com atalhos globais de teclado</div>
+      </div>
+    </div>
+
+    <div class="cards two-col">
+      <div class="card">
+        <div class="card-label native">● NATIVE</div>
+        <h3>Processo Principal Electron</h3>
+        <div class="filepath">electron/main.ts</div>
+        <p>Janela moderna acelerada por GPU, frameless e suporte nativo ao sistema de áudio e WebRTC.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label native">● NATIVE</div>
+        <h3>Atalhos Globais do Windows (Soundboard)</h3>
+        <div class="filepath">electron/globalShortcuts.ts</div>
+        <p>Dispare áudios e músicas mesmo com o aplicativo minimizado enquanto usa o Discord ou PDFs.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label native">● NATIVE</div>
+        <h3>Instalador .EXE Oficial (NSIS)</h3>
+        <div class="filepath">electron-builder.json</div>
+        <p>Geração do pacote instalador para Windows com atalhos na Área de Trabalho e Menu Iniciar.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-label new">● NEW</div>
+        <h3>DesktopTitleBar (UI Windows)</h3>
+        <div class="filepath">src/components/TitleBar/DesktopTitleBar.tsx</div>
+        <p>Barra de título customizada com botões de minimizar/maximizar/fechar integrada aos temas visuais.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ VERIFICAÇÃO ═══════════════════════════════════════════ -->
+<section class="phase" style="border-bottom: none;">
+  <div class="container">
+    <div class="phase-header">
+      <div class="phase-number" style="background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border);">✓</div>
+      <div>
+        <div class="phase-title">Plano de Verificação Completo</div>
+        <div class="phase-subtitle">Critérios de teste para cada fase</div>
+      </div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Fase 1 — Fundação & Pasta Local no Navegador</h3>
+        <ul>
+          <li>No Chrome/Edge, clicar em "Abrir Pasta Local" e escolher uma pasta do Windows com arquivos <code>.md</code>.</li>
+          <li>Verificar que as notas e subpastas aparecem na sidebar imediatamente.</li>
+          <li>Editar uma nota no TipTap e verificar que o arquivo físico no Windows foi atualizado no Bloco de Notas.</li>
+          <li>Recarregar a página (F5) e verificar reconexão automática com a pasta do HD.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Fase 2 — Core Obsidian</h3>
+        <ul>
+          <li>Digitar <code>[[</code> e verificar autocomplete de notas da pasta física.</li>
+          <li>Verificar atualização instantânea do painel de Backlinks ao referenciar notas.</li>
+          <li>Navegar rapidamente com <code>Ctrl+P</code> (Command Palette).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Fase 3 — Integração</h3>
+        <ul>
+          <li>Arrastar nota da pasta para o Canvas de Áudio e verificar criação do card.</li>
+          <li>Vincular Pin do mapa a arquivo <code>.md</code> e abrir com <code>Ctrl+Click</code>.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Fase 4 — Avançado</h3>
+        <ul>
+          <li>Renderizar Grafo de Conexões D3 mapeando todos os links entre notas da pasta.</li>
+          <li>Criar notas usando templates de RPG (NPC, Quests, Locais).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Fase 5 — Desktop Windows (.exe)</h3>
+        <ul>
+          <li>Gerar o instalador <code>.exe</code> com <code>npm run electron:build</code>.</li>
+          <li>Instalar no Windows e testar execução offline com atalhos globais de teclado da Soundboard.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

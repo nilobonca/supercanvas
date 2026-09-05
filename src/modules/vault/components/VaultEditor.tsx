@@ -1,0 +1,1022 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import Link from '@tiptap/extension-link';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import Highlight from '@tiptap/extension-highlight';
+import { MarkdownSyntaxReveal } from '../extensions/MarkdownSyntaxRevealExtension';
+import { useVaultStore } from '../hooks/useVaultStore';
+import { saveUserTemplate } from '../utils/templateStore';
+import { markdownToHtml, htmlToMarkdown } from '../utils/markdownConverter';
+import { parseFrontmatter, stringifyFrontmatter } from '../utils/frontmatterUtils';
+import { VaultSourceEditor } from './VaultSourceEditor';
+import { VaultReadingView } from './VaultReadingView';
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
+import { Callout } from '../extensions/CalloutExtension';
+import { 
+  Code, CheckCircle2, CloudUpload, FileText, Search, 
+  Check, Sparkles, Edit2, ChevronUp, 
+  ChevronDown, Replace, X, Eye, PanelRight
+} from 'lucide-react';
+
+const lowlight = createLowlight(common);
+import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { PromptInputModal } from './PromptInputModal';
+import { VaultSlashMenu } from './VaultSlashMenu';
+import { VaultFormattingMenu } from './VaultFormattingMenu';
+import { FORMATTING_COMMANDS, FormattingCommand } from '../utils/formattingCommands';
+
+interface VaultEditorProps {
+  paneId?: string;
+  documentPath?: string;
+}
+
+export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }) => {
+  const { 
+    activePath: globalActivePath, 
+    activeContent: globalActiveContent, 
+    updateContent, 
+    updateDocumentContent,
+    updateDocumentFrontmatter,
+    loadDocumentContent,
+    getDocumentContent,
+    documentCache,
+    isSaving, 
+    lastSavedAt,
+    storageType,
+    openOrCreateDocumentByTitle,
+    backlinksPanelOpen,
+    setBacklinksPanelOpen,
+    setCommandPaletteOpen,
+    getAllFiles,
+    searchNotesFuzzy,
+    renameNode,
+    deleteNode
+  } = useVaultStore();
+
+  // Use documentPath prop if provided (multi-pane mode), otherwise fall back to global
+  const activePath = documentPath || globalActivePath;
+  const cachedDoc = activePath ? documentCache[activePath] : undefined;
+  const activeContent = cachedDoc?.content ?? globalActiveContent;
+
+  const [title, setTitle] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleInput, setTitleInput] = useState('');
+  const [templateSuccess, setTemplateSuccess] = useState(false);
+  const [templatePromptOpen, setTemplatePromptOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const isUpdatingFromStoreRef = useRef(false);
+
+  // In-Note Search & Replace state
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [replaceMode, setReplaceMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [replaceTerm, setReplaceTerm] = useState('');
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const [matches, setMatches] = useState<{ from: number; to: number }[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // View Modes: 'live' (Live Preview) | 'source' (Modo Fonte) | 'reading' (Modo Leitura)
+  const [viewMode, setViewMode] = useState<'live' | 'source' | 'reading'>('live');
+  const [sourceValue, setSourceValue] = useState('');
+
+  // Sync source editor text when switching to source mode or when active document changes
+  useEffect(() => {
+    if (viewMode === 'source' && activePath) {
+      const bodyMd = htmlToMarkdown(activeContent || '');
+      const fullMd = stringifyFrontmatter(cachedDoc?.frontmatter || {}, bodyMd);
+      setSourceValue(fullMd);
+    }
+  }, [viewMode, activePath, cachedDoc?.frontmatter]);
+
+  const handleSourceChange = (newFullMd: string) => {
+    setSourceValue(newFullMd);
+    if (!activePath) return;
+
+    const { data: frontmatter, content: bodyMd } = parseFrontmatter(newFullMd);
+    const bodyHtml = markdownToHtml(bodyMd);
+
+    updateDocumentFrontmatter(activePath, frontmatter);
+    if (documentPath) {
+      updateDocumentContent(documentPath, bodyHtml);
+    } else {
+      updateContent(bodyHtml);
+    }
+  };
+
+  const handleSaveTitle = async () => {
+    const trimmed = titleInput.trim();
+    if (trimmed && trimmed !== title && activePath) {
+      const parts = activePath.split('/');
+      parts[parts.length - 1] = `${trimmed}.md`;
+      await renameNode(activePath, parts.join('/'), false);
+      setTitle(trimmed);
+    }
+    setIsEditingTitle(false);
+  };
+
+  // Autocomplete state for [[
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [suggestionQuery, setSuggestionQuery] = useState('');
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+
+  const suggestions = suggestionQuery.trim()
+    ? searchNotesFuzzy(suggestionQuery).slice(0, 8)
+    : getAllFiles().slice(0, 8);
+
+  const canCreateOption = Boolean(
+    suggestionQuery.trim() &&
+    !suggestions.some(s => s.name.toLowerCase() === suggestionQuery.trim().toLowerCase())
+  );
+  const totalSuggestionItems = suggestions.length + (canCreateOption ? 1 : 0);
+
+  const suggestionsRef = useRef(suggestions);
+  const suggestionOpenRef = useRef(suggestionOpen);
+  const selectedIndexRef = useRef(selectedSuggestionIndex);
+  const suggestionQueryRef = useRef(suggestionQuery);
+  const canCreateRef = useRef(canCreateOption);
+  const totalItemsRef = useRef(totalSuggestionItems);
+
+  useEffect(() => {
+    suggestionsRef.current = suggestions;
+    canCreateRef.current = canCreateOption;
+    totalItemsRef.current = totalSuggestionItems;
+  }, [suggestions, canCreateOption, totalSuggestionItems]);
+
+  useEffect(() => {
+    suggestionOpenRef.current = suggestionOpen;
+  }, [suggestionOpen]);
+
+  useEffect(() => {
+    selectedIndexRef.current = selectedSuggestionIndex;
+  }, [selectedSuggestionIndex]);
+
+  useEffect(() => {
+    suggestionQueryRef.current = suggestionQuery;
+  }, [suggestionQuery]);
+
+  useEffect(() => {
+    if (selectedSuggestionIndex >= totalSuggestionItems && totalSuggestionItems > 0) {
+      setSelectedSuggestionIndex(0);
+    }
+  }, [totalSuggestionItems, selectedSuggestionIndex]);
+
+  const doInsertWikilink = (view: { state: any; dispatch: (tr: any) => void }, targetTitle: string) => {
+    const { state, dispatch } = view;
+    const { selection } = state;
+    const { $from } = selection;
+    const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, ' ');
+    const match = textBefore.match(/\[\[([^\]]*)$/);
+
+    if (match) {
+      const start = $from.pos - match[0].length;
+      const end = $from.pos;
+      const tr = state.tr.delete(start, end).insertText(`[[${targetTitle}]] `);
+      dispatch(tr);
+    }
+    setSuggestionOpen(false);
+  };
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Slash Command (/) Autocomplete state
+  const [slashOpen, setSlashOpen] = useState(false);
+  const [slashQuery, setSlashQuery] = useState('');
+  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
+  const [slashPosition, setSlashPosition] = useState<{ top: number; left: number } | null>(null);
+
+  const filteredSlashCommands = React.useMemo(() => {
+    if (!slashQuery.trim()) return FORMATTING_COMMANDS;
+    const q = slashQuery.toLowerCase().trim();
+    return FORMATTING_COMMANDS.filter(cmd => 
+      cmd.title.toLowerCase().includes(q) ||
+      cmd.description.toLowerCase().includes(q) ||
+      cmd.keywords.some(k => k.toLowerCase().includes(q))
+    );
+  }, [slashQuery]);
+
+  const slashOpenRef = useRef(slashOpen);
+  const selectedSlashIndexRef = useRef(selectedSlashIndex);
+  const filteredSlashCommandsRef = useRef(filteredSlashCommands);
+  const slashQueryRef = useRef(slashQuery);
+  const executeSlashRef = useRef<(cmd: FormattingCommand) => void>(() => {});
+
+  useEffect(() => {
+    slashOpenRef.current = slashOpen;
+  }, [slashOpen]);
+
+  useEffect(() => {
+    selectedSlashIndexRef.current = selectedSlashIndex;
+  }, [selectedSlashIndex]);
+
+  useEffect(() => {
+    filteredSlashCommandsRef.current = filteredSlashCommands;
+  }, [filteredSlashCommands]);
+
+  useEffect(() => {
+    slashQueryRef.current = slashQuery;
+  }, [slashQuery]);
+
+  useEffect(() => {
+    if (selectedSlashIndex >= filteredSlashCommands.length && filteredSlashCommands.length > 0) {
+      setSelectedSlashIndex(0);
+    }
+  }, [filteredSlashCommands.length, selectedSlashIndex]);
+
+  const editor = useEditor({
+    editable: true,
+    extensions: [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3, 4] },
+        codeBlock: false,
+      }),
+      Placeholder.configure({
+        placeholder: 'Escreva suas anotações em Markdown... Dica: digite [[ para linkar com outra nota!',
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-violet-400 underline hover:text-violet-300 cursor-pointer',
+        },
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      Highlight.configure({
+        multicolor: false,
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Callout,
+      CodeBlockLowlight.configure({
+        lowlight,
+      }),
+      MarkdownSyntaxReveal,
+    ],
+    editorProps: {
+      attributes: {
+        class: 'prose prose-invert max-w-none focus:outline-none min-h-[500px] text-neutral-200 leading-relaxed text-base font-normal',
+      },
+      handleKeyDown: (view, event) => {
+        // 1. Slash command navigation (/)
+        if (slashOpenRef.current && filteredSlashCommandsRef.current.length > 0) {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setSelectedSlashIndex(prev => (prev + 1) % filteredSlashCommandsRef.current.length);
+            return true;
+          }
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setSelectedSlashIndex(prev => (prev - 1 + filteredSlashCommandsRef.current.length) % filteredSlashCommandsRef.current.length);
+            return true;
+          }
+          if (event.key === 'Enter' || event.key === 'Tab') {
+            event.preventDefault();
+            const currentIdx = selectedSlashIndexRef.current;
+            const currentCmd = filteredSlashCommandsRef.current[currentIdx];
+            if (currentCmd) {
+              executeSlashRef.current(currentCmd);
+              return true;
+            }
+            return true;
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            setSlashOpen(false);
+            return true;
+          }
+        }
+
+        // 2. Wikilink autocomplete navigation ([[])
+        if (suggestionOpenRef.current && totalItemsRef.current > 0) {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setSelectedSuggestionIndex(prev => (prev + 1) % totalItemsRef.current);
+            return true;
+          }
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            setSelectedSuggestionIndex(prev => (prev - 1 + totalItemsRef.current) % totalItemsRef.current);
+            return true;
+          }
+          if (event.key === 'Enter' || event.key === 'Tab') {
+            event.preventDefault();
+            const currentIdx = selectedIndexRef.current;
+            const currentSuggestions = suggestionsRef.current;
+            if (currentIdx >= 0 && currentIdx < currentSuggestions.length) {
+              doInsertWikilink(view, currentSuggestions[currentIdx].name);
+              return true;
+            } else if (canCreateRef.current && currentIdx === currentSuggestions.length) {
+              doInsertWikilink(view, suggestionQueryRef.current.trim());
+              return true;
+            }
+            return true;
+          }
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            setSuggestionOpen(false);
+            return true;
+          }
+        }
+        return false;
+      },
+      handleClick: (view, pos, event) => {
+        const mouseEvent = event as MouseEvent;
+        // Follow link only when Ctrl or Cmd is held (standard Obsidian / Live Preview behavior)
+        if (mouseEvent.ctrlKey || mouseEvent.metaKey) {
+          const target = (event.target as HTMLElement).closest('[data-wikilink-title]');
+          let wikilinkTitle = target?.getAttribute('data-wikilink-title');
+
+          if (!wikilinkTitle) {
+            const { doc } = view.state;
+            const $pos = doc.resolve(pos);
+            const text = $pos.parent.textBetween(0, $pos.parent.content.size, undefined, '\0');
+            const offset = $pos.parentOffset;
+            const regex = /\[\[([^[\]|]+)(?:\|([^\]]+))?\]\]/g;
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+              if (offset >= match.index && offset <= match.index + match[0].length) {
+                wikilinkTitle = match[1].trim();
+                break;
+              }
+            }
+          }
+
+          if (wikilinkTitle) {
+            event.preventDefault();
+            openOrCreateDocumentByTitle(wikilinkTitle);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData('text/plain');
+        if (!text) return false;
+
+        // 1. Paste URL over selection: converts selection into a markdown link (Obsidian behavior)
+        if (/^https?:\/\/[^\s]+$/.test(text.trim())) {
+          const { state } = view;
+          const { selection } = state;
+          if (!selection.empty) {
+            event.preventDefault();
+            editor?.chain().focus().setLink({ href: text.trim() }).run();
+            return true;
+          }
+        }
+
+        // 2. Paste raw markdown: parse if contains common markdown markers
+        if (text.includes('#') || text.includes('**') || text.includes('[[') || text.includes('- ') || text.includes('> ') || text.includes('==')) {
+          event.preventDefault();
+          const html = markdownToHtml(text);
+          editor?.commands.insertContent(html);
+          return true;
+        }
+        return false;
+      },
+    },
+    content: activeContent || '',
+    onUpdate: ({ editor }) => {
+      if (isUpdatingFromStoreRef.current) return;
+      const html = editor.getHTML();
+      if (documentPath) {
+        updateDocumentContent(documentPath, html);
+      } else {
+        updateContent(html);
+      }
+
+      // Check for [[ autocomplete trigger
+      const { selection } = editor.state;
+      const { $from } = selection;
+      const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, ' ');
+      const match = textBefore.match(/\[\[([^\]]*)$/);
+
+      if (match) {
+        setSuggestionQuery(match[1]);
+        setSuggestionOpen(true);
+        setSelectedSuggestionIndex(0);
+        setSlashOpen(false);
+      } else {
+        setSuggestionOpen(false);
+
+        // Check for / slash command trigger
+        const slashMatch = textBefore.match(/(?:^|\s)\/([a-zA-Z0-9_\u00C0-\u00FF-]*)$/);
+        if (slashMatch) {
+          setSlashQuery(slashMatch[1]);
+          setSlashOpen(true);
+          setSelectedSlashIndex(0);
+
+          try {
+            const coords = editor.view.coordsAtPos($from.pos);
+            const container = scrollContainerRef.current?.getBoundingClientRect();
+            if (container && coords) {
+              const top = coords.bottom - container.top + (scrollContainerRef.current?.scrollTop || 0) + 6;
+              const left = Math.max(16, Math.min(coords.left - container.left, (container.width || 500) - 300));
+              setSlashPosition({ top, left });
+            }
+          } catch {
+            setSlashPosition(null);
+          }
+        } else {
+          setSlashOpen(false);
+        }
+      }
+    },
+  });
+
+  const handleExecuteSlashCommand = (cmd: FormattingCommand) => {
+    if (!editor) return;
+    const { state, dispatch } = editor.view;
+    const { selection } = state;
+    const { $from } = selection;
+    const textBefore = $from.parent.textBetween(0, $from.parentOffset, undefined, ' ');
+    const slashMatch = textBefore.match(/(?:^|\s)\/([a-zA-Z0-9_\u00C0-\u00FF-]*)$/);
+
+    if (slashMatch) {
+      const matchLen = slashMatch[1].length + 1; // includes '/'
+      const start = $from.pos - matchLen;
+      const end = $from.pos;
+      const tr = state.tr.delete(start, end);
+      dispatch(tr);
+    }
+    setSlashOpen(false);
+    setTimeout(() => {
+      cmd.execute(editor);
+    }, 10);
+  };
+
+  useEffect(() => {
+    executeSlashRef.current = handleExecuteSlashCommand;
+  });
+
+  // Sync title from activePath
+  useEffect(() => {
+    if (activePath) {
+      const fileName = activePath.split('/').pop() || '';
+      setTitle(fileName.replace(/\.(md|txt)$/, ''));
+    }
+  }, [activePath]);
+
+  // Load document content if not yet loaded in cache
+  useEffect(() => {
+    if (documentPath && !documentPath.startsWith('canvas:') && !documentCache[documentPath]) {
+      loadDocumentContent(documentPath);
+    }
+  }, [documentPath, documentCache, loadDocumentContent]);
+
+  // Sync content when active document changes
+  useEffect(() => {
+    if (!editor) return;
+    if (activeContent !== editor.getHTML()) {
+      isUpdatingFromStoreRef.current = true;
+      editor.commands.setContent(activeContent || '');
+      isUpdatingFromStoreRef.current = false;
+    }
+  }, [activePath, activeContent, editor]);
+
+  // Compute search matches whenever doc or searchTerm or caseSensitive changes
+  useEffect(() => {
+    if (!editor || !searchTerm.trim()) {
+      setMatches([]);
+      setCurrentMatchIndex(0);
+      return;
+    }
+    const doc = editor.state.doc;
+    const found: { from: number; to: number }[] = [];
+    const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, caseSensitive ? 'g' : 'gi');
+
+    doc.descendants((node, pos) => {
+      if (!node.isText) return;
+      const text = node.text || '';
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        found.push({
+          from: pos + match.index,
+          to: pos + match.index + match[0].length,
+        });
+      }
+    });
+
+    setMatches(found);
+    if (found.length > 0) {
+      setCurrentMatchIndex(prev => Math.min(prev, found.length - 1));
+    } else {
+      setCurrentMatchIndex(0);
+    }
+  }, [editor, searchTerm, caseSensitive, activeContent]);
+
+  const goToMatch = (idx: number, currentMatches: { from: number; to: number }[] = matches) => {
+    if (!editor || currentMatches.length === 0) return;
+    const target = currentMatches[idx];
+    if (target) {
+      editor.chain().focus().setTextSelection({ from: target.from, to: target.to }).scrollIntoView().run();
+      setCurrentMatchIndex(idx);
+    }
+  };
+
+  const handleNextMatch = () => {
+    if (matches.length === 0) return;
+    const nextIdx = (currentMatchIndex + 1) % matches.length;
+    goToMatch(nextIdx);
+  };
+
+  const handlePrevMatch = () => {
+    if (matches.length === 0) return;
+    const prevIdx = (currentMatchIndex - 1 + matches.length) % matches.length;
+    goToMatch(prevIdx);
+  };
+
+  const handleReplaceCurrent = () => {
+    if (!editor || matches.length === 0) return;
+    const current = matches[currentMatchIndex];
+    if (current) {
+      editor.chain().focus().insertContentAt({ from: current.from, to: current.to }, replaceTerm).run();
+    }
+  };
+
+  const handleReplaceAll = () => {
+    if (!editor || matches.length === 0) return;
+    const { state, dispatch } = editor.view;
+    let tr = state.tr;
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const m = matches[i];
+      tr = tr.insertText(replaceTerm, m.from, m.to);
+    }
+    dispatch(tr);
+  };
+
+  // Keyboard shortcuts: Ctrl+F (Search), Ctrl+H (Replace), Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setSearchOpen(true);
+        setReplaceMode(false);
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        }, 50);
+        return;
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        setSearchOpen(true);
+        setReplaceMode(true);
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+          searchInputRef.current?.select();
+        }, 50);
+        return;
+      }
+      if (e.key === 'Escape') {
+        if (searchOpen) {
+          setSearchOpen(false);
+          editor?.commands.focus();
+        } else if (editor?.isFocused) {
+          editor.commands.blur();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editor, searchOpen]);
+
+  // Handle inserting a selected suggestion
+  const insertWikilink = (targetTitle: string) => {
+    if (!editor) return;
+    doInsertWikilink(editor.view, targetTitle);
+  };
+
+  const handleMakeTemplate = () => {
+    if (!title) return;
+    setTemplatePromptOpen(true);
+  };
+
+  const handleSaveTemplate = (templateName: string) => {
+    if (!templateName || !templateName.trim()) return;
+
+    saveUserTemplate({
+      name: templateName.trim(),
+      content: activeContent,
+      description: `Criado a partir da nota ${title}`
+    });
+
+    setTemplateSuccess(true);
+    setTimeout(() => setTemplateSuccess(false), 3000);
+  };
+
+  if (!activePath) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-stone-500 dark:text-neutral-400 p-8 select-none bg-stone-50/40 dark:bg-black/20">
+        <div className="w-14 h-14 rounded-2xl bg-white dark:bg-white/5 border border-stone-200/90 dark:border-white/10 flex items-center justify-center mb-4 text-stone-400 dark:text-neutral-500 shadow-xs">
+          <FileText className="w-7 h-7" />
+        </div>
+        <h3 className="text-base font-semibold text-stone-800 dark:text-stone-100 mb-1">Nenhum documento aberto</h3>
+        <p className="text-xs text-stone-500 dark:text-neutral-400 max-w-sm text-center mb-4 leading-relaxed">
+          Selecione uma nota na barra lateral, crie uma nova ou use a Command Palette para buscar.
+        </p>
+        <button
+          onClick={() => setCommandPaletteOpen(true)}
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-xs font-medium text-stone-700 dark:text-neutral-200 border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
+        >
+          <Search className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-400" />
+          <span>Buscar Notas (Ctrl+P)</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#0E0E12] overflow-hidden relative">
+      {/* Top Header & Toolbar (relative z-40 ensures dropdown menus render on top of note content) */}
+      <div className="relative z-40 border-b border-stone-200/90 dark:border-white/10 bg-white/95 dark:bg-[#121216]/95 backdrop-blur-md px-6 py-3 flex flex-col gap-3 shrink-0">
+        {/* Title Bar & Status */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 truncate">
+            {isEditingTitle ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  autoFocus
+                  value={titleInput}
+                  onChange={(e) => setTitleInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveTitle();
+                    if (e.key === 'Escape') setIsEditingTitle(false);
+                  }}
+                  onBlur={handleSaveTitle}
+                  className="bg-stone-50 dark:bg-[#16161D] border border-purple-500 rounded-md px-2 py-0.5 text-base font-semibold text-stone-900 dark:text-neutral-100 outline-none w-56"
+                />
+                <button
+                  onClick={handleSaveTitle}
+                  className="p-1 hover:bg-stone-100 dark:hover:bg-white/10 rounded text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => {
+                  setTitleInput(title);
+                  setIsEditingTitle(true);
+                }}
+                className="group/title flex items-center gap-1.5 cursor-pointer truncate"
+                title="Clique para renomear esta nota"
+              >
+                <h1 className="text-lg font-bold text-stone-900 dark:text-neutral-100 tracking-tight truncate group-hover/title:text-purple-600 dark:group-hover/title:text-purple-300 transition-colors">
+                  {title || 'Sem título'}
+                </h1>
+                <Edit2 className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5 text-xs text-stone-500 dark:text-neutral-400">
+            {isSaving ? (
+              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+                <CloudUpload className="w-3.5 h-3.5 animate-pulse" />
+                Salvando...
+              </span>
+            ) : lastSavedAt ? (
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Salvo às {new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </span>
+            ) : null}
+
+            <div className="w-px h-4 bg-stone-200 dark:bg-white/10 mx-1" />
+
+            {/* Find & Replace toggle */}
+            <button
+              onClick={() => {
+                setSearchOpen(!searchOpen);
+                if (!searchOpen) {
+                  setTimeout(() => {
+                    searchInputRef.current?.focus();
+                    searchInputRef.current?.select();
+                  }, 50);
+                }
+              }}
+              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                searchOpen
+                  ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-300 text-purple-700 dark:text-purple-300'
+                  : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
+              }`}
+              title="Localizar e Substituir na nota (Ctrl+F / Ctrl+H)"
+            >
+              <Search className="w-3.5 h-3.5" />
+            </button>
+
+            {/* 3-dots Context Menu for Options, View Modes, Formatting & Note Actions */}
+            <VaultFormattingMenu
+              editor={editor}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onMakeTemplate={handleMakeTemplate}
+              templateSuccess={templateSuccess}
+              onDeleteNote={() => setDeleteConfirmOpen(true)}
+            />
+
+            {/* Note Details (Properties & Backlinks) Sidebar Toggle */}
+            <button
+              onClick={() => setBacklinksPanelOpen(!backlinksPanelOpen)}
+              className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center ${
+                backlinksPanelOpen
+                  ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+                  : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
+              }`}
+              title="Propriedades e Backlinks da Nota"
+              aria-label="Abrir painel lateral de propriedades e backlinks"
+            >
+              <PanelRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Contextual Table Controls (when cursor is inside a table) */}
+        {editor && viewMode === 'live' && editor.isActive('table') && (
+          <div className="flex items-center gap-1 bg-purple-50/90 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 p-1 rounded-lg w-fit animate-in fade-in duration-100 text-xs">
+            <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 px-1">Tabela:</span>
+            <button
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              className="px-2 py-0.5 text-[11px] rounded hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium cursor-pointer"
+            >
+              +Linha
+            </button>
+            <button
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              className="px-2 py-0.5 text-[11px] rounded hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium cursor-pointer"
+            >
+              +Coluna
+            </button>
+            <button
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+            >
+              -Linha
+            </button>
+            <button
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+            >
+              -Coluna
+            </button>
+            <button
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+            >
+              Excluir
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Floating In-Note Find & Replace Widget (Ctrl+F / Ctrl+H) */}
+      {searchOpen && (
+        <div className="absolute top-26 right-8 z-30 bg-white/95 dark:bg-[#16161D]/95 backdrop-blur-md border border-stone-200/90 dark:border-white/10 rounded-xl shadow-2xl p-2.5 flex flex-col gap-2 w-84 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="relative flex-1 flex items-center">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Localizar na nota..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (e.shiftKey) handlePrevMatch();
+                    else handleNextMatch();
+                  }
+                  if (e.key === 'Escape') setSearchOpen(false);
+                }}
+                className="w-full bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-purple-500 pr-14"
+              />
+              <span className="absolute right-2 text-[10px] text-stone-400 dark:text-neutral-500 font-mono select-none">
+                {searchTerm ? (matches.length > 0 ? `${currentMatchIndex + 1}/${matches.length}` : '0/0') : ''}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setCaseSensitive(!caseSensitive)}
+              className={`px-1.5 py-1 rounded font-mono text-[10px] border transition-colors cursor-pointer ${caseSensitive ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-400 text-purple-700 dark:text-purple-300 font-bold' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
+              title="Diferenciar maiúsculas/minúsculas"
+            >
+              Aa
+            </button>
+
+            <button
+              onClick={handlePrevMatch}
+              disabled={matches.length === 0}
+              className="p-1 rounded hover:bg-stone-100 dark:hover:bg-white/5 text-stone-600 dark:text-neutral-300 disabled:opacity-30 cursor-pointer"
+              title="Ocorrência anterior (Shift+Enter)"
+            >
+              <ChevronUp className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={handleNextMatch}
+              disabled={matches.length === 0}
+              className="p-1 rounded hover:bg-stone-100 dark:hover:bg-white/5 text-stone-600 dark:text-neutral-300 disabled:opacity-30 cursor-pointer"
+              title="Próxima ocorrência (Enter)"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setReplaceMode(!replaceMode)}
+              className={`p-1 rounded border transition-colors cursor-pointer ${replaceMode ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-400 text-purple-700 dark:text-purple-300' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
+              title="Alternar modo Substituir"
+            >
+              <Replace className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              onClick={() => setSearchOpen(false)}
+              className="p-1 rounded hover:bg-stone-100 dark:hover:bg-white/5 text-stone-400 hover:text-stone-600 dark:hover:text-neutral-200 cursor-pointer"
+              title="Fechar (Esc)"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {replaceMode && (
+            <div className="flex items-center gap-1.5 pt-1.5 border-t border-stone-200/80 dark:border-white/10">
+              <input
+                type="text"
+                placeholder="Substituir por..."
+                value={replaceTerm}
+                onChange={(e) => setReplaceTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleReplaceCurrent();
+                  if (e.key === 'Escape') setSearchOpen(false);
+                }}
+                className="flex-1 bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-purple-500"
+              />
+              <button
+                onClick={handleReplaceCurrent}
+                disabled={matches.length === 0}
+                className="px-2 py-1 bg-stone-100 dark:bg-white/5 hover:bg-stone-200 dark:hover:bg-white/10 border border-stone-200 dark:border-white/10 rounded-lg text-stone-700 dark:text-neutral-200 text-[11px] font-medium disabled:opacity-30 cursor-pointer"
+              >
+                Substituir
+              </button>
+              <button
+                onClick={handleReplaceAll}
+                disabled={matches.length === 0}
+                className="px-2 py-1 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 rounded-lg text-[11px] font-medium disabled:opacity-30 cursor-pointer"
+              >
+                Tudo
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Editor Content Scroll Container */}
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto px-10 py-8 custom-scrollbar relative bg-white dark:bg-[#0E0E12] text-stone-900 dark:text-stone-100"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            editor?.commands.blur();
+          }
+        }}
+      >
+        <div 
+          className="max-w-4xl mx-auto relative min-h-full pb-32"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && viewMode === 'live') {
+              editor?.commands.blur();
+            }
+          }}
+        >
+          {viewMode === 'live' && (
+            <EditorContent editor={editor} />
+          )}
+
+          {viewMode === 'source' && (
+            <VaultSourceEditor
+              value={sourceValue}
+              onChange={handleSourceChange}
+            />
+          )}
+
+          {viewMode === 'reading' && (
+            <VaultReadingView
+              content={htmlToMarkdown(activeContent || '')}
+            />
+          )}
+
+          {/* Slash Command Popup when user types / */}
+          {slashOpen && (
+            <VaultSlashMenu
+              items={filteredSlashCommands}
+              selectedIndex={selectedSlashIndex}
+              onSelect={handleExecuteSlashCommand}
+              onClose={() => setSlashOpen(false)}
+              position={slashPosition}
+            />
+          )}
+
+          {/* Autocomplete Popup when user types [[ */}
+          {suggestionOpen && (
+            <div className="absolute left-0 top-12 z-30 w-72 bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+              <div className="px-3 py-1.5 bg-stone-50 dark:bg-black/40 border-b border-stone-200 dark:border-white/10 text-[11px] text-stone-500 dark:text-neutral-400 flex items-center justify-between">
+                <span>Linkar com nota:</span>
+                <span className="font-mono text-purple-600 dark:text-purple-400">[[{suggestionQuery}</span>
+              </div>
+              <div className="max-h-48 overflow-y-auto p-1 space-y-0.5 custom-scrollbar">
+                {suggestions.map((item, idx) => (
+                  <div
+                    key={item.path}
+                    ref={el => {
+                      if (idx === selectedSuggestionIndex) {
+                        el?.scrollIntoView({ block: 'nearest' });
+                      }
+                    }}
+                    onClick={() => insertWikilink(item.name)}
+                    onMouseEnter={() => setSelectedSuggestionIndex(idx)}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                      idx === selectedSuggestionIndex
+                        ? 'bg-purple-600 text-white font-medium'
+                        : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">{item.name}</span>
+                  </div>
+                ))}
+
+                {suggestionQuery.trim() && !suggestions.some(s => s.name.toLowerCase() === suggestionQuery.toLowerCase()) && (
+                  <div
+                    ref={el => {
+                      if (selectedSuggestionIndex === suggestions.length) {
+                        el?.scrollIntoView({ block: 'nearest' });
+                      }
+                    }}
+                    onClick={() => insertWikilink(suggestionQuery.trim())}
+                    onMouseEnter={() => setSelectedSuggestionIndex(suggestions.length)}
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors border-t border-stone-200 dark:border-white/10 mt-1 ${
+                      selectedSuggestionIndex === suggestions.length
+                        ? 'bg-emerald-600 text-white font-medium'
+                        : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    <span className="truncate">Criar nota: <strong>"{suggestionQuery.trim()}"</strong></span>
+                  </div>
+                )}
+              </div>
+              <div className="px-2.5 py-1 bg-stone-50 dark:bg-black/40 border-t border-stone-200 dark:border-white/10 text-[10px] text-stone-500 dark:text-neutral-500 flex items-center justify-between select-none">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-stone-200 dark:border-white/10 text-stone-600 dark:text-neutral-400 font-mono text-[9px]">↑↓</kbd> Navegar
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-stone-200 dark:border-white/10 text-stone-600 dark:text-neutral-400 font-mono text-[9px]">↵</kbd> Confirmar
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1 py-0.5 rounded bg-white dark:bg-neutral-800 border border-stone-200 dark:border-white/10 text-stone-600 dark:text-neutral-400 font-mono text-[9px]">Esc</kbd>
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* In-app Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteConfirmOpen}
+        itemName={title || 'Sem título'}
+        isFolder={false}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={async () => {
+          if (activePath) {
+            await deleteNode(activePath, false);
+            setDeleteConfirmOpen(false);
+          }
+        }}
+      />
+
+      {/* In-app Prompt Input Modal */}
+      <PromptInputModal
+        isOpen={templatePromptOpen}
+        title="Criar Modelo de Template"
+        description="Digite um nome para o novo modelo baseado nesta nota:"
+        defaultValue={title}
+        placeholder="Nome do template..."
+        confirmText="Salvar Template"
+        onClose={() => setTemplatePromptOpen(false)}
+        onConfirm={handleSaveTemplate}
+      />
+    </div>
+  );
+};

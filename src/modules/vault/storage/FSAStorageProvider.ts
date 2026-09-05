@@ -1,0 +1,466 @@
+import { IVaultStorageProvider } from './VaultStorageAdapter';
+import { VaultNode, VaultDocument } from '../interfaces/vault';
+
+// IndexedDB database name used by RPGSA
+const DB_NAME = 'RPGSA_DB';
+const KEYVAL_STORE = 'keyval';
+const HANDLE_KEY = 'fsa_vault_directory_handle';
+
+export class FSAStorageProvider implements IVaultStorageProvider {
+  readonly type = 'fsa' as const;
+  private rootHandle: FileSystemDirectoryHandle | null = null;
+  private _vaultName: string = 'Local Windows Vault';
+
+  get isConnected(): boolean {
+    return this.rootHandle !== null;
+  }
+
+  get vaultName(): string {
+    return this.rootHandle?.name || this._vaultName;
+  }
+
+  get rootDirectoryHandle(): FileSystemDirectoryHandle | null {
+    return this.rootHandle;
+  }
+
+  /**
+   * Initializes the provider by trying to restore a previously saved handle from IndexedDB
+   */
+  async init(): Promise<boolean> {
+    if (typeof window === 'undefined' || !('showDirectoryPicker' in window)) {
+      return false;
+    }
+
+    try {
+      const savedHandle = await this.getSavedHandleFromIDB();
+      if (savedHandle) {
+        // Verify permissions
+        const permission = await this.verifyPermission(savedHandle, true);
+        if (permission) {
+          this.rootHandle = savedHandle;
+          this._vaultName = savedHandle.name;
+          return true;
+        }
+      }
+    } catch (err) {
+      console.warn('[FSAStorageProvider] Failed to restore handle from IDB:', err);
+    }
+    return false;
+  }
+
+  /**
+   * Prompts the user to pick a folder on their Windows computer
+   */
+  async pickDirectory(): Promise<boolean> {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    if (!('showDirectoryPicker' in window)) {
+      console.warn('[FSAStorageProvider] showDirectoryPicker não suportado neste navegador/ambiente.');
+      if (typeof window !== 'undefined') {
+        const isNotLocalhost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        const isIframe = window.self !== window.top;
+
+        if (isNotLocalhost) {
+          const targetUrl = `http://localhost:${window.location.port || 3000}`;
+          const redirect = confirm(
+            `Acesso a pastas do Windows bloqueado pelo navegador!\n\n` +
+            `Você está acessando pelo IP (${window.location.hostname}). O Google Chrome e Microsoft Edge só liberam acesso ao HD em conexões localhost por segurança do sistema.\n\n` +
+            `Deseja abrir agora pelo endereço ${targetUrl} para desbloquear as pastas do Windows?`
+          );
+          if (redirect) {
+            window.location.href = targetUrl;
+          }
+          return false;
+        }
+
+        if (isIframe) {
+          const openTab = confirm(
+            `Acesso a pastas do Windows bloqueado dentro deste painel/iframe!\n\n` +
+            `Os navegadores exigem que o app esteja aberto em uma aba normal do navegador para acessar pastas do HD.\n\n` +
+            `Deseja abrir o Supercanvas em uma nova aba do navegador agora?`
+          );
+          if (openTab) {
+            window.open(window.location.href, '_blank');
+          }
+          return false;
+        }
+
+        alert('Seu navegador atual não suporta a File System Access API para pastas locais. Para vincular uma pasta física do Windows, utilize o Google Chrome, Microsoft Edge ou Brave acessando via http://localhost:3000.');
+      }
+      return false;
+    }
+
+    try {
+      const winWithFSA = window as unknown as {
+        showDirectoryPicker: (options?: Record<string, unknown>) => Promise<FileSystemDirectoryHandle>;
+      };
+      const handle = await winWithFSA.showDirectoryPicker({
+        mode: 'readwrite',
+        startIn: 'documents'
+      });
+
+      if (!handle) return false;
+
+      const hasPermission = await this.verifyPermission(handle, true);
+      if (!hasPermission) return false;
+
+      this.rootHandle = handle;
+      this._vaultName = handle.name;
+
+      // Persist handle to IndexedDB for automatic reconnection
+      await this.saveHandleToIDB(handle);
+
+      return true;
+    } catch (err: unknown) {
+      const errorObj = err as { name?: string };
+      if (errorObj?.name === 'AbortError') {
+        return false; // User cancelled
+      }
+      console.error('[FSAStorageProvider] Error picking directory:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Disconnects the current directory handle
+   */
+  async disconnect(): Promise<void> {
+    this.rootHandle = null;
+    await this.removeSavedHandleFromIDB();
+  }
+
+  /**
+   * Recursively or shallowly lists all nodes inside a directory
+   */
+  async listNodes(subPath: string = ''): Promise<VaultNode[]> {
+    if (!this.rootHandle) return [];
+
+    const dirHandle = subPath ? await this.resolveDirectory(subPath) : this.rootHandle;
+    if (!dirHandle) return [];
+
+    return this.scanDirectory(dirHandle, subPath);
+  }
+
+  private async scanDirectory(dirHandle: FileSystemDirectoryHandle, basePath: string): Promise<VaultNode[]> {
+    const nodes: VaultNode[] = [];
+
+    // Iterate over directory entries
+    for await (const [name, handle] of (dirHandle as any).entries()) {
+      // Ignore hidden files / folders (e.g. .git, .obsidian, .trash)
+      if (name.startsWith('.')) continue;
+
+      const currentPath = basePath ? `${basePath}/${name}` : name;
+
+      if (handle.kind === 'directory') {
+        const children = await this.scanDirectory(handle as FileSystemDirectoryHandle, currentPath);
+        nodes.push({
+          id: currentPath,
+          name,
+          path: currentPath,
+          type: 'folder',
+          children
+        });
+      } else if (handle.kind === 'file') {
+        const ext = name.split('.').pop()?.toLowerCase() || '';
+        const isMarkdown = ['md', 'txt'].includes(ext);
+        const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus'].includes(ext);
+        const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+
+        if (isMarkdown || isAudio || isImage) {
+          const file = await (handle as FileSystemFileHandle).getFile();
+          const fileType: 'note' | 'audio' | 'image' = isAudio ? 'audio' : isImage ? 'image' : 'note';
+          nodes.push({
+            id: currentPath,
+            name: isMarkdown ? name.replace(/\.(md|txt)$/, '') : name,
+            path: currentPath,
+            type: 'file',
+            fileType,
+            extension: ext,
+            size: file.size,
+            updatedAt: file.lastModified
+          });
+        }
+      }
+    }
+
+    // Sort folders first, then files alphabetically
+    return nodes.sort((a, b) => {
+      if (a.type === b.type) return a.name.localeCompare(b.name);
+      return a.type === 'folder' ? -1 : 1;
+    });
+  }
+
+  /**
+   * Reads a Markdown file content
+   */
+  async readDocument(filePath: string): Promise<string> {
+    if (!filePath || filePath.startsWith('canvas:')) return '';
+    if (!this.rootHandle) return '';
+
+    try {
+      const fileHandle = await this.resolveFile(filePath, false);
+      if (!fileHandle) return '';
+
+      const file = await fileHandle.getFile();
+      return await file.text();
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Writes content to a Markdown file
+   */
+  async saveDocument(filePath: string, content: string): Promise<void> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    const fileHandle = await this.resolveFile(filePath, true);
+    if (!fileHandle) throw new Error(`Não foi possível acessar o arquivo: ${filePath}`);
+
+    const writable = await (fileHandle as any).createWritable();
+    await writable.write(content);
+    await writable.close();
+  }
+
+  /**
+   * Creates a new document
+   */
+  async createDocument(filePath: string, initialContent: string = ''): Promise<VaultDocument> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    // Ensure extension
+    const normalizedPath = filePath.endsWith('.md') ? filePath : `${filePath}.md`;
+    await this.saveDocument(normalizedPath, initialContent);
+
+    const parts = normalizedPath.split('/');
+    const fileName = parts.pop()!;
+    const folderPath = parts.join('/');
+    const title = fileName.replace(/\.md$/, '');
+
+    return {
+      id: normalizedPath,
+      vaultId: this.vaultName,
+      title,
+      content: initialContent,
+      path: normalizedPath,
+      folderPath,
+      tags: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+  }
+
+  /**
+   * Creates a folder
+   */
+  async createFolder(folderPath: string): Promise<void> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+    await this.resolveDirectory(folderPath, true);
+  }
+
+  private urlCache = new Map<string, string>();
+
+  /**
+   * Saves a binary file (audio, image, etc.)
+   */
+  async saveFile(filePath: string, file: File | Blob): Promise<void> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    const fileHandle = await this.resolveFile(filePath, true);
+    if (!fileHandle) throw new Error(`Não foi possível acessar o arquivo: ${filePath}`);
+
+    const writable = await (fileHandle as any).createWritable();
+    await writable.write(file);
+    await writable.close();
+
+    if (this.urlCache.has(filePath)) {
+      URL.revokeObjectURL(this.urlCache.get(filePath)!);
+      this.urlCache.delete(filePath);
+    }
+  }
+
+  /**
+   * Gets a binary file Blob
+   */
+  async getFileBlob(filePath: string): Promise<Blob> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    const fileHandle = await this.resolveFile(filePath, false);
+    if (!fileHandle) throw new Error(`Arquivo não encontrado: ${filePath}`);
+
+    return await fileHandle.getFile();
+  }
+
+  /**
+   * Gets an object URL for a media file
+   */
+  async getFileUrl(filePath: string): Promise<string> {
+    if (this.urlCache.has(filePath)) {
+      return this.urlCache.get(filePath)!;
+    }
+    const blob = await this.getFileBlob(filePath);
+    const url = URL.createObjectURL(blob);
+    this.urlCache.set(filePath, url);
+    return url;
+  }
+
+  /**
+   * Deletes a file or directory
+   */
+  async deleteNode(nodePath: string, isFolder: boolean): Promise<void> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    const parts = nodePath.split('/');
+    const targetName = parts.pop()!;
+    const parentPath = parts.join('/');
+
+    const parentHandle = parentPath ? await this.resolveDirectory(parentPath) : this.rootHandle;
+    if (!parentHandle) throw new Error(`Diretório pai não encontrado: ${parentPath}`);
+
+    await (parentHandle as any).removeEntry(targetName, { recursive: isFolder });
+
+    if (this.urlCache.has(nodePath)) {
+      URL.revokeObjectURL(this.urlCache.get(nodePath)!);
+      this.urlCache.delete(nodePath);
+    }
+  }
+
+  /**
+   * Renames a file or directory
+   */
+  async renameNode(oldPath: string, newPath: string, isFolder: boolean = false): Promise<void> {
+    if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
+
+    if (!isFolder) {
+      const fileHandle = await this.resolveFile(oldPath, false);
+      if (!fileHandle) throw new Error(`Arquivo de origem não encontrado: ${oldPath}`);
+      const file = await fileHandle.getFile();
+      await this.saveFile(newPath, file);
+      await this.deleteNode(oldPath, false);
+    } else {
+      const sourceHandle = await this.resolveDirectory(oldPath);
+      if (!sourceHandle) throw new Error(`Pasta de origem não encontrada: ${oldPath}`);
+      await this.resolveDirectory(newPath, true);
+      await this.copyDirectoryRecursive(sourceHandle, newPath);
+      await this.deleteNode(oldPath, true);
+    }
+  }
+
+  private async copyDirectoryRecursive(sourceHandle: FileSystemDirectoryHandle, targetPath: string): Promise<void> {
+    for await (const entry of (sourceHandle as any).values()) {
+      if (entry.kind === 'file') {
+        const file = await entry.getFile();
+        const content = await file.text();
+        await this.saveDocument(`${targetPath}/${entry.name}`, content);
+      } else if (entry.kind === 'directory') {
+        const subDirHandle = await (sourceHandle as any).getDirectoryHandle(entry.name);
+        await this.resolveDirectory(`${targetPath}/${entry.name}`, true);
+        await this.copyDirectoryRecursive(subDirHandle, `${targetPath}/${entry.name}`);
+      }
+    }
+  }
+
+  // --- Helper methods to navigate FileSystemDirectoryHandle ---
+
+  private async resolveDirectory(path: string, create: boolean = false): Promise<FileSystemDirectoryHandle | null> {
+    if (!this.rootHandle) return null;
+    const parts = path.split('/').filter(Boolean);
+
+    let current = this.rootHandle;
+    for (const part of parts) {
+      try {
+        current = await current.getDirectoryHandle(part, { create });
+      } catch {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  private async resolveFile(path: string, create: boolean = false): Promise<FileSystemFileHandle | null> {
+    if (!this.rootHandle) return null;
+    const parts = path.split('/').filter(Boolean);
+    const fileName = parts.pop();
+    if (!fileName) return null;
+
+    const dirPath = parts.join('/');
+    const dirHandle = dirPath ? await this.resolveDirectory(dirPath, create) : this.rootHandle;
+    if (!dirHandle) return null;
+
+    try {
+      return await dirHandle.getFileHandle(fileName, { create });
+    } catch {
+      return null;
+    }
+  }
+
+  private async verifyPermission(fileHandle: FileSystemHandle, readWrite: boolean): Promise<boolean> {
+    const options: any = {};
+    if (readWrite) options.mode = 'readwrite';
+
+    if ((await (fileHandle as any).queryPermission(options)) === 'granted') {
+      return true;
+    }
+    if ((await (fileHandle as any).requestPermission(options)) === 'granted') {
+      return true;
+    }
+    return false;
+  }
+
+  // --- IndexedDB persistence for handle ---
+
+  private async getSavedHandleFromIDB(): Promise<FileSystemDirectoryHandle | null> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open(DB_NAME);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(KEYVAL_STORE)) {
+          resolve(null);
+          return;
+        }
+        const tx = db.transaction(KEYVAL_STORE, 'readonly');
+        const getReq = tx.objectStore(KEYVAL_STORE).get(HANDLE_KEY);
+        getReq.onsuccess = () => resolve(getReq.result || null);
+        getReq.onerror = () => resolve(null);
+      };
+      request.onerror = () => resolve(null);
+    });
+  }
+
+  private async saveHandleToIDB(handle: FileSystemDirectoryHandle): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(KEYVAL_STORE)) {
+          resolve();
+          return;
+        }
+        const tx = db.transaction(KEYVAL_STORE, 'readwrite');
+        const putReq = tx.objectStore(KEYVAL_STORE).put(handle, HANDLE_KEY);
+        putReq.onsuccess = () => resolve();
+        putReq.onerror = () => reject(putReq.error);
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  private async removeSavedHandleFromIDB(): Promise<void> {
+    return new Promise((resolve) => {
+      const request = indexedDB.open(DB_NAME);
+      request.onsuccess = () => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains(KEYVAL_STORE)) {
+          resolve();
+          return;
+        }
+        const tx = db.transaction(KEYVAL_STORE, 'readwrite');
+        tx.objectStore(KEYVAL_STORE).delete(HANDLE_KEY);
+        tx.oncomplete = () => resolve();
+      };
+      request.onerror = () => resolve();
+    });
+  }
+}

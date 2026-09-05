@@ -1,0 +1,1126 @@
+import { create } from 'zustand';
+import { IVaultStorageProvider } from '../storage/VaultStorageAdapter';
+import { FSAStorageProvider } from '../storage/FSAStorageProvider';
+import { IDBStorageProvider } from '../storage/IDBStorageProvider';
+import { VaultNode } from '../interfaces/vault';
+import { normalizeNoteTitle } from '../utils/wikilinkUtils';
+import Fuse from 'fuse.js';
+import { markdownToHtml, htmlToMarkdown } from '../utils/markdownConverter';
+import { parseFrontmatter, stringifyFrontmatter } from '../utils/frontmatterUtils';
+import { 
+  VaultTab, 
+  VaultLayoutNode, 
+  VaultPaneLeaf, 
+  SplitDirection, 
+  DraggedTabInfo, 
+  DropPreviewState,
+  CachedDocument
+} from '../interfaces/layout';
+import { 
+  createPaneLeaf, 
+  findPaneLeaf, 
+  getAllPanes, 
+  insertTabInPane, 
+  removeTabFromPane, 
+  splitPaneInTree, 
+  resizeSplitInTree, 
+  saveLayoutToStorage, 
+  loadLayoutFromStorage,
+  updatePaneInTree
+} from '../utils/layoutUtils';
+
+export type { VaultTab };
+export type { VaultLayoutNode, VaultPaneLeaf, SplitDirection, DraggedTabInfo, DropPreviewState };
+
+export interface FlatNoteItem {
+  path: string;
+  name: string;
+  folder: string;
+  fileType?: 'note' | 'audio' | 'image' | 'file';
+  extension?: string;
+  size?: number;
+}
+
+interface VaultState {
+  provider: IVaultStorageProvider | null;
+  storageType: 'fsa' | 'idb';
+  vaultId: string;
+  vaultName: string;
+  isConnected: boolean;
+  isLoading: boolean;
+  isSaving: boolean;
+  lastSavedAt: number | null;
+
+  // File tree
+  nodes: VaultNode[];
+  expandedFolders: Set<string>;
+  customOrderVersion: number;
+
+  // Multi-window docking layout
+  layout: VaultLayoutNode;
+  activePaneId: string;
+  documentCache: Record<string, CachedDocument>;
+  draggedTab: DraggedTabInfo | null;
+  dropPreview: DropPreviewState | null;
+
+  // Legacy tab & active doc compatibility
+  tabs: VaultTab[];
+  activePath: string | null;
+  activeContent: string;
+  isEditing: boolean;
+
+  // UI state
+  sidebarOpen: boolean;
+  sidebarWidth: number;
+  searchQuery: string;
+  commandPaletteOpen: boolean;
+  backlinksPanelOpen: boolean;
+  detailsSidebarTab: 'properties' | 'backlinks';
+  settingsOpen: boolean;
+  templateModalOpen: boolean;
+
+  // Actions
+  initializeStorage: () => Promise<void>;
+  connectFSA: (forcePicker?: boolean) => Promise<boolean>;
+  connectIDB: (vaultId?: string, vaultName?: string) => Promise<void>;
+  disconnect: () => Promise<void>;
+  refreshNodes: () => Promise<void>;
+  toggleFolder: (path: string) => void;
+
+  setVaultName: (name: string) => Promise<void>;
+  setSidebarWidth: (width: number) => void;
+  setIsEditing: (isEditing: boolean) => void;
+  toggleIsEditing: () => void;
+
+  // Multi-window actions
+  setActivePane: (paneId: string) => void;
+  splitPane: (targetPaneId: string, tab: VaultTab, direction: SplitDirection, position: 'before' | 'after', sourcePaneId?: string) => void;
+  closeTabInPane: (paneId: string, path: string) => void;
+  setActiveTabInPane: (paneId: string, path: string) => void;
+  moveTabToPane: (sourcePaneId: string, targetPaneId: string, tabPath: string, insertIndex?: number) => void;
+  resizeSplit: (splitId: string, newSizes: number[]) => void;
+  setDraggedTab: (draggedTab: DraggedTabInfo | null) => void;
+  setDropPreview: (dropPreview: DropPreviewState | null) => void;
+
+  // Documents & Tabs
+  openDocument: (path: string, targetPaneId?: string) => Promise<void>;
+  openMediaTab: (path: string, type: 'audio' | 'image', title?: string, targetPaneId?: string) => void;
+  openOrCreateDocumentByTitle: (title: string, targetPaneId?: string) => Promise<void>;
+  openCanvasTab: (canvasId: string, title?: string, targetPaneId?: string) => void;
+  closeTab: (path: string) => void;
+  setActiveTab: (path: string) => void;
+  
+  // Content and Saving
+  getDocumentContent: (path: string) => string;
+  updateDocumentContent: (path: string, content: string) => void;
+  updateDocumentFrontmatter: (path: string, frontmatter: Record<string, unknown>) => void;
+  loadDocumentContent: (path: string) => Promise<string>;
+  saveDocumentContent: (path: string) => Promise<void>;
+  updateContent: (content: string) => void;
+  saveCurrentDocument: () => Promise<void>;
+
+  createFile: (folderPath?: string, name?: string) => Promise<string>;
+  saveMediaFile: (file: File, folderPath?: string) => Promise<string>;
+  getFileUrl: (filePath: string) => Promise<string>;
+  createFolder: (parentPath?: string, name?: string) => Promise<void>;
+  renameNode: (oldPath: string, newPath: string, isFolder?: boolean) => Promise<void>;
+  moveNode: (sourcePath: string, targetFolderPath: string) => Promise<void>;
+  reorderNodes: (parentPath: string, orderedPaths: string[]) => void;
+  deleteNode: (path: string, isFolder: boolean) => Promise<void>;
+
+  toggleSidebar: () => void;
+  setSearchQuery: (query: string) => void;
+  setCommandPaletteOpen: (open: boolean) => void;
+  setBacklinksPanelOpen: (open: boolean) => void;
+  setDetailsSidebarTab: (tab: 'properties' | 'backlinks') => void;
+  setSettingsOpen: (open: boolean) => void;
+  setTemplateModalOpen: (open: boolean) => void;
+
+  getAllFiles: () => FlatNoteItem[];
+  searchNotesFuzzy: (query: string) => FlatNoteItem[];
+}
+
+// Debounce timers per document
+const docSaveTimeouts = new Map<string, NodeJS.Timeout>();
+
+// Persistent custom order helpers
+export function getCustomOrder(): Record<string, string[]> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem('vault_custom_order');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function setCustomOrder(order: Record<string, string[]>) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('vault_custom_order', JSON.stringify(order));
+  } catch {}
+}
+
+function sortNodes(nodes: VaultNode[], parentPath: string = ''): VaultNode[] {
+  const orderMap = getCustomOrder();
+  const order = orderMap[parentPath] || [];
+
+  const getIdx = (path: string) => {
+    let idx = order.indexOf(path);
+    if (idx !== -1) return idx;
+    idx = order.indexOf(path.replace(/\.(md|txt)$/, ''));
+    if (idx !== -1) return idx;
+    return order.indexOf(`${path}.md`);
+  };
+
+  const sorted = [...nodes].sort((a, b) => {
+    const idxA = getIdx(a.path);
+    const idxB = getIdx(b.path);
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return sorted.map(node => {
+    if (node.type === 'folder' && node.children) {
+      return {
+        ...node,
+        children: sortNodes(node.children, node.path)
+      };
+    }
+    return node;
+  });
+}
+
+// Helper to flatten tree into flat file items
+function flattenTree(nodes: VaultNode[], folder: string = ''): FlatNoteItem[] {
+  const result: FlatNoteItem[] = [];
+  for (const node of nodes) {
+    if (node.type === 'file') {
+      const ext = node.extension || node.name.split('.').pop()?.toLowerCase() || '';
+      const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus'].includes(ext);
+      const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+      const fileType = node.fileType || (isAudio ? 'audio' : isImage ? 'image' : 'note');
+
+      result.push({
+        path: node.path,
+        name: node.name,
+        folder,
+        fileType,
+        extension: ext,
+        size: node.size
+      });
+    } else if (node.type === 'folder' && node.children) {
+      const subFolder = folder ? `${folder}/${node.name}` : node.name;
+      result.push(...flattenTree(node.children, subFolder));
+    }
+  }
+  return result;
+}
+
+const initialDefaultLeaf = createPaneLeaf([], null);
+
+export const useVaultStore = create<VaultState>((set, get) => ({
+  vaultId: 'default-vault',
+  provider: null,
+  storageType: 'fsa',
+  vaultName: 'Vault',
+  isConnected: false,
+  isLoading: true,
+  isSaving: false,
+  lastSavedAt: null,
+
+  nodes: [],
+  expandedFolders: new Set<string>(),
+  customOrderVersion: 0,
+
+  // Docking layout tree
+  layout: initialDefaultLeaf,
+  activePaneId: initialDefaultLeaf.id,
+  documentCache: {},
+  draggedTab: null,
+  dropPreview: null,
+
+  // Legacy compatibility
+  tabs: [],
+  activePath: null,
+  activeContent: '',
+  isEditing: false,
+
+  sidebarOpen: true,
+  sidebarWidth: typeof window !== 'undefined' 
+    ? Number(localStorage.getItem('vault_sidebar_width')) || 260 
+    : 260,
+  searchQuery: '',
+  commandPaletteOpen: false,
+  backlinksPanelOpen: false,
+  detailsSidebarTab: 'properties',
+  settingsOpen: false,
+  templateModalOpen: false,
+
+  setVaultName: async (name: string) => {
+    const trimmed = name.trim() || 'Meu Vault';
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vault_custom_name', trimmed);
+    }
+    set({ vaultName: trimmed });
+  },
+
+  setSidebarWidth: (width: number) => {
+    const clamped = Math.min(Math.max(width, 180), 550);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vault_sidebar_width', String(clamped));
+    }
+    set({ sidebarWidth: clamped });
+  },
+
+  setIsEditing: (isEditing: boolean) => set({ isEditing }),
+  toggleIsEditing: () => set(state => ({ isEditing: !state.isEditing })),
+
+  initializeStorage: async () => {
+    set({ isLoading: true });
+
+    const savedVaultName = typeof window !== 'undefined' ? localStorage.getItem('vault_custom_name') : null;
+    const savedActiveId = (typeof window !== 'undefined' ? localStorage.getItem('vault_active_id') : null) || 'default-vault';
+    const storedLayout = loadLayoutFromStorage();
+    let effectiveLayout = storedLayout;
+    let initialActivePaneId = '';
+
+    if (effectiveLayout) {
+      const panes = getAllPanes(effectiveLayout);
+      if (panes.length > 0) {
+        initialActivePaneId = panes[0].id;
+      } else {
+        effectiveLayout = createPaneLeaf([], null);
+        initialActivePaneId = effectiveLayout.id;
+      }
+    } else {
+      effectiveLayout = createPaneLeaf([], null);
+      initialActivePaneId = effectiveLayout.id;
+    }
+
+    // Try restoring FSA first (previously authorized local folder)
+    const fsa = new FSAStorageProvider();
+    const restored = await fsa.init();
+
+    if (restored) {
+      const nodes = await fsa.listNodes();
+      set({
+        provider: fsa,
+        storageType: 'fsa',
+        vaultId: 'fsa-main',
+        vaultName: savedVaultName || fsa.vaultName,
+        isConnected: true,
+        isLoading: false,
+        nodes: sortNodes(nodes),
+        layout: effectiveLayout,
+        activePaneId: initialActivePaneId,
+      });
+
+      // Se havia documento ativo na folha inicial, carrega seu conteúdo
+      const firstPane = findPaneLeaf(effectiveLayout, initialActivePaneId);
+      if (firstPane?.activePath) {
+        if (firstPane.activePath.startsWith('canvas:')) {
+          const tab = firstPane.tabs.find(t => t.path === firstPane.activePath);
+          get().openCanvasTab(firstPane.activePath.replace('canvas:', ''), tab?.title, initialActivePaneId);
+        } else {
+          get().openDocument(firstPane.activePath, initialActivePaneId);
+        }
+      }
+      return;
+    }
+
+    // Default fallback to IDB
+    const idb = new IDBStorageProvider(savedActiveId, savedVaultName || 'Meu Vault Local');
+    await idb.init();
+    const nodes = await idb.listNodes();
+
+    set({
+      provider: idb,
+      storageType: 'idb',
+      vaultId: savedActiveId,
+      vaultName: savedVaultName || idb.vaultName,
+      isConnected: true,
+      isLoading: false,
+      nodes: sortNodes(nodes),
+      layout: effectiveLayout,
+      activePaneId: initialActivePaneId,
+    });
+
+    const firstPane = findPaneLeaf(effectiveLayout, initialActivePaneId);
+    if (firstPane?.activePath) {
+      if (firstPane.activePath.startsWith('canvas:')) {
+        const tab = firstPane.tabs.find(t => t.path === firstPane.activePath);
+        get().openCanvasTab(firstPane.activePath.replace('canvas:', ''), tab?.title, initialActivePaneId);
+      } else {
+        get().openDocument(firstPane.activePath, initialActivePaneId);
+      }
+    }
+  },
+
+  connectFSA: async (forcePicker = true) => {
+    try {
+      const fsa = new FSAStorageProvider();
+      let connected = false;
+
+      // Se não for forçado a abrir o picker, tenta inicializar com o handle já salvo no IDB
+      if (!forcePicker) {
+        connected = await fsa.init();
+        if (!connected) {
+          return false;
+        }
+      } else {
+        // Se forcePicker for true, abre o seletor nativo do Windows
+        connected = await fsa.pickDirectory();
+      }
+
+      if (!connected) return false;
+
+      const folderVaultName = fsa.vaultName || 'Pasta Local (HD)';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vault_active_id', 'fsa-main');
+        localStorage.setItem('vault_custom_name', folderVaultName);
+      }
+      set({ isLoading: true });
+      const nodes = await fsa.listNodes();
+      const newLayout = createPaneLeaf([], null);
+
+      set({
+        provider: fsa,
+        storageType: 'fsa',
+        vaultId: 'fsa-main',
+        vaultName: folderVaultName,
+        isConnected: true,
+        isLoading: false,
+        nodes: sortNodes(nodes),
+        layout: newLayout,
+        activePaneId: newLayout.id,
+        documentCache: {},
+        tabs: [],
+        activePath: null,
+        activeContent: '',
+        isEditing: false
+      });
+      saveLayoutToStorage(newLayout);
+      return true;
+    } catch (err) {
+      console.error('Error connecting to local folder:', err);
+      set({ isLoading: false });
+      return false;
+    }
+  },
+
+  connectIDB: async (vaultId = 'default-vault', defaultVaultName = 'Meu Vault') => {
+    set({ isLoading: true });
+    const savedVaultName = typeof window !== 'undefined' ? localStorage.getItem('vault_custom_name') : null;
+    const finalName = defaultVaultName || savedVaultName || 'Meu Vault';
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vault_active_id', vaultId);
+      localStorage.setItem('vault_custom_name', finalName);
+    }
+    const idb = new IDBStorageProvider(vaultId, finalName);
+    await idb.init();
+    const nodes = await idb.listNodes();
+    const newLayout = createPaneLeaf([], null);
+
+    set({
+      provider: idb,
+      storageType: 'idb',
+      vaultId: vaultId,
+      vaultName: finalName,
+      isConnected: true,
+      isLoading: false,
+      nodes: sortNodes(nodes),
+      layout: newLayout,
+      activePaneId: newLayout.id,
+      documentCache: {},
+      tabs: [],
+      activePath: null,
+      activeContent: '',
+      isEditing: false
+    });
+    saveLayoutToStorage(newLayout);
+  },
+
+  disconnect: async () => {
+    const { provider } = get();
+    if (provider?.type === 'fsa') {
+      await (provider as FSAStorageProvider).disconnect();
+    }
+    await get().connectIDB();
+  },
+
+  refreshNodes: async () => {
+    const { provider } = get();
+    if (!provider) return;
+    try {
+      const rawNodes = await provider.listNodes();
+      set({ nodes: sortNodes(rawNodes) });
+    } catch (err) {
+      console.error('Error refreshing vault nodes:', err);
+    }
+  },
+
+  toggleFolder: (path: string) => {
+    set(state => {
+      const next = new Set(state.expandedFolders);
+      if (next.has(path)) {
+        next.delete(path);
+      } else {
+        next.add(path);
+      }
+      return { expandedFolders: next };
+    });
+  },
+
+  setActivePane: (paneId: string) => {
+    const { layout } = get();
+    const pane = findPaneLeaf(layout, paneId);
+    if (!pane) return;
+
+    set({
+      activePaneId: paneId,
+      activePath: pane.activePath,
+      tabs: pane.tabs,
+      activeContent: pane.activePath ? (get().documentCache[pane.activePath]?.content || '') : '',
+    });
+  },
+
+  setDraggedTab: (draggedTab: DraggedTabInfo | null) => set({ draggedTab }),
+  setDropPreview: (next: DropPreviewState | null) => {
+    const current = get().dropPreview;
+    if (!next && !current) return;
+    if (next && current && next.zone === current.zone && next.targetPaneId === current.targetPaneId) {
+      return; // Mesma zona e mesmo painel: não dispara re-render!
+    }
+    set({ dropPreview: next });
+  },
+
+  splitPane: (targetPaneId: string, tab: VaultTab, direction: SplitDirection, position: 'before' | 'after', sourcePaneId?: string) => {
+    const { layout } = get();
+    const { newLayout, newPaneId } = splitPaneInTree(layout, targetPaneId, tab, direction, position, sourcePaneId);
+
+    saveLayoutToStorage(newLayout);
+    const newLeaf = findPaneLeaf(newLayout, newPaneId);
+
+    set({
+      layout: newLayout,
+      activePaneId: newPaneId,
+      draggedTab: null,
+      dropPreview: null,
+      activePath: tab.path,
+      tabs: newLeaf ? newLeaf.tabs : [tab],
+    });
+
+    if (tab.path.startsWith('canvas:') || tab.type === 'audio' || tab.type === 'image') {
+      // Nenhum markdown pra carregar
+    } else {
+      get().loadDocumentContent(tab.path);
+    }
+  },
+
+  closeTabInPane: (paneId: string, path: string) => {
+    const { layout, activePaneId } = get();
+    const { newLayout } = removeTabFromPane(layout, paneId, path);
+    saveLayoutToStorage(newLayout);
+
+    // Se o painel ativo foi fechado, acha outro painel para ser ativo
+    let nextActivePaneId = activePaneId;
+    let nextPane = findPaneLeaf(newLayout, activePaneId);
+
+    if (!nextPane) {
+      const allPanes = getAllPanes(newLayout);
+      if (allPanes.length > 0) {
+        nextActivePaneId = allPanes[0].id;
+        nextPane = allPanes[0];
+      }
+    }
+
+    set({
+      layout: newLayout,
+      activePaneId: nextActivePaneId,
+      activePath: nextPane?.activePath || null,
+      tabs: nextPane?.tabs || [],
+      activeContent: nextPane?.activePath ? (get().documentCache[nextPane.activePath]?.content || '') : '',
+    });
+  },
+
+  setActiveTabInPane: (paneId: string, path: string) => {
+    const { layout } = get();
+    const updated = updatePaneInTree(layout, paneId, (pane) => ({
+      ...pane,
+      activePath: path
+    }));
+    saveLayoutToStorage(updated);
+
+    const pane = findPaneLeaf(updated, paneId);
+    set({
+      layout: updated,
+      activePaneId: paneId,
+      activePath: path,
+      tabs: pane?.tabs || [],
+    });
+
+    if (!path.startsWith('canvas:')) {
+      get().loadDocumentContent(path);
+    }
+  },
+
+  moveTabToPane: (sourcePaneId: string, targetPaneId: string, tabPath: string, insertIndex?: number) => {
+    const { layout } = get();
+    const sourcePane = findPaneLeaf(layout, sourcePaneId);
+    const tab = sourcePane?.tabs.find(t => t.path === tabPath);
+    if (!tab) return;
+
+    if (sourcePaneId === targetPaneId) {
+      // Reordena dentro da mesma barra de abas
+      const updated = updatePaneInTree(layout, sourcePaneId, (pane) => {
+        const nextTabs = pane.tabs.filter(t => t.path !== tabPath);
+        const idx = typeof insertIndex === 'number' ? insertIndex : nextTabs.length;
+        nextTabs.splice(idx, 0, tab);
+        return { ...pane, tabs: nextTabs, activePath: tabPath };
+      });
+      saveLayoutToStorage(updated);
+      set({ layout: updated, activePaneId: sourcePaneId, draggedTab: null, dropPreview: null });
+      return;
+    }
+
+    // Move entre painéis diferentes
+    const { newLayout: layoutWithoutTab } = removeTabFromPane(layout, sourcePaneId, tabPath);
+    const finalLayout = insertTabInPane(layoutWithoutTab, targetPaneId, tab, insertIndex);
+    saveLayoutToStorage(finalLayout);
+
+    const targetPane = findPaneLeaf(finalLayout, targetPaneId);
+    set({
+      layout: finalLayout,
+      activePaneId: targetPaneId,
+      draggedTab: null,
+      dropPreview: null,
+      activePath: tabPath,
+      tabs: targetPane?.tabs || [],
+    });
+  },
+
+  resizeSplit: (splitId: string, newSizes: number[]) => {
+    const { layout } = get();
+    const updated = resizeSplitInTree(layout, splitId, newSizes);
+    saveLayoutToStorage(updated);
+    set({ layout: updated });
+  },
+
+  openDocument: async (path: string, targetPaneId?: string) => {
+    if (!path) return;
+
+    if (path.startsWith('canvas:')) {
+      const canvasId = path.replace('canvas:', '');
+      const tab = findPaneLeaf(get().layout, targetPaneId || get().activePaneId)?.tabs.find(t => t.path === path);
+      get().openCanvasTab(canvasId, tab?.title, targetPaneId);
+      return;
+    }
+
+    const ext = path.split('.').pop()?.toLowerCase() || '';
+    const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus'].includes(ext);
+    const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+
+    if (isAudio) {
+      get().openMediaTab(path, 'audio', undefined, targetPaneId);
+      return;
+    }
+    if (isImage) {
+      get().openMediaTab(path, 'image', undefined, targetPaneId);
+      return;
+    }
+
+    const { layout, activePaneId } = get();
+    const targetId = targetPaneId || activePaneId;
+    const title = path.split('/').pop()?.replace(/\.(md|txt)$/, '') || 'Sem título';
+    const tab: VaultTab = { path, title, type: 'markdown' };
+
+    const updatedLayout = insertTabInPane(layout, targetId, tab);
+    saveLayoutToStorage(updatedLayout);
+
+    const targetPane = findPaneLeaf(updatedLayout, targetId);
+
+    set({
+      layout: updatedLayout,
+      activePaneId: targetId,
+      activePath: path,
+      tabs: targetPane?.tabs || [tab],
+      isEditing: true
+    });
+
+    await get().loadDocumentContent(path);
+  },
+
+  openMediaTab: (path: string, type: 'audio' | 'image', title?: string, targetPaneId?: string) => {
+    const { layout, activePaneId } = get();
+    const targetId = targetPaneId || activePaneId;
+    const cleanTitle = title || path.split('/').pop() || 'Mídia';
+    const tab: VaultTab = { path, title: cleanTitle, type };
+
+    const updatedLayout = insertTabInPane(layout, targetId, tab);
+    saveLayoutToStorage(updatedLayout);
+
+    const targetPane = findPaneLeaf(updatedLayout, targetId);
+
+    set({
+      layout: updatedLayout,
+      activePaneId: targetId,
+      activePath: path,
+      tabs: targetPane?.tabs || [tab],
+      activeContent: '',
+      isEditing: false,
+    });
+  },
+
+  openOrCreateDocumentByTitle: async (title: string, targetPaneId?: string) => {
+    const [docTitle, sectionHeader] = title.split('#');
+    const normalized = normalizeNoteTitle(docTitle);
+    const allFiles = get().getAllFiles();
+
+    // 1. Check if note already exists
+    const match = allFiles.find(f => normalizeNoteTitle(f.name) === normalized || normalizeNoteTitle(f.path) === normalized);
+    if (match) {
+      await get().openDocument(match.path, targetPaneId);
+      if (sectionHeader) {
+        setTimeout(() => {
+          const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+          for (const h of headings) {
+            if (h.textContent?.trim().toLowerCase() === sectionHeader.trim().toLowerCase()) {
+              h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              break;
+            }
+          }
+        }, 150);
+      }
+      return;
+    }
+
+    // 2. Doesn't exist, create it!
+    const cleanTitle = docTitle.trim();
+    const newPath = await get().createFile('', cleanTitle);
+    await get().openDocument(newPath, targetPaneId);
+  },
+
+  openCanvasTab: (canvasId: string, title?: string, targetPaneId?: string) => {
+    const { layout, activePaneId } = get();
+    const targetId = targetPaneId || activePaneId;
+    const path = `canvas:${canvasId}`;
+    const cleanTitle = title || 'Quadro de Conexões';
+    const tab: VaultTab = { path, title: cleanTitle, type: 'canvas', canvasId };
+
+    const updatedLayout = insertTabInPane(layout, targetId, tab);
+    saveLayoutToStorage(updatedLayout);
+
+    const targetPane = findPaneLeaf(updatedLayout, targetId);
+
+    set({
+      layout: updatedLayout,
+      activePaneId: targetId,
+      activePath: path,
+      tabs: targetPane?.tabs || [tab],
+      isEditing: false,
+    });
+  },
+
+  closeTab: (path: string) => {
+    const { activePaneId } = get();
+    get().closeTabInPane(activePaneId, path);
+  },
+
+  setActiveTab: (path: string) => {
+    const { activePaneId } = get();
+    get().setActiveTabInPane(activePaneId, path);
+  },
+
+  getDocumentContent: (path: string) => {
+    return get().documentCache[path]?.content || '';
+  },
+
+  loadDocumentContent: async (path: string) => {
+    if (!path || path.startsWith('canvas:')) return '';
+    const { provider, documentCache } = get();
+    if (documentCache[path]?.content !== undefined) {
+      set({ activeContent: documentCache[path].content });
+      return documentCache[path].content;
+    }
+
+    if (!provider) return '';
+
+    try {
+      const raw = await provider.readDocument(path);
+      const { data: frontmatter, content: bodyMarkdown } = parseFrontmatter(raw);
+      const htmlContent = markdownToHtml(bodyMarkdown);
+
+      set(state => ({
+        documentCache: {
+          ...state.documentCache,
+          [path]: { content: htmlContent, frontmatter, isDirty: false, lastSavedAt: Date.now() }
+        },
+        activeContent: htmlContent
+      }));
+
+      return htmlContent;
+    } catch (err) {
+      console.warn(`Documento não encontrado ou falha ao ler em ${path}:`, err);
+      return '';
+    }
+  },
+
+  updateDocumentContent: (path: string, content: string) => {
+    if (!path || path.startsWith('canvas:')) return;
+    set(state => {
+      const currentDoc = state.documentCache[path];
+      return {
+        documentCache: {
+          ...state.documentCache,
+          [path]: { ...currentDoc, content, isDirty: true }
+        },
+        activeContent: state.activePath === path ? content : state.activeContent,
+        isSaving: true,
+      };
+    });
+
+    if (docSaveTimeouts.has(path)) {
+      clearTimeout(docSaveTimeouts.get(path)!);
+    }
+
+    const timer = setTimeout(() => {
+      get().saveDocumentContent(path);
+    }, 450);
+    docSaveTimeouts.set(path, timer);
+  },
+
+  updateDocumentFrontmatter: (path: string, frontmatter: Record<string, unknown>) => {
+    if (!path || path.startsWith('canvas:')) return;
+    set(state => {
+      const currentDoc = state.documentCache[path] || { content: '' };
+      return {
+        documentCache: {
+          ...state.documentCache,
+          [path]: { ...currentDoc, frontmatter, isDirty: true }
+        },
+        isSaving: true,
+      };
+    });
+
+    if (docSaveTimeouts.has(path)) {
+      clearTimeout(docSaveTimeouts.get(path)!);
+    }
+
+    const timer = setTimeout(() => {
+      get().saveDocumentContent(path);
+    }, 450);
+    docSaveTimeouts.set(path, timer);
+  },
+
+  saveDocumentContent: async (path: string) => {
+    if (!path || path.startsWith('canvas:')) return;
+    const { provider, documentCache } = get();
+    if (!provider || !path) return;
+
+    const doc = documentCache[path];
+    if (!doc) return;
+
+    try {
+      let markdown = htmlToMarkdown(doc.content);
+      if (doc.frontmatter && Object.keys(doc.frontmatter).length > 0) {
+        markdown = stringifyFrontmatter(doc.frontmatter, markdown);
+      }
+      await provider.saveDocument(path, markdown);
+
+      set(state => ({
+        isSaving: false,
+        lastSavedAt: Date.now(),
+        documentCache: {
+          ...state.documentCache,
+          [path]: { ...doc, isDirty: false, lastSavedAt: Date.now() }
+        }
+      }));
+    } catch (err) {
+      console.error(`Falha ao salvar documento em ${path}:`, err);
+      set({ isSaving: false });
+    }
+  },
+
+  updateContent: (content: string) => {
+    const { activePath } = get();
+    if (activePath) {
+      get().updateDocumentContent(activePath, content);
+    }
+  },
+
+  saveCurrentDocument: async () => {
+    const { activePath } = get();
+    if (activePath) {
+      await get().saveDocumentContent(activePath);
+    }
+  },
+
+  createFile: async (folderPath: string = '', rawName?: string) => {
+    const { provider, getAllFiles } = get();
+    if (!provider) throw new Error('Storage não inicializado');
+
+    let finalName = rawName?.trim() || '';
+    if (!finalName) {
+      const allFiles = getAllFiles();
+      const prefix = folderPath ? `${folderPath}/` : '';
+      const existingPaths = new Set(allFiles.map(f => f.path.toLowerCase()));
+
+      const defaultBase = 'Nova nota';
+      const candidate = `${prefix}${defaultBase}.md`.toLowerCase();
+      if (!existingPaths.has(candidate)) {
+        finalName = defaultBase;
+      } else {
+        let counter = 1;
+        while (existingPaths.has(`${prefix}${defaultBase} ${counter}.md`.toLowerCase())) {
+          counter++;
+        }
+        finalName = `${defaultBase} ${counter}`;
+      }
+    }
+
+    const fileName = finalName.endsWith('.md') ? finalName : `${finalName}.md`;
+    const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+
+    await provider.createDocument(fullPath, `# ${finalName}\n\n`);
+    await get().refreshNodes();
+    await get().openDocument(fullPath);
+    return fullPath;
+  },
+
+  saveMediaFile: async (file: File, folderPath: string = '') => {
+    const { provider } = get();
+    if (!provider) throw new Error('Storage não inicializado');
+
+    const fileName = file.name;
+    const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
+
+    await provider.saveFile(fullPath, file);
+    await get().refreshNodes();
+    return fullPath;
+  },
+
+  getFileUrl: async (filePath: string) => {
+    const { provider } = get();
+    if (!provider) throw new Error('Storage não inicializado');
+    return await provider.getFileUrl(filePath);
+  },
+
+  createFolder: async (parentPath: string = '', folderName: string = 'Nova Pasta') => {
+    const { provider } = get();
+    if (!provider) throw new Error('Storage não inicializado');
+
+    const fullPath = parentPath ? `${parentPath}/${folderName}` : folderName;
+    await provider.createFolder(fullPath);
+
+    set(state => {
+      const next = new Set(state.expandedFolders);
+      next.add(fullPath);
+      return { expandedFolders: next };
+    });
+
+    await get().refreshNodes();
+  },
+
+  renameNode: async (oldPath: string, newPath: string, isFolder: boolean = false) => {
+    const { provider, layout, activePath, documentCache } = get();
+    if (!provider || oldPath === newPath) return;
+
+    await provider.renameNode(oldPath, newPath, isFolder);
+
+    // Atualiza árvore de layout
+    const allPanes = getAllPanes(layout);
+    let updatedLayout = layout;
+
+    for (const pane of allPanes) {
+      const hasOldTab = pane.tabs.some(t => t.path === oldPath || (isFolder && t.path.startsWith(`${oldPath}/`)));
+      if (hasOldTab) {
+        updatedLayout = updatePaneInTree(updatedLayout, pane.id, (p) => {
+          const nextTabs = p.tabs.map(t => {
+            if (t.path === oldPath) {
+              const newTitle = newPath.split('/').pop()?.replace(/\.(md|txt)$/, '') || 'Sem título';
+              return { ...t, path: newPath, title: newTitle };
+            }
+            if (isFolder && t.path.startsWith(`${oldPath}/`)) {
+              const updatedP = newPath + t.path.slice(oldPath.length);
+              return { ...t, path: updatedP };
+            }
+            return t;
+          });
+          let nextActive = p.activePath;
+          if (p.activePath === oldPath) {
+            nextActive = newPath;
+          } else if (isFolder && p.activePath?.startsWith(`${oldPath}/`)) {
+            nextActive = newPath + p.activePath.slice(oldPath.length);
+          }
+          return { ...p, tabs: nextTabs, activePath: nextActive };
+        });
+      }
+    }
+
+    saveLayoutToStorage(updatedLayout);
+
+    // Atualiza cache de documentos
+    const nextDocCache = { ...documentCache };
+    if (nextDocCache[oldPath]) {
+      nextDocCache[newPath] = nextDocCache[oldPath];
+      delete nextDocCache[oldPath];
+    }
+
+    let nextActivePath = activePath;
+    if (activePath === oldPath) {
+      nextActivePath = newPath;
+    } else if (isFolder && activePath?.startsWith(`${oldPath}/`)) {
+      nextActivePath = newPath + activePath.slice(oldPath.length);
+    }
+
+    // Atualiza orderMap persistente
+    const orderMap = getCustomOrder();
+    let orderChanged = false;
+    const newOrderMap: Record<string, string[]> = {};
+
+    for (const [folderKey, list] of Object.entries(orderMap)) {
+      let nextFolderKey = folderKey;
+      if (isFolder) {
+        if (folderKey === oldPath) {
+          nextFolderKey = newPath;
+          orderChanged = true;
+        } else if (folderKey.startsWith(`${oldPath}/`)) {
+          nextFolderKey = newPath + folderKey.slice(oldPath.length);
+          orderChanged = true;
+        }
+      }
+      const nextList = list.map(itemPath => {
+        if (itemPath === oldPath || itemPath === oldPath.replace(/\.(md|txt)$/, '')) {
+          orderChanged = true;
+          return newPath;
+        }
+        if (isFolder && itemPath.startsWith(`${oldPath}/`)) {
+          orderChanged = true;
+          return newPath + itemPath.slice(oldPath.length);
+        }
+        return itemPath;
+      });
+      newOrderMap[nextFolderKey] = nextList;
+    }
+
+    if (orderChanged) {
+      setCustomOrder(newOrderMap);
+    }
+
+    set(state => ({
+      layout: updatedLayout,
+      documentCache: nextDocCache,
+      activePath: nextActivePath,
+      customOrderVersion: (state.customOrderVersion || 0) + 1
+    }));
+
+    await get().refreshNodes();
+  },
+
+  moveNode: async (sourcePath: string, targetFolderPath: string) => {
+    const fileName = sourcePath.split('/').pop()!;
+    const newPath = targetFolderPath ? `${targetFolderPath}/${fileName}` : fileName;
+    if (newPath === sourcePath) return;
+
+    const findIsFolder = (list: VaultNode[], path: string): boolean => {
+      for (const node of list) {
+        if (node.path === path) return node.type === 'folder';
+        if (node.children) {
+          const res = findIsFolder(node.children, path);
+          if (res) return true;
+        }
+      }
+      return false;
+    };
+    const isFolder = findIsFolder(get().nodes, sourcePath);
+    await get().renameNode(sourcePath, newPath, isFolder);
+
+    if (targetFolderPath) {
+      set(state => {
+        const next = new Set(state.expandedFolders);
+        next.add(targetFolderPath);
+        return { expandedFolders: next };
+      });
+    }
+  },
+
+  reorderNodes: (parentPath: string, orderedPaths: string[]) => {
+    const orderMap = getCustomOrder();
+    orderMap[parentPath] = orderedPaths;
+    setCustomOrder(orderMap);
+    set(state => ({
+      nodes: sortNodes(state.nodes),
+      customOrderVersion: (state.customOrderVersion || 0) + 1
+    }));
+  },
+
+  deleteNode: async (path: string, isFolder: boolean) => {
+    const { provider, layout } = get();
+    if (!provider) return;
+
+    await provider.deleteNode(path, isFolder);
+
+    const allPanes = getAllPanes(layout);
+    for (const pane of allPanes) {
+      const match = pane.tabs.find(t => t.path === path || (isFolder && t.path.startsWith(`${path}/`)));
+      if (match) {
+        get().closeTabInPane(pane.id, match.path);
+      }
+    }
+
+    // Limpa do orderMap persistente
+    const orderMap = getCustomOrder();
+    let orderChanged = false;
+    const newOrderMap: Record<string, string[]> = {};
+
+    for (const [folderKey, list] of Object.entries(orderMap)) {
+      if (isFolder && (folderKey === path || folderKey.startsWith(`${path}/`))) {
+        orderChanged = true;
+        continue;
+      }
+      const nextList = list.filter(itemPath => {
+        if (itemPath === path || (isFolder && itemPath.startsWith(`${path}/`))) {
+          orderChanged = true;
+          return false;
+        }
+        return true;
+      });
+      newOrderMap[folderKey] = nextList;
+    }
+
+    if (orderChanged) {
+      setCustomOrder(newOrderMap);
+    }
+
+    await get().refreshNodes();
+  },
+
+  toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+  setSearchQuery: (searchQuery: string) => set({ searchQuery }),
+  setCommandPaletteOpen: (commandPaletteOpen: boolean) => set({ commandPaletteOpen }),
+  setBacklinksPanelOpen: (backlinksPanelOpen: boolean) => set({ backlinksPanelOpen }),
+  setDetailsSidebarTab: (detailsSidebarTab: 'properties' | 'backlinks') => set({ detailsSidebarTab }),
+  setSettingsOpen: (settingsOpen: boolean) => set({ settingsOpen }),
+  setTemplateModalOpen: (templateModalOpen: boolean) => set({ templateModalOpen }),
+
+  getAllFiles: () => {
+    return flattenTree(get().nodes);
+  },
+
+  searchNotesFuzzy: (query: string) => {
+    const allFiles = get().getAllFiles();
+    if (!query.trim()) return allFiles;
+
+    const fuse = new Fuse(allFiles, {
+      keys: ['name', 'path', 'folder'],
+      threshold: 0.4,
+      distance: 100
+    });
+
+    return fuse.search(query).map(r => r.item);
+  }
+}));

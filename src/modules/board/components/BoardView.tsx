@@ -1,0 +1,550 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { useBoardCanvas } from '../hooks/useBoardCanvas';
+import { BoardElement, HandlePosition, BoardElementType } from '../types';
+import { useIDB } from '@/utils/indexedDB';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
+import { BoardHeader } from './BoardHeader';
+import { BoardToolbar } from './BoardToolbar';
+import { BoardCanvasContainer } from './BoardCanvasContainer';
+import { BoardArrowLayer } from './BoardArrowLayer';
+import { BoardDropContextMenu } from './BoardDropContextMenu';
+import { BoardNoteElement } from './elements/BoardNoteElement';
+import { BoardTextElement } from './elements/BoardTextElement';
+import { BoardAudioElement } from './elements/BoardAudioElement';
+import { BoardImageElement } from './elements/BoardImageElement';
+import { BoardCanvasPreviewElement } from './elements/BoardCanvasPreviewElement';
+import { SelectAudioModal } from './modals/SelectAudioModal';
+import { SelectImageModal } from './modals/SelectImageModal';
+import { SelectCanvasModal } from './modals/SelectCanvasModal';
+import { BoardVaultSearchModal } from './modals/BoardVaultSearchModal';
+import ContextMenu from '@/components/ContextMenu';
+import { StickyNote, Type, Music, Image as ImageIcon, FolderKanban, Search } from 'lucide-react';
+
+interface BoardViewProps {
+  boardId: string;
+  isEmbeddedInVault?: boolean;
+  onCloseEmbedded?: () => void;
+}
+
+export const BoardView: React.FC<BoardViewProps> = ({
+  boardId,
+  isEmbeddedInVault,
+  onCloseEmbedded,
+}) => {
+  const { activeLayers, updateLayer } = useIDB();
+  const currentLayer = activeLayers.find(l => l.id === boardId);
+  const folderPath = currentLayer?.folderPath;
+
+  const {
+    boardData,
+    isLoading,
+    selectedElementId,
+    setSelectedElementId,
+    viewport,
+    setViewport,
+    updateBoardName,
+    updateElement,
+    deleteElement,
+    createNote,
+    createText,
+    createAudio,
+    createImage,
+    createCanvasPreview,
+    createConnectedElement,
+    connectionsHook,
+    audioModalOpen,
+    setAudioModalOpen,
+    imageModalOpen,
+    setImageModalOpen,
+    canvasModalOpen,
+    setCanvasModalOpen,
+  } = useBoardCanvas(boardId);
+
+  const { provider, getFileUrl } = useVaultStore();
+  const [vaultSearchModalOpen, setVaultSearchModalOpen] = useState(false);
+  const [draggingTool, setDraggingTool] = useState<BoardElementType | 'vault-search' | null>(null);
+  const dropPlacementPosRef = useRef<{ x: number; y: number } | null>(null);
+  const [canvasContextMenu, setCanvasContextMenu] = useState<{
+    x: number;
+    y: number;
+    worldPos: { x: number; y: number };
+  } | null>(null);
+
+  const [canvasTheme, setCanvasTheme] = useState<'dark' | 'light'>('dark');
+
+  useEffect(() => {
+    const saved = localStorage.getItem('board_canvas_theme');
+    if (saved === 'light' || saved === 'dark') {
+      setCanvasTheme(saved);
+    }
+  }, []);
+
+  const toggleCanvasTheme = () => {
+    setCanvasTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('board_canvas_theme', next);
+      }
+      return next;
+    });
+  };
+
+  // Shortcut Ctrl+K to open Vault Search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setVaultSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const handleDropTool = (toolType: BoardElementType | 'vault-search', worldPos: { x: number; y: number }) => {
+    switch (toolType) {
+      case 'note':
+        createNote({ x: worldPos.x - 110, y: worldPos.y - 90 });
+        break;
+      case 'text':
+        createText({ x: worldPos.x - 100, y: worldPos.y - 35 });
+        break;
+      case 'vault-search':
+        dropPlacementPosRef.current = { x: worldPos.x - 130, y: worldPos.y - 75 };
+        setVaultSearchModalOpen(true);
+        break;
+      case 'audio':
+        dropPlacementPosRef.current = { x: worldPos.x - 140, y: worldPos.y - 60 };
+        setAudioModalOpen(true);
+        break;
+      case 'image':
+        dropPlacementPosRef.current = { x: worldPos.x - 130, y: worldPos.y - 100 };
+        setImageModalOpen(true);
+        break;
+      case 'canvas-preview':
+        dropPlacementPosRef.current = { x: worldPos.x - 130, y: worldPos.y - 75 };
+        setCanvasModalOpen(true);
+        break;
+    }
+  };
+
+  const handleDropNote = async (note: { path: string; name: string }, worldPos: { x: number; y: number }) => {
+    let noteContent = '';
+    try {
+      if (provider) {
+        noteContent = await provider.readDocument(note.path);
+      }
+    } catch (err) {
+      console.warn('Could not read dropped note content from vault:', err);
+    }
+
+    createNote(
+      worldPos,
+      '#fef08a',
+      note.name,
+      noteContent || `# ${note.name}\n\nNota vinculada do Vault: ${note.path}`,
+      note.path
+    );
+  };
+
+  const handleDropVaultMedia = async (media: { path: string; name: string; fileType: 'audio' | 'image' }, worldPos: { x: number; y: number }) => {
+    try {
+      const url = await getFileUrl(media.path);
+      if (media.fileType === 'audio') {
+        createAudio({
+          name: media.name,
+          url,
+          volume: 1,
+          loop: false,
+          filePath: media.path,
+        }, worldPos);
+      } else if (media.fileType === 'image') {
+        createImage({
+          name: media.name,
+          src: url,
+          filePath: media.path,
+        }, worldPos);
+      }
+    } catch (err) {
+      console.error('Erro ao processar mídia do Vault no canvas:', err);
+    }
+  };
+
+  const centerElement = (element: BoardElement) => {
+    const containerW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    const containerH = typeof window !== 'undefined' ? window.innerHeight : 800;
+    const elCenterX = element.x + element.width / 2;
+    const elCenterY = element.y + element.height / 2;
+
+    setViewport(prev => ({
+      ...prev,
+      x: containerW / 2 - elCenterX * prev.k,
+      y: containerH / 2 - elCenterY * prev.k,
+    }));
+  };
+
+  if (isLoading) {
+    return (
+      <div className={isEmbeddedInVault ? "w-full h-full bg-neutral-950 flex flex-col items-center justify-center gap-3 text-white" : "w-screen h-screen bg-neutral-950 flex flex-col items-center justify-center gap-3 text-white"}>
+        <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+        <p className="text-xs text-neutral-400 font-mono">Carregando Canvas de Conexões...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative overflow-hidden font-sans transition-colors duration-200 ${
+      canvasTheme === 'light' ? "bg-[#F8F9FA] text-stone-900" : "bg-neutral-950 text-white"
+    } ${isEmbeddedInVault ? "w-full h-full" : "w-screen h-screen"}`}>
+      {/* Barra Superior */}
+      <BoardHeader
+        boardName={boardData.name}
+        onUpdateName={updateBoardName}
+        elementsCount={boardData.elements.length}
+        connectionsCount={boardData.connections.length}
+        canvasTheme={canvasTheme}
+        onToggleTheme={toggleCanvasTheme}
+        isEmbeddedInVault={isEmbeddedInVault}
+        onCloseEmbedded={onCloseEmbedded}
+        folderPath={folderPath}
+        onMoveToGeneral={() => currentLayer && updateLayer({ ...currentLayer, folderPath: null })}
+      />
+
+      {/* Viewport Interativo com Pan & Zoom */}
+      <BoardCanvasContainer
+        viewport={viewport}
+        setViewport={setViewport}
+        canvasTheme={canvasTheme}
+        onToggleTheme={toggleCanvasTheme}
+        onPointerMoveOnCanvas={connectionsHook.updateArrowDrag}
+        onPointerUpOnCanvas={connectionsHook.finishArrowDrag}
+        onDropNote={handleDropNote}
+        onDropVaultMedia={handleDropVaultMedia}
+        onDropTool={handleDropTool}
+        draggingTool={draggingTool}
+        onCanvasContextMenu={(e, worldPos, screenPos) => {
+          setCanvasContextMenu({ x: screenPos.x, y: screenPos.y, worldPos });
+        }}
+        onCanvasClick={() => {
+          setSelectedElementId(null);
+          connectionsHook.setSelectedConnectionId(null);
+          setCanvasContextMenu(null);
+        }}
+      >
+        {/* Camada SVG de Conexões e Setas */}
+        <BoardArrowLayer
+          elements={boardData.elements}
+          connections={boardData.connections}
+          activeDrag={connectionsHook.activeDrag}
+          selectedConnectionId={connectionsHook.selectedConnectionId}
+          onSelectConnection={connectionsHook.setSelectedConnectionId}
+          onDeleteConnection={connectionsHook.deleteConnection}
+        />
+
+        {/* Camada de Elementos do Board */}
+        {boardData.elements.map((element) => {
+          const isSelected = selectedElementId === element.id;
+          const snappedHandle =
+            connectionsHook.activeDrag?.snappedTarget?.elementId === element.id
+              ? connectionsHook.activeDrag.snappedTarget.handle
+              : null;
+
+          const commonProps = {
+            key: element.id,
+            element,
+            isSelected,
+            snappedHandle,
+            zoom: viewport.k,
+            canvasTheme,
+            onSelect: () => {
+              setSelectedElementId(element.id);
+              connectionsHook.setSelectedConnectionId(null);
+            },
+            onUpdate: (updates: Partial<BoardElement>) => updateElement(element.id, updates),
+            onDelete: () => deleteElement(element.id),
+            onStartArrow: (handle: HandlePosition, e: React.PointerEvent) =>
+              connectionsHook.startArrowDrag(element.id, handle, e),
+            onCenterElement: () => centerElement(element),
+          };
+
+          switch (element.type) {
+            case 'note':
+              return <BoardNoteElement {...commonProps} />;
+            case 'text':
+              return <BoardTextElement {...commonProps} />;
+            case 'audio':
+              return <BoardAudioElement {...commonProps} />;
+            case 'image':
+              return <BoardImageElement {...commonProps} />;
+            case 'canvas-preview':
+              return <BoardCanvasPreviewElement {...commonProps} />;
+            default:
+              return null;
+          }
+        })}
+      </BoardCanvasContainer>
+
+      {/* Dock Inferior de Criação */}
+      <BoardToolbar
+        onAddNote={() => createNote()}
+        onAddText={() => createText()}
+        onOpenVaultSearch={() => setVaultSearchModalOpen(true)}
+        onToolDragStart={setDraggingTool}
+        onToolDragEnd={() => setDraggingTool(null)}
+      />
+
+      {/* Menu de Contexto ao Soltar Seta no Vazio */}
+      {connectionsHook.pendingArrowContext && (
+        <BoardDropContextMenu
+          context={connectionsHook.pendingArrowContext}
+          onSelectOption={(type, payload) => createConnectedElement(type, payload)}
+          onOpenVaultSearchModal={() => setVaultSearchModalOpen(true)}
+          onClose={connectionsHook.closePendingArrowContext}
+        />
+      )}
+
+      {/* Modal Unificado de Busca do Vault */}
+      <BoardVaultSearchModal
+        isOpen={vaultSearchModalOpen}
+        currentBoardId={boardId}
+        onClose={() => {
+          setVaultSearchModalOpen(false);
+          dropPlacementPosRef.current = null;
+        }}
+        onSelectNote={async (note) => {
+          let noteContent = '';
+          try {
+            if (provider) {
+              noteContent = await provider.readDocument(note.path);
+            }
+          } catch (err) {
+            console.warn('Could not read dropped note content from vault:', err);
+          }
+
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('note', {
+              color: '#fef08a',
+              title: note.name,
+              content: noteContent || `# ${note.name}\n\nNota vinculada do Vault: ${note.path}`,
+              filePath: note.path,
+            });
+          } else {
+            createNote(
+              dropPlacementPosRef.current || undefined,
+              '#fef08a',
+              note.name,
+              noteContent || `# ${note.name}\n\nNota vinculada do Vault: ${note.path}`,
+              note.path
+            );
+            dropPlacementPosRef.current = null;
+          }
+        }}
+        onSelectAudio={(audioData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('audio', audioData);
+          } else {
+            createAudio(audioData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+        onSelectImage={(imageData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('image', imageData);
+          } else {
+            createImage(imageData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+        onSelectCanvas={(previewData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('canvas-preview', previewData);
+          } else {
+            createCanvasPreview(previewData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+      />
+
+      {/* Menu de Contexto do Canvas */}
+      {canvasContextMenu && (
+        <ContextMenu
+          x={canvasContextMenu.x}
+          y={canvasContextMenu.y}
+          onClose={() => setCanvasContextMenu(null)}
+          options={[
+            {
+              label: 'Adicionar Nota',
+              icon: <StickyNote size={18} className="text-amber-500" />,
+              onClick: () => {
+                createNote({
+                  x: canvasContextMenu.worldPos.x - 110,
+                  y: canvasContextMenu.worldPos.y - 90,
+                });
+                setCanvasContextMenu(null);
+              },
+              subMenu: [
+                {
+                  label: 'Nota Amarela',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#fef08a] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#fef08a');
+                    setCanvasContextMenu(null);
+                  },
+                },
+                {
+                  label: 'Nota Verde',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#a7f3d0] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#a7f3d0');
+                    setCanvasContextMenu(null);
+                  },
+                },
+                {
+                  label: 'Nota Azul',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#a5f3fc] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#a5f3fc');
+                    setCanvasContextMenu(null);
+                  },
+                },
+                {
+                  label: 'Nota Roxa',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#e9d5ff] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#e9d5ff');
+                    setCanvasContextMenu(null);
+                  },
+                },
+                {
+                  label: 'Nota Rosa',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#fecdd3] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#fecdd3');
+                    setCanvasContextMenu(null);
+                  },
+                },
+                {
+                  label: 'Nota Escura',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#1e293b] border border-black/20" />,
+                  onClick: () => {
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#1e293b');
+                    setCanvasContextMenu(null);
+                  },
+                },
+              ],
+            },
+            {
+              label: 'Adicionar Texto',
+              icon: <Type size={18} className="text-purple-400" />,
+              onClick: () => {
+                createText({
+                  x: canvasContextMenu.worldPos.x - 100,
+                  y: canvasContextMenu.worldPos.y - 35,
+                });
+                setCanvasContextMenu(null);
+              },
+            },
+            {
+              label: 'Buscar no Vault...',
+              icon: <Search size={18} className="text-emerald-400" />,
+              onClick: () => {
+                dropPlacementPosRef.current = {
+                  x: canvasContextMenu.worldPos.x - 130,
+                  y: canvasContextMenu.worldPos.y - 75,
+                };
+                setVaultSearchModalOpen(true);
+                setCanvasContextMenu(null);
+              },
+            },
+            {
+              label: 'Adicionar Áudio...',
+              icon: <Music size={18} className="text-blue-400" />,
+              onClick: () => {
+                dropPlacementPosRef.current = {
+                  x: canvasContextMenu.worldPos.x - 140,
+                  y: canvasContextMenu.worldPos.y - 60,
+                };
+                setAudioModalOpen(true);
+                setCanvasContextMenu(null);
+              },
+            },
+            {
+              label: 'Adicionar Imagem...',
+              icon: <ImageIcon size={18} className="text-rose-400" />,
+              onClick: () => {
+                dropPlacementPosRef.current = {
+                  x: canvasContextMenu.worldPos.x - 130,
+                  y: canvasContextMenu.worldPos.y - 100,
+                };
+                setImageModalOpen(true);
+                setCanvasContextMenu(null);
+              },
+            },
+            {
+              label: 'Adicionar Quadro de Conexões...',
+              icon: <FolderKanban size={18} className="text-amber-400" />,
+              onClick: () => {
+                dropPlacementPosRef.current = {
+                  x: canvasContextMenu.worldPos.x - 130,
+                  y: canvasContextMenu.worldPos.y - 75,
+                };
+                setCanvasModalOpen(true);
+                setCanvasContextMenu(null);
+              },
+            },
+          ]}
+        />
+      )}
+
+      {/* Modais de Seleção */}
+      <SelectAudioModal
+        isOpen={audioModalOpen}
+        onClose={() => {
+          setAudioModalOpen(false);
+          dropPlacementPosRef.current = null;
+        }}
+        onSelect={(audioData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('audio', audioData);
+          } else {
+            createAudio(audioData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+      />
+
+      <SelectImageModal
+        isOpen={imageModalOpen}
+        onClose={() => {
+          setImageModalOpen(false);
+          dropPlacementPosRef.current = null;
+        }}
+        onSelect={(imageData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('image', imageData);
+          } else {
+            createImage(imageData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+      />
+
+      <SelectCanvasModal
+        isOpen={canvasModalOpen}
+        currentBoardId={boardId}
+        onClose={() => {
+          setCanvasModalOpen(false);
+          dropPlacementPosRef.current = null;
+        }}
+        onSelect={(previewData) => {
+          if (connectionsHook.pendingArrowContext) {
+            createConnectedElement('canvas-preview', previewData);
+          } else {
+            createCanvasPreview(previewData, dropPlacementPosRef.current || undefined);
+            dropPlacementPosRef.current = null;
+          }
+        }}
+      />
+    </div>
+  );
+};
