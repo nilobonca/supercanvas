@@ -26,6 +26,18 @@ export interface AppUpdateState {
   openPrompt: () => void;
 }
 
+function isMissingReleaseError(message?: string | null): boolean {
+  if (!message) return false;
+  return (
+    message.includes('Unable to find latest version on GitHub') ||
+    message.includes('please ensure a production release exists') ||
+    message.includes('Cannot parse releases feed') ||
+    message.includes('404') ||
+    message.includes('406') ||
+    message.includes('No published versions on GitHub')
+  );
+}
+
 export const useAppUpdateStore = create<AppUpdateState>((set, get) => ({
   currentVersion: null,
   status: 'idle',
@@ -124,13 +136,25 @@ export const useAppUpdateStore = create<AppUpdateState>((set, get) => ({
           });
           break;
 
-        case 'error':
+        case 'error': {
+          const errMsg = payload.message || '';
+          if (isMissingReleaseError(errMsg)) {
+            set({
+              status: 'not-available',
+              isChecking: false,
+              errorMessage: null,
+              lastCheckedAt: Date.now()
+            });
+            break;
+          }
+
           set({
             status: 'error',
             isChecking: false,
-            errorMessage: payload.message || 'Não foi possível verificar ou baixar a atualização.'
+            errorMessage: errMsg || 'Não foi possível verificar ou baixar a atualização.'
           });
           break;
+        }
       }
     });
 
@@ -164,11 +188,21 @@ export const useAppUpdateStore = create<AppUpdateState>((set, get) => ({
       await window.electronAPI.checkForUpdates();
     } catch (err: any) {
       console.error('[AppUpdateStore] checkForUpdates error:', err);
-      set({
-        status: 'error',
-        isChecking: false,
-        errorMessage: err?.message || 'Falha ao solicitar verificação de atualizações.'
-      });
+      const errMsg = err?.message || '';
+      if (isMissingReleaseError(errMsg)) {
+        set({
+          status: 'not-available',
+          isChecking: false,
+          errorMessage: null,
+          lastCheckedAt: Date.now()
+        });
+      } else {
+        set({
+          status: 'error',
+          isChecking: false,
+          errorMessage: errMsg || 'Falha ao solicitar verificação de atualizações.'
+        });
+      }
     }
   },
 

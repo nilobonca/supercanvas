@@ -236,6 +236,21 @@ function sendUpdateStatus(payload) {
 
 autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.allowPrerelease = true;
+autoUpdater.allowDowngrade = false;
+
+// Helper to check if an update error is due to absence of releases on GitHub
+function isReleaseNotFoundError(err) {
+  const errMsg = err ? (err.message || String(err)) : '';
+  return (
+    errMsg.includes('Unable to find latest version on GitHub') ||
+    errMsg.includes('please ensure a production release exists') ||
+    errMsg.includes('Cannot parse releases feed') ||
+    errMsg.includes('HttpError: 404') ||
+    errMsg.includes('HttpError: 406') ||
+    errMsg.includes('No published versions on GitHub')
+  );
+}
 
 autoUpdater.on('checking-for-update', () => {
   console.log('[RPGSA Updater] Checking for update...');
@@ -272,6 +287,11 @@ autoUpdater.on('update-downloaded', (info) => {
 
 autoUpdater.on('error', (err) => {
   console.error('[RPGSA Updater] Update error:', err);
+  if (isReleaseNotFoundError(err)) {
+    console.log('[RPGSA Updater] No newer release feed found on GitHub. App is currently up to date.');
+    sendUpdateStatus({ status: 'not-available', version: app.getVersion() });
+    return;
+  }
   sendUpdateStatus({ status: 'error', message: err ? err.message : 'Falha na atualização' });
 });
 
@@ -281,6 +301,10 @@ ipcMain.handle('check-for-updates', async () => {
       return await autoUpdater.checkForUpdates();
     } catch (err) {
       console.error('[RPGSA Updater] Check failed:', err);
+      if (isReleaseNotFoundError(err)) {
+        sendUpdateStatus({ status: 'not-available', version: app.getVersion() });
+        return null;
+      }
       sendUpdateStatus({ status: 'error', message: err ? err.message : 'Falha na verificação de atualização' });
     }
   } else {
@@ -290,7 +314,7 @@ ipcMain.handle('check-for-updates', async () => {
     const checkGitHubLatest = () => {
       return new Promise((resolve) => {
         const req = https.get(
-          'https://api.github.com/repos/nilobonca/supercanvas/releases/latest',
+          'https://api.github.com/repos/nilobonca/supercanvas/releases?per_page=5',
           {
             headers: {
               'User-Agent': 'Concha-Electron-App',
@@ -305,12 +329,15 @@ ipcMain.handle('check-for-updates', async () => {
             res.on('end', () => {
               try {
                 if (res.statusCode === 200) {
-                  const release = JSON.parse(data);
-                  const latestVersion = (release.tag_name || '').replace(/^v/, '');
-                  resolve({ success: true, release, latestVersion });
-                } else {
-                  resolve({ success: false, statusCode: res.statusCode });
+                  const releases = JSON.parse(data);
+                  if (Array.isArray(releases) && releases.length > 0) {
+                    const release = releases.find((r) => !r.draft) || releases[0];
+                    const latestVersion = (release.tag_name || '').replace(/^v/, '');
+                    resolve({ success: true, release, latestVersion });
+                    return;
+                  }
                 }
+                resolve({ success: false, statusCode: res.statusCode });
               } catch {
                 resolve({ success: false });
               }
