@@ -51,7 +51,7 @@ const PinItem: React.FC<PinItemProps> = ({ pin, onContextMenu, onSelect }) => {
                         e.stopPropagation();
                         window.open(`/vault?doc=${encodeURIComponent(pin.linkedDocumentPath!)}`, '_blank');
                     }}
-                    className="absolute -bottom-1 -right-1 bg-violet-600 hover:bg-violet-500 text-white p-1 rounded-full shadow-lg border border-violet-300 cursor-pointer transition-transform hover:scale-110 z-10"
+                    className="absolute -bottom-1 -right-1 bg-[#1831D7] hover:bg-[#1831D7]/90 text-white p-1 rounded-full shadow-lg border border-[#7F95FF] cursor-pointer transition-transform hover:scale-110 z-10"
                     title={`Abrir nota vinculada: ${pin.linkedDocumentPath}`}
                 >
                     <BookOpen size={12} />

@@ -138,7 +138,7 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
       onClick={onClose}
     >
       <div 
-        className="w-full max-w-lg bg-white dark:bg-[#161620] border border-black/10 dark:border-white/10 rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-5 text-stone-900 dark:text-white animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-white dark:bg-[#17192A] border border-black/10 dark:border-[#7F95FF]/20 rounded-3xl shadow-2xl p-6 sm:p-7 flex flex-col gap-5 text-stone-900 dark:text-[#F4F0E6] animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input oculto para fallback universal de seleção de pasta no Windows */}
@@ -156,14 +156,14 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-              <SafeIcon size={20} className="text-purple-600 dark:text-purple-400" />
+            <div className="w-9 h-9 rounded-xl bg-[#1831D7]/20 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF] flex items-center justify-center">
+              <SafeIcon size={20} className="text-[#1831D7] dark:text-[#7F95FF]" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold tracking-tight">
                 {mode === 'select' ? 'Adicionar ou Criar Vault' : 'Novo Vault IndexedDB'}
               </h3>
-              <p className="text-xs text-stone-500 dark:text-neutral-400">
+              <p className="text-xs text-stone-500 dark:text-[#B4D3F1]/80">
                 {mode === 'select' ? 'Escolha o tipo de base de conhecimento' : 'Digite o nome do seu novo vault isolado'}
               </p>
             </div>
@@ -204,24 +204,24 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
             {/* Option 1: Pasta do Windows */}
             <div
               onClick={handleConnectLocalFolder}
-              className="p-5 rounded-2xl bg-stone-50/80 hover:bg-emerald-50/60 dark:bg-white/5 dark:hover:bg-emerald-950/20 border border-stone-200/80 hover:border-emerald-400 dark:border-white/10 dark:hover:border-emerald-500/50 cursor-pointer transition-all flex flex-col gap-3 group shadow-xs hover:shadow-md"
+              className="p-5 rounded-2xl bg-stone-50/80 hover:bg-[#52B1FF]/10 dark:bg-white/5 dark:hover:bg-[#52B1FF]/10 border border-stone-200/80 hover:border-[#52B1FF]/60 dark:border-white/10 dark:hover:border-[#52B1FF]/50 cursor-pointer transition-all flex flex-col gap-3 group shadow-xs hover:shadow-md"
             >
-              <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-[#52B1FF]/15 text-[#52B1FF] flex items-center justify-center group-hover:scale-110 transition-transform">
                 {isConnectingFSA ? (
-                  <RefreshCw size={22} className="animate-spin text-emerald-600 dark:text-emerald-400" />
+                  <RefreshCw size={22} className="animate-spin text-[#52B1FF]" />
                 ) : (
                   <HardDrive size={22} />
                 )}
               </div>
               <div>
-                <h4 className="text-sm font-bold group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <h4 className="text-sm font-bold group-hover:text-[#52B1FF] transition-colors">
                   Pasta do Windows (HD)
                 </h4>
-                <p className="text-xs text-stone-500 dark:text-neutral-400 leading-relaxed mt-1">
+                <p className="text-xs text-stone-500 dark:text-[#B4D3F1]/80 leading-relaxed mt-1">
                   Vincule uma pasta local do computador com sincronização direta de arquivos Markdown (.md).
                 </p>
               </div>
-              <span className="mt-auto text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span className="mt-auto text-[11px] font-semibold text-[#52B1FF] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                 {isConnectingFSA ? 'Processando pasta...' : 'Selecionar pasta →'}
               </span>
             </div>
@@ -229,20 +229,20 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
             {/* Option 2: IndexedDB Vault */}
             <div
               onClick={() => setMode('idb-form')}
-              className="p-5 rounded-2xl bg-stone-50/80 hover:bg-purple-50/60 dark:bg-white/5 dark:hover:bg-purple-950/20 border border-stone-200/80 hover:border-purple-400 dark:border-white/10 dark:hover:border-purple-500/50 cursor-pointer transition-all flex flex-col gap-3 group shadow-xs hover:shadow-md"
+              className="p-5 rounded-2xl bg-stone-50/80 hover:bg-[#1831D7]/10 dark:bg-white/5 dark:hover:bg-[#7F95FF]/10 border border-stone-200/80 hover:border-[#1831D7]/50 dark:border-white/10 dark:hover:border-[#7F95FF]/50 cursor-pointer transition-all flex flex-col gap-3 group shadow-xs hover:shadow-md"
             >
-              <div className="w-11 h-11 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-11 h-11 rounded-xl bg-[#1831D7]/20 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF] flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Database size={22} />
               </div>
               <div>
-                <h4 className="text-sm font-bold group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4 className="text-sm font-bold group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                   Vault no Navegador
                 </h4>
-                <p className="text-xs text-stone-500 dark:text-neutral-400 leading-relaxed mt-1">
+                <p className="text-xs text-stone-500 dark:text-[#B4D3F1]/80 leading-relaxed mt-1">
                   Crie uma base de dados interna no IndexedDB, com isolamento para campanhas e notas.
                 </p>
               </div>
-              <span className="mt-auto text-[11px] font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+              <span className="mt-auto text-[11px] font-semibold text-[#1831D7] dark:text-[#7F95FF] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                 Criar banco &rarr;
               </span>
             </div>
@@ -262,7 +262,7 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
                 value={vaultNameInput}
                 onChange={(e) => setVaultNameInput(e.target.value)}
                 autoFocus
-                className="w-full px-4 py-2.5 rounded-xl bg-stone-50 dark:bg-black/30 border border-black/10 dark:border-white/10 text-sm outline-none focus:border-purple-500"
+                className="w-full px-4 py-2.5 rounded-xl bg-stone-50 dark:bg-[#131524] border border-black/10 dark:border-[#7F95FF]/20 text-sm outline-none focus:border-[#7F95FF]"
               />
             </div>
 
@@ -277,7 +277,7 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
               <button
                 type="submit"
                 disabled={!vaultNameInput.trim()}
-                className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-xs font-semibold text-white transition-colors shadow-sm"
+                className="px-5 py-2 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 disabled:opacity-50 text-xs font-semibold text-[#F4F0E6] transition-colors shadow-sm"
               >
                 Criar e Ativar Vault
               </button>

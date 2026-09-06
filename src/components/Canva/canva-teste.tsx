@@ -48,7 +48,7 @@ const CanvasContainer = React.forwardRef<CanvasContainerHandle, CanvasContainerP
   React.useEffect(() => {
     setMounted(true);
   }, []);
-  const isEthereal = mounted && theme === 'ethereal';
+  const isEthereal = false;
 
   const [canvasTheme, setCanvasTheme] = useState<'dark' | 'light'>('dark');
   useEffect(() => {
@@ -616,7 +616,7 @@ const CanvasContainer = React.forwardRef<CanvasContainerHandle, CanvasContainerP
                     finalHeight = item.height * minimapRatio;
                   }
                 } else if (item.type === 'soundboard') {
-                  color = 'bg-purple-500'; // Soundboard Item
+                  color = 'bg-[#1831D7]'; // Soundboard Item
                   finalWidth = 64 * minimapRatio; // Assuming standard button size
                   finalHeight = 64 * minimapRatio;
                 } else if (item.type === 'pin') {
@@ -730,10 +730,10 @@ const CanvasContainer = React.forwardRef<CanvasContainerHandle, CanvasContainerP
               <div className="w-px h-3 bg-stone-200 dark:bg-neutral-700 mx-0.5"></div>
               <button
                 onClick={toggleCanvasTheme}
-                className="p-1 hover:bg-stone-100 dark:hover:bg-neutral-700 active:bg-stone-200 dark:active:bg-neutral-600 rounded transition text-stone-600 dark:text-neutral-300 hover:text-stone-900 dark:hover:text-white touch-manipulation flex-shrink-0 cursor-pointer"
+                className="p-1 hover:bg-stone-100 dark:hover:bg-neutral-700 active:bg-stone-200 dark:active:bg-neutral-600 rounded transition text-stone-600 dark:text-neutral-300 hover:text-stone-950 dark:hover:text-white touch-manipulation flex-shrink-0 cursor-pointer"
                 title={canvasTheme === 'light' ? "Mudar para fundo escuro" : "Mudar para fundo claro"}
               >
-                {canvasTheme === 'light' ? <Moon size={15} className="text-purple-600" /> : <Sun size={15} className="text-amber-500" />}
+                {canvasTheme === 'light' ? <Moon size={15} className="text-[#1831D7]" /> : <Sun size={15} className="text-amber-500" />}
               </button>
             </div>
           </div>

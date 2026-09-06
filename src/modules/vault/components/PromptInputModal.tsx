@@ -77,7 +77,7 @@ export const PromptInputModal: React.FC<PromptInputModalProps> = ({
       >
         {/* Header */}
         <div className="px-5 pt-4 pb-1 flex items-center justify-between">
-          <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/30 flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#1831D7]/10 border border-[#7F95FF]/30 flex items-center justify-center text-[#1831D7] dark:text-[#7F95FF] shrink-0">
             {icon || <Edit3 className="w-5 h-5" />}
           </div>
           <button
@@ -108,7 +108,7 @@ export const PromptInputModal: React.FC<PromptInputModalProps> = ({
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-white/15 bg-stone-50 dark:bg-black/30 text-stone-900 dark:text-neutral-100 text-sm outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500 transition-all font-medium placeholder:text-stone-400 dark:placeholder:text-neutral-500"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-white/15 bg-stone-50 dark:bg-black/30 text-stone-900 dark:text-neutral-100 text-sm outline-none focus:ring-2 focus:ring-[#7F95FF]/50 focus:border-[#1831D7] transition-all font-medium placeholder:text-stone-400 dark:placeholder:text-neutral-500"
               />
             </div>
           </div>
@@ -125,7 +125,7 @@ export const PromptInputModal: React.FC<PromptInputModalProps> = ({
             <button
               type="submit"
               disabled={!value.trim()}
-              className="px-3.5 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+              className="px-3.5 py-1.5 rounded-lg bg-[#1831D7] hover:bg-[#1831D7]/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Check className="w-3.5 h-3.5" />
               <span>{confirmText}</span>

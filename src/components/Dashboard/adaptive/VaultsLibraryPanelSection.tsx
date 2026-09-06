@@ -89,11 +89,11 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
           ============================================================ */}
       <div className="flex items-center justify-between gap-2">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-purple-600 dark:text-purple-400 font-bold">
+          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1831D7] dark:text-[#7F95FF] font-bold">
             Bases de Conhecimento
           </span>
-          <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-white flex items-center gap-2">
-            <SafeIcon size={18} className="text-purple-600 dark:text-purple-400" />
+          <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-[#F4F0E6] flex items-center gap-2">
+            <SafeIcon size={18} className="text-[#1831D7] dark:text-[#7F95FF]" />
             <span>Biblioteca de Vaults</span>
           </h3>
         </div>
@@ -101,7 +101,7 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
         {onCreateVault && (
           <button
             onClick={onCreateVault}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-[0.97]"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6] text-xs font-bold transition-all shadow-sm cursor-pointer active:scale-[0.97]"
           >
             <Plus size={13} className="stroke-[2.5]" />
             <span>Novo Vault</span>
@@ -119,7 +119,7 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar vault..."
-          className="w-full bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.08] dark:border-white/[0.08] rounded-xl pl-8 pr-8 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-purple-500 transition-colors"
+          className="w-full bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.08] dark:border-white/[0.08] rounded-xl pl-8 pr-8 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-[#7F95FF] transition-colors"
         />
         {searchQuery && (
           <button
@@ -152,8 +152,8 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
                 className={clsx(
                   "p-3.5 rounded-xl border transition-all duration-200 group flex flex-col gap-2.5 cursor-pointer select-none",
                   isSelected
-                    ? "bg-purple-500/[0.08] dark:bg-purple-950/25 border-purple-500/60 ring-1 ring-purple-500/30 shadow-xs"
-                    : "bg-white dark:bg-[#14141C] border-black/[0.06] dark:border-white/[0.08] hover:border-purple-500/40 hover:bg-black/[0.01] dark:hover:bg-white/[0.02]"
+                    ? "bg-[#1831D7]/10 dark:bg-[#7F95FF]/15 border-[#1831D7] dark:border-[#7F95FF] ring-1 ring-[#7F95FF]/30 shadow-xs"
+                    : "bg-white dark:bg-[#131524] border-black/[0.06] dark:border-white/[0.08] hover:border-[#7F95FF]/40 hover:bg-black/[0.01] dark:hover:bg-[#17192A]"
                 )}
                 title="Clique 1x para ver o grafo • Clique 2x para entrar"
               >
@@ -165,12 +165,12 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
                         "w-7 h-7 rounded-lg flex items-center justify-center",
                         isFSA 
                           ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
-                          : "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                          : "bg-[#1831D7]/15 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF]"
                       )}>
                         {isFSA ? <HardDrive size={14} /> : <Database size={14} />}
                       </div>
                       {isSelected && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#14141C] animate-pulse" />
+                        <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#131524] animate-pulse" />
                       )}
                     </div>
 
@@ -179,8 +179,8 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
                         <h4 className={clsx(
                           "font-bold text-xs truncate transition-colors",
                           isSelected 
-                            ? "text-purple-700 dark:text-purple-300" 
-                            : "text-stone-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400"
+                            ? "text-[#1831D7] dark:text-[#7F95FF]" 
+                            : "text-stone-900 dark:text-[#F4F0E6] group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF]"
                         )}>
                           {vault.name}
                         </h4>

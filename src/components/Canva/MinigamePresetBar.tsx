@@ -48,7 +48,7 @@ export const MinigamePresetBar: React.FC<MinigamePresetBarProps> = ({ activeGame
           <button
             type="button"
             onClick={() => setIsSaving(true)}
-            className="px-2.5 py-1 text-[11px] rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 border border-indigo-400/30 text-white font-medium flex items-center gap-1.5 shadow-[0_0_12px_rgba(99,102,241,0.3)] transition-all cursor-pointer"
+            className="px-2.5 py-1 text-[11px] rounded-lg bg-brand-gradient-h hover:brightness-110 border border-[#7F95FF]/30 text-white font-medium flex items-center gap-1.5 shadow-[0_0_12px_rgba(24,49,215,0.4)] transition-all cursor-pointer"
             title="Salvar configuração atual como um preset permanente"
           >
             <Save size={12} />

@@ -142,7 +142,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
     return [
       {
         label: isBoard ? 'Abrir no Vault' : 'Abrir Canvas',
-        icon: isBoard ? <FolderKanban size={16} className="text-purple-500" /> : <Music size={16} className="text-sky-500" />,
+        icon: isBoard ? <FolderKanban size={16} className="text-[#1831D7] dark:text-[#7F95FF]" /> : <Music size={16} className="text-[#52B1FF]" />,
         onClick: () => {
           if (isBoard) {
             openCanvasTab(c.id, c.name);
@@ -153,7 +153,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
       },
       {
         label: 'Mover para Pasta...',
-        icon: <FolderInput size={16} className="text-violet-500" />,
+        icon: <FolderInput size={16} className="text-[#7F95FF]" />,
         onClick: () => {},
         subMenu: [
           {
@@ -213,7 +213,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
           <div className="flex items-center gap-1">
             <button
               onClick={() => onCreateBoardCanvas(null)}
-              className="p-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 hover:text-purple-600 dark:text-neutral-300 dark:hover:text-purple-300 border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 hover:text-[#1831D7] dark:text-neutral-300 dark:hover:text-[#7F95FF] border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
               title="Novo Quadro de Conexões Geral"
             >
               <FolderKanban className="w-3.5 h-3.5" />
@@ -276,7 +276,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
               <div className="flex flex-col gap-1.5 w-full mt-2 max-w-[220px]">
                 <button
                   onClick={() => onCreateBoardCanvas(null)}
-                  className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-purple-50 hover:bg-purple-100/80 dark:bg-purple-950/30 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-medium border border-purple-200 dark:border-purple-800/40 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-1.5 px-3 rounded-lg bg-[#1831D7]/10 hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] text-xs font-medium border border-[#7F95FF]/30 transition-colors cursor-pointer"
                 >
                   <FolderKanban className="w-3.5 h-3.5" />
                   <span>Novo Quadro de Conexões</span>
@@ -379,7 +379,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
                 <div className="flex items-center gap-2.5 truncate min-w-0 flex-1">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
                     isBoard
-                      ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/40 text-purple-600 dark:text-purple-400'
+                      ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/30 text-[#1831D7] dark:text-[#7F95FF]'
                       : 'bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/40 text-sky-600 dark:text-sky-400'
                   }`}>
                     {isBoard ? <FolderKanban className="w-3.5 h-3.5" /> : <Music className="w-3.5 h-3.5" />}
@@ -398,7 +398,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border ${
                     isBoard
-                      ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-300 border-purple-200 dark:border-purple-800/40'
+                      ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border-[#7F95FF]/30'
                       : 'bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-300 border-sky-200 dark:border-sky-800/40'
                   }`}>
                     {isBoard ? 'Quadro' : 'Áudio'}

@@ -125,7 +125,7 @@ export const CanvasesQuickPanelSection: React.FC<CanvasesQuickPanelSectionProps>
         {onCreateCanvas && (
           <button
             onClick={() => onCreateCanvas()}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
             title="Criar Novo Canvas"
           >
             <Plus size={13} className="stroke-[2.5]" />
@@ -144,7 +144,7 @@ export const CanvasesQuickPanelSection: React.FC<CanvasesQuickPanelSectionProps>
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar por nome, id ou pasta..."
-          className="w-full bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.08] dark:border-white/[0.08] rounded-xl pl-8 pr-8 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-purple-500 transition-colors"
+          className="w-full bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.08] dark:border-white/[0.08] rounded-xl pl-8 pr-8 py-1.5 text-xs text-stone-900 dark:text-white placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-[#7F95FF] transition-colors"
         />
         {searchQuery && (
           <button
@@ -223,7 +223,7 @@ export const CanvasesQuickPanelSection: React.FC<CanvasesQuickPanelSectionProps>
                           ? "bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
                           : group.vault?.storageType === 'fsa'
                             ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                            : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                            : "bg-[#1831D7]/15 text-[#1831D7] dark:bg-[#1831D7]/30 dark:text-[#7F95FF]"
                       )}>
                         {group.isGeneral ? <Folder size={11} /> : group.vault?.storageType === 'fsa' ? <HardDrive size={11} /> : <Database size={11} />}
                       </div>

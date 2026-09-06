@@ -61,7 +61,7 @@ export const SessionChat: React.FC<SessionChatProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-neutral-950 border-b border-neutral-800">
         <div className="flex items-center gap-2">
-          <MessageSquare size={16} className="text-indigo-400" />
+          <MessageSquare size={16} className="text-[#7F95FF]" />
           <h3 className="font-semibold text-neutral-200 text-sm">{title}</h3>
         </div>
         <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export const SessionChat: React.FC<SessionChatProps> = ({
             <button
               onClick={onToggleSaveChat}
               title={saveChatEnabled ? "Histórico será salvo no projeto" : "Histórico temporário (não será salvo)"}
-              className={`text-xs px-2 py-1 rounded transition-colors ${saveChatEnabled ? 'bg-indigo-500/20 text-indigo-300' : 'bg-neutral-800 text-neutral-500'}`}
+              className={`text-xs px-2 py-1 rounded transition-colors ${saveChatEnabled ? 'bg-[#1831D7]/20 text-[#7F95FF]' : 'bg-neutral-800 text-neutral-500'}`}
             >
               {saveChatEnabled ? 'Salvar Histórico: ON' : 'Salvar Histórico: OFF'}
             </button>
@@ -120,7 +120,7 @@ export const SessionChat: React.FC<SessionChatProps> = ({
                     {isMe ? 'Você' : msg.senderName} • {formatTimestamp(msg.timestamp)}
                   </div>
                   <div 
-                    className="px-5 py-3 w-full max-w-[90%] bg-gradient-to-br from-indigo-950/80 via-neutral-900/90 to-fuchsia-950/80 border border-indigo-500/40 rounded-2xl shadow-xl text-[15px] text-indigo-50 font-medium tracking-wide text-center"
+                    className="px-5 py-3 w-full max-w-[90%] bg-gradient-to-br from-[#17192A] via-[#131524] to-[#17192A] border border-[#7F95FF]/40 rounded-2xl shadow-xl text-[15px] text-[#F4F0E6] font-medium tracking-wide text-center"
                     dangerouslySetInnerHTML={{ 
                       __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white text-[16px] drop-shadow-sm">$1</strong>') 
                     }}
@@ -137,7 +137,7 @@ export const SessionChat: React.FC<SessionChatProps> = ({
                 <div 
                   className={`px-4 py-2.5 rounded-2xl max-w-[85%] text-[15px] leading-relaxed break-words shadow-md ${
                     isMe 
-                      ? 'bg-indigo-600/90 text-indigo-50 rounded-tr-sm border border-indigo-500/50' 
+                      ? 'bg-[#1831D7] text-white rounded-tr-sm border border-[#7F95FF]/40' 
                       : 'bg-neutral-800/95 text-neutral-100 border border-neutral-700/80 rounded-tl-sm'
                   }`}
                 >
@@ -169,7 +169,7 @@ export const SessionChat: React.FC<SessionChatProps> = ({
             type="button"
             onClick={() => setShowDiceMenu(!showDiceMenu)}
             className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
-              showDiceMenu ? 'bg-indigo-600 text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'
+              showDiceMenu ? 'bg-[#1831D7] text-white' : 'bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700'
             }`}
             title="Rolar Dados"
           >
@@ -181,12 +181,12 @@ export const SessionChat: React.FC<SessionChatProps> = ({
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Digite uma mensagem..."
-              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+              className="flex-1 bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-[#7F95FF] focus:ring-1 focus:ring-[#7F95FF] transition-all"
             />
             <button
               type="submit"
               disabled={!text.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-800 disabled:text-neutral-500 text-white p-2 rounded-lg transition-colors flex items-center justify-center"
+              className="bg-[#1831D7] hover:bg-[#1831D7]/90 disabled:bg-neutral-800 disabled:text-neutral-500 text-white p-2 rounded-lg transition-colors flex items-center justify-center"
             >
               <Send size={16} />
             </button>

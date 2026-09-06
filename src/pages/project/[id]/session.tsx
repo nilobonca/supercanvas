@@ -111,8 +111,8 @@ export default function ListenerSession() {
             <audio ref={audioElRef} style={{ display: 'none' }} />
 
             {/* Glowing background gradient elements for dark fantasy design */}
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-950/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#1831D7]/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#52B1FF]/10 rounded-full blur-[120px] pointer-events-none" />
 
             {!isJoined ? (
                 // 1. Name Input Login Screen

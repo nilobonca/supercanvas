@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, globalShortcut, dialog, shell, Menu } = req
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const http = require('http');
+const https = require('https');
 const fs = require('fs');
 
 const isDev = !app.isPackaged && process.env.NODE_ENV !== 'production';
@@ -233,7 +234,7 @@ function sendUpdateStatus(payload) {
   }
 }
 
-autoUpdater.autoDownload = true;
+autoUpdater.autoDownload = false;
 autoUpdater.autoInstallOnAppQuit = true;
 
 autoUpdater.on('checking-for-update', () => {
@@ -242,13 +243,18 @@ autoUpdater.on('checking-for-update', () => {
 });
 
 autoUpdater.on('update-available', (info) => {
-  console.log('[RPGSA Updater] Update available:', info.version);
-  sendUpdateStatus({ status: 'available', version: info.version });
+  console.log('[RPGSA Updater] Update available:', info && info.version);
+  sendUpdateStatus({
+    status: 'available',
+    version: info && info.version,
+    releaseName: (info && info.releaseName) || `Versão ${info && info.version}`,
+    releaseNotes: typeof (info && info.releaseNotes) === 'string' ? info.releaseNotes : undefined
+  });
 });
 
 autoUpdater.on('update-not-available', (info) => {
   console.log('[RPGSA Updater] Update not available. Current version is latest:', info && info.version);
-  sendUpdateStatus({ status: 'not-available', version: info && info.version });
+  sendUpdateStatus({ status: 'not-available', version: (info && info.version) || app.getVersion() });
 });
 
 autoUpdater.on('download-progress', (progressObj) => {
@@ -260,8 +266,8 @@ autoUpdater.on('download-progress', (progressObj) => {
 });
 
 autoUpdater.on('update-downloaded', (info) => {
-  console.log('[RPGSA Updater] Update downloaded:', info.version);
-  sendUpdateStatus({ status: 'downloaded', version: info.version });
+  console.log('[RPGSA Updater] Update downloaded:', info && info.version);
+  sendUpdateStatus({ status: 'downloaded', version: info && info.version });
 });
 
 autoUpdater.on('error', (err) => {
@@ -275,40 +281,125 @@ ipcMain.handle('check-for-updates', async () => {
       return await autoUpdater.checkForUpdates();
     } catch (err) {
       console.error('[RPGSA Updater] Check failed:', err);
-      sendUpdateStatus({ status: 'error', message: err.message });
+      sendUpdateStatus({ status: 'error', message: err ? err.message : 'Falha na verificação de atualização' });
     }
   } else {
-    // In development mode, simulate verification
+    // In development mode, check GitHub Releases API or fallback gracefully
     sendUpdateStatus({ status: 'checking' });
-    setTimeout(() => {
-      sendUpdateStatus({ status: 'not-available', version: app.getVersion() });
-    }, 1200);
+
+    const checkGitHubLatest = () => {
+      return new Promise((resolve) => {
+        const req = https.get(
+          'https://api.github.com/repos/nilobonca/supercanvas/releases/latest',
+          {
+            headers: {
+              'User-Agent': 'Concha-Electron-App',
+              Accept: 'application/vnd.github.v3+json'
+            }
+          },
+          (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              try {
+                if (res.statusCode === 200) {
+                  const release = JSON.parse(data);
+                  const latestVersion = (release.tag_name || '').replace(/^v/, '');
+                  resolve({ success: true, release, latestVersion });
+                } else {
+                  resolve({ success: false, statusCode: res.statusCode });
+                }
+              } catch {
+                resolve({ success: false });
+              }
+            });
+          }
+        );
+
+        req.on('error', () => resolve({ success: false }));
+        req.setTimeout(4000, () => {
+          req.destroy();
+          resolve({ success: false });
+        });
+      });
+    };
+
+    try {
+      const result = await checkGitHubLatest();
+      const currentVer = app.getVersion();
+
+      if (result.success && result.latestVersion && result.latestVersion !== currentVer) {
+        console.log(`[RPGSA Updater Dev] Remote release detected: v${result.latestVersion} (installed: v${currentVer})`);
+        sendUpdateStatus({
+          status: 'available',
+          version: result.latestVersion,
+          releaseName: result.release.name || `Versão ${result.latestVersion}`,
+          releaseNotes: typeof result.release.body === 'string' ? result.release.body : ''
+        });
+      } else {
+        setTimeout(() => {
+          sendUpdateStatus({ status: 'not-available', version: currentVer });
+        }, 800);
+      }
+    } catch {
+      setTimeout(() => {
+        sendUpdateStatus({ status: 'not-available', version: app.getVersion() });
+      }, 800);
+    }
   }
   return null;
 });
 
 ipcMain.handle('start-download-update', async () => {
   if (!isDev) {
-    return await autoUpdater.downloadUpdate();
+    try {
+      return await autoUpdater.downloadUpdate();
+    } catch (err) {
+      console.error('[RPGSA Updater] Download error:', err);
+      sendUpdateStatus({ status: 'error', message: err ? err.message : 'Falha ao baixar atualização' });
+    }
+  } else {
+    // In dev mode, simulate realistic download progression for testing UI
+    console.log('[RPGSA Updater Dev] Simulating download progression...');
+    sendUpdateStatus({ status: 'downloading', percent: 15, speed: 1048576 });
+    setTimeout(() => sendUpdateStatus({ status: 'downloading', percent: 45, speed: 2097152 }), 700);
+    setTimeout(() => sendUpdateStatus({ status: 'downloading', percent: 80, speed: 3145728 }), 1400);
+    setTimeout(() => sendUpdateStatus({ status: 'downloading', percent: 100, speed: 4194304 }), 2100);
+    setTimeout(() => {
+      sendUpdateStatus({ status: 'downloaded', version: '0.2.0' });
+    }, 2600);
   }
   return null;
 });
 
 ipcMain.handle('quit-and-install', () => {
-  autoUpdater.quitAndInstall(false, true);
+  if (!isDev) {
+    autoUpdater.quitAndInstall(false, true);
+  } else {
+    console.log('[RPGSA Updater Dev] Quit and install triggered in dev mode.');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Atualização do Concha',
+        message: 'Ambiente de desenvolvimento: No aplicativo instalado final (.exe), o Concha será reiniciado e a nova versão aplicada automaticamente.'
+      });
+    }
+  }
 });
 
 app.whenReady().then(async () => {
   await createWindow();
 
-  if (!isDev) {
-    // Check for updates 4 seconds after launch
-    setTimeout(() => {
+  // Check for updates shortly after launch
+  setTimeout(() => {
+    if (!isDev) {
       autoUpdater.checkForUpdates().catch((err) => {
         console.log('[RPGSA Updater] Silent check error on launch:', err.message);
       });
-    }, 4000);
-  }
+    }
+  }, 4000);
 });
 
 app.on('activate', () => {

@@ -350,7 +350,7 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-neutral-800/70">
-          <Search className="w-5 h-5 text-violet-500 shrink-0" />
+          <Search className="w-5 h-5 text-[#7F95FF] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -394,7 +394,7 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
                 onClick={() => setCategory(cat.key)}
                 className={`px-2.5 py-1 rounded-full font-medium transition-all ${
                   isActive
-                    ? 'bg-violet-600/30 text-violet-300 border border-violet-500/40'
+                    ? 'bg-[#1831D7]/30 text-[#B4D3F1] border border-[#7F95FF]/40'
                     : 'text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/50'
                 }`}
               >
@@ -417,8 +417,8 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`flex items-center justify-between px-4 py-2.5 rounded-2xl cursor-pointer transition-colors text-sm border border-dashed ${
                     isSelected
-                      ? 'bg-[#7c3aed] text-white border-violet-400 font-semibold'
-                      : 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10 font-medium'
+                      ? 'bg-[#1831D7] text-white border-[#7F95FF] font-semibold'
+                      : 'text-[#7F95FF] border-[#7F95FF]/30 hover:bg-[#1831D7]/10 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-3 truncate">
@@ -442,29 +442,29 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`flex items-center justify-between px-4 py-2.5 rounded-2xl cursor-pointer transition-colors text-sm ${
                   isSelected
-                    ? 'bg-[#7c3aed] text-white font-semibold shadow-sm'
+                    ? 'bg-[#1831D7] text-white font-semibold shadow-sm'
                     : 'text-neutral-200 hover:bg-neutral-800/40 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3 truncate">
                   {item.type === 'note' && (
                     <FileText
-                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-violet-400'}`}
+                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#7F95FF]'}`}
                     />
                   )}
                   {item.type === 'audio' && (
                     <Music
-                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-violet-400'}`}
+                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#7F95FF]'}`}
                     />
                   )}
                   {item.type === 'image' && (
                     <ImageIcon
-                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-violet-400'}`}
+                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#7F95FF]'}`}
                     />
                   )}
                   {item.type === 'canvas' && (
                     <FolderKanban
-                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-violet-400'}`}
+                      className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#7F95FF]'}`}
                     />
                   )}
 
@@ -472,7 +472,7 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
 
                   <span
                     className={`text-xs truncate ${
-                      isSelected ? 'text-violet-200/90' : 'text-neutral-500'
+                      isSelected ? 'text-[#B4D3F1]' : 'text-neutral-500'
                     }`}
                   >
                     • {item.subtitle}

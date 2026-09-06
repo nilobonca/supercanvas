@@ -116,7 +116,7 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
       newData = {
         title,
         content: '',
-        color: srcNote.color || '#8b5cf6',
+        color: srcNote.color || '#1831D7',
         filePath: targetFilePath,
       } as NoteData;
     } else if (sourceEl.type === 'text') {

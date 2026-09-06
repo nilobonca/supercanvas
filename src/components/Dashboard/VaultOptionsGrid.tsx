@@ -43,11 +43,11 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-extrabold tracking-tight text-stone-900 dark:text-white flex items-center gap-2">
-              <SafeIcon size={18} className="text-purple-600 dark:text-purple-400" />
+            <h3 className="text-lg font-extrabold tracking-tight text-stone-900 dark:text-[#F4F0E6] flex items-center gap-2">
+              <SafeIcon size={18} className="text-[#1831D7] dark:text-[#7F95FF]" />
               <span>Opções de Vault</span>
             </h3>
-            <p className="text-xs text-[#6B6864] dark:text-[#A0A0B0]">
+            <p className="text-xs text-[#6B6864] dark:text-[#B4D3F1]/80">
               Escolha como deseja estruturar, conectar ou criar suas bases de conhecimento
             </p>
           </div>
@@ -59,20 +59,20 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
             onClick={onConnectFSA}
             className="surface-bezel-outer group hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           >
-            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#16161F] hover:border-emerald-500/50">
+            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#131524] hover:border-[#52B1FF]/50">
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-[#52B1FF]/15 border border-[#52B1FF]/30 text-[#52B1FF] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <HardDrive size={24} />
                 </div>
-                <h4 className="text-base font-bold text-stone-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <h4 className="text-base font-bold text-stone-900 dark:text-[#F4F0E6] group-hover:text-[#52B1FF] transition-colors">
                   Pasta Local do Windows
                 </h4>
-                <p className="text-xs text-[#6B6864] dark:text-[#A0A0B0] mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#6B6864] dark:text-[#B4D3F1]/80 mt-1.5 leading-relaxed">
                   Conecte qualquer pasta do seu computador (incluindo vaults do Obsidian). Seus arquivos <code className="font-mono bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded text-[11px]">.md</code> são sincronizados em tempo real no seu HD.
                 </p>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#52B1FF]">
                 <span>Vincular Pasta HD</span>
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -84,20 +84,20 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
             onClick={onCreateIDBVault}
             className="surface-bezel-outer group hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           >
-            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#16161F] hover:border-purple-500/50">
+            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#131524] hover:border-[#7F95FF]/50">
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-[#1831D7]/20 border border-[#7F95FF]/30 text-[#7F95FF] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <SafeIcon size={24} />
                 </div>
-                <h4 className="text-base font-bold text-stone-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4 className="text-base font-bold text-stone-900 dark:text-[#F4F0E6] group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                   Novo Vault IndexedDB
                 </h4>
-                <p className="text-xs text-[#6B6864] dark:text-[#A0A0B0] mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#6B6864] dark:text-[#B4D3F1]/80 mt-1.5 leading-relaxed">
                   Crie uma base de dados isolada salva localmente no navegador. Ideal para campanhas fechadas de RPG, regras de sistema e anotações rápidas sem configurar pastas locais.
                 </p>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-purple-600 dark:text-purple-400">
+              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#1831D7] dark:text-[#7F95FF]">
                 <span>Criar Novo Vault</span>
                 <Plus size={14} className="group-hover:scale-125 transition-transform" />
               </div>
@@ -109,25 +109,25 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
             onClick={onOpenQuickCanvas}
             className="surface-bezel-outer group hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           >
-            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#16161F] hover:border-sky-500/50">
+            <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#131524] hover:border-[#7F95FF]/50">
               <div>
-                <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/40 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="w-12 h-12 rounded-2xl bg-[#7F95FF]/15 border border-[#7F95FF]/30 text-[#7F95FF] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <FolderKanban size={24} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-base font-bold text-stone-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                  <h4 className="text-base font-bold text-stone-900 dark:text-[#F4F0E6] group-hover:text-[#7F95FF] transition-colors">
                     Acesso Rápido aos Canvas
                   </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1831D7]/20 text-[#1831D7] dark:text-[#B4D3F1]">
                     {totalCanvasesCount}
                   </span>
                 </div>
-                <p className="text-xs text-[#6B6864] dark:text-[#A0A0B0] mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#6B6864] dark:text-[#B4D3F1]/80 mt-1.5 leading-relaxed">
                   Navegue por todos os seus Quadros de Conexões e Mesas de Áudio RPG organizados e separados pelos vaults onde foram salvos ou em visualização unificada.
                 </p>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-sky-600 dark:text-sky-400">
+              <div className="mt-5 pt-3 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center justify-between text-xs font-semibold text-[#7F95FF]">
                 <span>Ver Todos os Canvas</span>
                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </div>
@@ -174,8 +174,8 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
                 className={clsx(
                   "p-5 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4 group relative",
                   isActive
-                    ? "bg-white dark:bg-[#181824] border-purple-500/60 dark:border-purple-500/60 shadow-md ring-2 ring-purple-500/20"
-                    : "bg-white/70 dark:bg-[#14141B] border-black/[0.08] dark:border-white/[0.08] hover:border-purple-400/40 hover:bg-white dark:hover:bg-[#181822]"
+                    ? "bg-white dark:bg-[#17192A] border-[#1831D7] dark:border-[#7F95FF] shadow-md ring-2 ring-[#7F95FF]/20"
+                    : "bg-white/70 dark:bg-[#131524] border-black/[0.08] dark:border-white/[0.08] hover:border-[#7F95FF]/40 hover:bg-white dark:hover:bg-[#17192A]"
                 )}
               >
                 {/* Header Row: Icon, Title, Badge */}
@@ -184,26 +184,26 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
                     <div className={clsx(
                       "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
                       isFSA
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-200/80 dark:bg-emerald-950/30 dark:border-emerald-800/40 dark:text-emerald-300"
-                        : "bg-purple-50 text-purple-600 border-purple-200/80 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-300"
+                        ? "bg-[#52B1FF]/10 text-[#52B1FF] border-[#52B1FF]/30"
+                        : "bg-[#1831D7]/15 text-[#1831D7] border-[#1831D7]/30 dark:bg-[#7F95FF]/15 dark:border-[#7F95FF]/30 dark:text-[#7F95FF]"
                     )}>
                       {isFSA ? <HardDrive size={20} /> : <Database size={20} />}
                     </div>
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm text-stone-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                        <h4 className="font-bold text-sm text-stone-900 dark:text-[#F4F0E6] line-clamp-1 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                           {vault.name}
                         </h4>
                         {isActive && (
-                          <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                          <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/30">
                             <Check size={11} className="stroke-[3]" />
                             Ativo
                           </span>
                         )}
                       </div>
 
-                      <span className="text-[11px] text-stone-500 dark:text-neutral-400 block mt-0.5">
+                      <span className="text-[11px] text-stone-500 dark:text-[#B4D3F1]/70 block mt-0.5">
                         {isFSA ? 'HD Local (Windows)' : 'IndexedDB'}
                       </span>
                     </div>
@@ -227,21 +227,21 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
                 </div>
 
                 {/* Footer Metrics & Open Indicator */}
-                <div className="flex items-center justify-between pt-3 border-t border-black/[0.06] dark:border-white/[0.06] text-xs text-stone-500 dark:text-neutral-400">
+                <div className="flex items-center justify-between pt-3 border-t border-black/[0.06] dark:border-white/[0.06] text-xs text-stone-500 dark:text-[#B4D3F1]/80">
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
-                      <FileText size={12} className="text-purple-500" />
+                      <FileText size={12} className="text-[#7F95FF]" />
                       {vault.documentCount || 0} notas
                     </span>
                     <span className="flex items-center gap-1">
-                      <Layers size={12} className="text-sky-500" />
+                      <Layers size={12} className="text-[#52B1FF]" />
                       {vault.canvasCount || 0} canvas
                     </span>
                   </div>
 
                   <span className={clsx(
                     "font-semibold text-xs flex items-center gap-1 transition-transform group-hover:translate-x-0.5",
-                    isActive ? "text-purple-600 dark:text-purple-400" : "text-stone-400 group-hover:text-stone-700 dark:group-hover:text-white"
+                    isActive ? "text-[#1831D7] dark:text-[#7F95FF]" : "text-stone-400 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF]"
                   )}>
                     {isActive ? 'Conectado' : 'Alternar'} &rarr;
                   </span>

@@ -122,7 +122,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
           <button
             type="button"
             onClick={() => router.push('/vault')}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-[#1831D7]/10 hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border border-[#1831D7]/25 transition-all cursor-pointer"
             title="Abrir Vault de Notas"
           >
             <SafeIcon size={14} />
@@ -135,7 +135,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
           {isEditingName ? (
             <div className="flex items-center gap-1 app-region-no-drag">
               <input
-                className="font-bold text-sm bg-transparent border-b-2 border-purple-500 text-stone-900 dark:text-neutral-100 focus:outline-none px-1 py-0.5"
+                className="font-bold text-sm bg-transparent border-b-2 border-[#1831D7] dark:border-[#7F95FF] text-stone-900 dark:text-neutral-100 focus:outline-none px-1 py-0.5"
                 style={{ width: `${Math.max(tempName.length, 1) + 2}ch`, WebkitAppRegion: 'no-drag' } as React.CSSProperties}
                 value={tempName}
                 onChange={e => setTempName(e.target.value)}
@@ -154,7 +154,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
                 setTempName(displayName);
                 setIsEditingName(true);
               }}
-              className="font-bold text-sm cursor-pointer transition-colors flex items-center gap-1.5 group select-none text-stone-800 dark:text-neutral-200 hover:text-purple-600 dark:hover:text-purple-400 app-region-no-drag"
+              className="font-bold text-sm cursor-pointer transition-colors flex items-center gap-1.5 group select-none text-stone-800 dark:text-neutral-200 hover:text-[#1831D7] dark:hover:text-[#7F95FF] app-region-no-drag"
               style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
               title="Clique para renomear"
             >
@@ -214,7 +214,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors cursor-pointer shadow-xs"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium bg-[#1831D7] hover:bg-[#1831D7]/90 text-white rounded-md transition-colors cursor-pointer shadow-xs"
           >
             <Users size={12} className="pointer-events-none" />
             <span>Convidar</span>
@@ -229,7 +229,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
             className={clsx(
               "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer",
               isDiceTrayOpen 
-                ? "bg-indigo-600 text-white" 
+                ? "bg-[#1831D7] text-white" 
                 : "text-stone-600 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10"
             )}
           >
@@ -261,7 +261,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
                 className={clsx(
                   "flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md transition-colors cursor-pointer relative",
                   isChatOpen 
-                    ? "bg-indigo-600 text-white" 
+                    ? "bg-[#1831D7] text-white" 
                     : hasUnreadMessages
                       ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20"
                       : "text-stone-600 dark:text-neutral-400 hover:bg-black/5 dark:hover:bg-white/10"
@@ -295,7 +295,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Users className="text-indigo-500" size={20} />
+                  <Users className="text-[#1831D7] dark:text-[#7F95FF]" size={20} />
                   Sessão Compartilhada
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
@@ -324,7 +324,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
                   className={`px-4 py-1.5 text-xs font-bold rounded transition-colors cursor-pointer ${
                     isSessionActive
                       ? 'bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/10'
+                      : 'bg-[#1831D7] hover:bg-[#1831D7]/90 text-white shadow-md shadow-[#1831D7]/20'
                   }`}
                 >
                   {isSessionActive ? 'Desativar' : 'Ativar Sessão'}
@@ -368,7 +368,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
                           setTimeout(() => setCopied(false), 2000);
                         }
                       }}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-w-[80px]"
+                      className="bg-[#1831D7] hover:bg-[#1831D7]/90 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-w-[80px]"
                     >
                       {copied ? (
                         <>
@@ -410,7 +410,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
         <div className="fixed top-12 right-4 z-50 w-64 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-gray-200 dark:border-white/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 pointer-events-auto">
           <div className="bg-gray-50 dark:bg-neutral-800/50 px-3 py-2 border-b border-gray-200 dark:border-neutral-800 flex justify-between items-center">
             <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">Ouvintes Conectados</span>
-            <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-[#1831D7]/10 text-[#1831D7] dark:bg-[#1831D7]/20 dark:text-[#7F95FF] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
               {sessionListeners.length}
             </span>
           </div>
@@ -423,8 +423,8 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
               <ul className="divide-y divide-gray-100 dark:divide-neutral-800/50">
                 {sessionListeners.map(listener => (
                   <li key={listener.listenerId} className="px-3 py-2.5 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
-                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
-                      <Users size={12} className="text-indigo-600 dark:text-indigo-400" />
+                    <div className="w-6 h-6 rounded-full bg-[#1831D7]/10 dark:bg-[#1831D7]/20 flex items-center justify-center shrink-0">
+                      <Users size={12} className="text-[#1831D7] dark:text-[#7F95FF]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray-900 dark:text-neutral-200 truncate">

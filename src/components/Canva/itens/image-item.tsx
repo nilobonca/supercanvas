@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { X, Edit2, Crop, Check } from 'lucide-react';
 import { ActiveImage } from '@/interfaces/utils/indexedDB';
@@ -393,7 +393,7 @@ const ImageItem: React.FC<ImageItemProps> = ({ image, onDelete, onEdit, onUpdate
                                     e.stopPropagation();
                                     handleCropStart();
                                 }}
-                                className="bg-purple-500 text-white rounded-full p-1 hover:bg-purple-600 shadow-md"
+                                className="bg-[#1831D7] text-white rounded-full p-1 hover:bg-[#1831D7]/90 shadow-md"
                                 title="Crop imagem"
                             >
                                 <Crop size={12} />

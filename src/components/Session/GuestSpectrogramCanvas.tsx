@@ -22,7 +22,7 @@ export const GuestSpectrogramCanvas: React.FC<GuestSpectrogramCanvasProps> = ({
         <div className="w-full bg-neutral-900/60 border border-neutral-800/80 rounded-xl p-4 shadow-xl backdrop-blur-sm">
             <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
-                    <Activity size={14} className="text-indigo-400" />
+                    <Activity size={14} className="text-[#7F95FF]" />
                     Espectrograma Acústico
                 </span>
                 <button

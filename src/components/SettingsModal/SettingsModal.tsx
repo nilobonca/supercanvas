@@ -11,6 +11,7 @@ import { parseBackupFile, ParsedImportData } from '@/utils/exportSystem/importUt
 import { ChatLogModal } from './ChatLogModal';
 import { useShortcutStore } from '@/store/shortcutStore';
 import { useMinigamesStore } from '@/store/minigamesStore';
+import { AppUpdateSettingsSection } from './AppUpdateSettingsSection';
 
 type Tab = 'appearance' | 'system' | 'backup' | 'shortcuts' | 'minigames';
 
@@ -153,7 +154,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         className={clsx(
           "flex items-center gap-3 px-3.5 py-2.5 w-full rounded-xl transition-all text-sm font-medium",
           isActive 
-            ? (isLight ? "bg-purple-100/80 text-purple-900 font-semibold shadow-xs" : "bg-white/10 text-white font-semibold")
+            ? (isLight ? "bg-[#1831D7]/15 text-[#1831D7] font-semibold shadow-xs" : "bg-white/10 text-white font-semibold")
             : (isLight ? "text-stone-500 hover:text-stone-900 hover:bg-stone-100/60" : "text-neutral-400 hover:text-white hover:bg-white/5")
         )}
       >
@@ -175,151 +176,74 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* 1. Pastel Claro (Primary Light) */}
-          <button
-            onClick={() => setTheme('light')}
-            className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
-              theme === 'light'
-                ? "border-purple-400 bg-purple-50/70 shadow-lg shadow-purple-500/5 ring-2 ring-purple-400/20"
-                : "border-stone-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
-            )}
-          >
-            <div className="w-full h-20 mb-3 rounded-xl bg-[#FAF9F6] border border-stone-200 p-2.5 flex flex-col gap-1.5 shadow-inner">
-               <div className="flex items-center gap-1.5">
-                 <div className="w-12 h-3 rounded-full bg-purple-200 border border-purple-300"></div>
-                 <div className="w-10 h-3 rounded-full bg-emerald-100 border border-emerald-200"></div>
-                 <div className="w-8 h-3 rounded-full bg-sky-100 border border-sky-200"></div>
-               </div>
-               <div className="w-full h-8 rounded-lg bg-white border border-stone-200/80 flex items-center px-2">
-                 <div className="w-1/3 h-2 rounded-full bg-stone-300"></div>
-               </div>
-            </div>
-            <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">
-              🌸 Pastel Claro
-            </span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">
-              Papel osso aquecido, acentos pastéis lavanda/menta, leitura diurna suave
-            </span>
-            {theme === 'light' && <div className="absolute top-4 right-4 text-purple-600 dark:text-purple-400"><Check size={18} /></div>}
-          </button>
-
-          {/* 2. Pastel Escuro (Primary Dark) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          {/* 1. Modo Escuro Oficial (Midnight Navy) */}
           <button
             onClick={() => setTheme('dark')}
             className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
+              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem] cursor-pointer",
               theme === 'dark'
-                ? "border-purple-400 bg-purple-950/20 shadow-lg shadow-purple-500/5 ring-2 ring-purple-400/20"
-                : "border-stone-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
+                ? "border-[#7F95FF] bg-[#1831D7]/15 shadow-lg shadow-[#1831D7]/10 ring-2 ring-[#7F95FF]/30"
+                : "border-stone-200 dark:border-white/10 hover:border-[#7F95FF]/50 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
             )}
           >
-            <div className="w-full h-20 mb-3 rounded-xl bg-[#0F0F13] border border-white/10 p-2.5 flex flex-col gap-1.5 shadow-inner">
+            <div className="w-full h-20 mb-3 rounded-xl bg-[#17192A] border border-white/10 p-2.5 flex flex-col gap-1.5 shadow-inner">
                <div className="flex items-center gap-1.5">
-                 <div className="w-12 h-3 rounded-full bg-purple-500/30 border border-purple-400/40"></div>
-                 <div className="w-10 h-3 rounded-full bg-emerald-500/30 border border-emerald-400/40"></div>
-                 <div className="w-8 h-3 rounded-full bg-sky-500/30 border border-sky-400/40"></div>
+                 <div className="w-12 h-3 rounded-full bg-[#52B1FF] shadow-xs"></div>
+                 <div className="w-10 h-3 rounded-full bg-[#7F95FF] shadow-xs"></div>
+                 <div className="w-8 h-3 rounded-full bg-[#001FFF]/80 shadow-xs"></div>
                </div>
-               <div className="w-full h-8 rounded-lg bg-[#181822] border border-white/10 flex items-center px-2">
-                 <div className="w-1/3 h-2 rounded-full bg-neutral-600"></div>
+               <div className="w-full h-8 rounded-lg bg-[#1D2035] border border-white/10 flex items-center px-2.5 justify-between">
+                 <div className="w-1/3 h-2 rounded-full bg-[#F4F0E6]/80"></div>
+                 <div className="w-3 h-3 rounded-full bg-[#7F95FF]/70"></div>
+               </div>
+            </div>
+            <span className="font-semibold text-stone-900 dark:text-[#F4F0E6] flex items-center gap-1.5 text-sm">
+              🌙 Modo Escuro Oficial
+            </span>
+            <span className="text-xs text-stone-500 dark:text-[#B4D3F1]/80 mt-0.5 leading-relaxed">
+              Midnight Navy (#17192A), tipografia marfim (#F4F0E6) de alto contraste e gradiente azul oficial.
+            </span>
+            {theme === 'dark' && <div className="absolute top-4 right-4 text-[#7F95FF]"><Check size={18} /></div>}
+          </button>
+
+          {/* 2. Modo Claro Oficial (Warm Ivory) */}
+          <button
+            onClick={() => setTheme('light')}
+            className={clsx(
+              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem] cursor-pointer",
+              theme === 'light'
+                ? "border-[#1831D7] bg-[#1831D7]/10 shadow-lg shadow-[#1831D7]/5 ring-2 ring-[#1831D7]/20"
+                : "border-stone-200 dark:border-white/10 hover:border-[#1831D7]/40 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
+            )}
+          >
+            <div className="w-full h-20 mb-3 rounded-xl bg-[#F4F0E6] border border-black/10 p-2.5 flex flex-col gap-1.5 shadow-inner">
+               <div className="flex items-center gap-1.5">
+                 <div className="w-12 h-3 rounded-full bg-[#1831D7]"></div>
+                 <div className="w-10 h-3 rounded-full bg-[#7F95FF]"></div>
+                 <div className="w-8 h-3 rounded-full bg-[#52B1FF]"></div>
+               </div>
+               <div className="w-full h-8 rounded-lg bg-white border border-black/10 flex items-center px-2.5 justify-between">
+                 <div className="w-1/3 h-2 rounded-full bg-[#17192A]"></div>
+                 <div className="w-3 h-3 rounded-full bg-[#1831D7]"></div>
                </div>
             </div>
             <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">
-              🌙 Pastel Escuro
+              ☀️ Modo Claro Oficial
             </span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">
-              Carvão veludo nobre, iluminação fosca e tons pastéis luminosos
+            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+              Marfim aquecido (#F4F0E6), superfícies brancas e tipografia em azul meia-noite (#17192A).
             </span>
-            {theme === 'dark' && <div className="absolute top-4 right-4 text-purple-400"><Check size={18} /></div>}
-          </button>
-
-          {/* 3. Ethereal Arcane */}
-          <button
-            onClick={() => setTheme('ethereal')}
-            className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
-              theme === 'ethereal'
-                ? "border-purple-500 bg-purple-500/10 shadow-lg shadow-purple-500/10 ring-2 ring-purple-500/20"
-                : "border-stone-200 dark:border-white/10 hover:border-purple-300 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
-            )}
-          >
-            <div className="w-full h-20 mb-3 rounded-xl bg-black/60 border border-purple-500/30 p-2 flex flex-col gap-1.5 backdrop-blur-md">
-               <div className="w-1/2 h-3 rounded-full bg-purple-500/40"></div>
-               <div className="w-full h-7 rounded-lg bg-white/5 border border-white/10"></div>
-            </div>
-            <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">🌌 Ethereal Arcane</span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">Glassmorphism de luxo, roxo/azul profundo, blur</span>
-            {theme === 'ethereal' && <div className="absolute top-4 right-4 text-purple-400"><Check size={18} /></div>}
-          </button>
-
-          {/* 4. Grimdark Horror */}
-          <button
-            onClick={() => setTheme('grimdark')}
-            className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
-              theme === 'grimdark'
-                ? "border-red-600 bg-red-950/30 shadow-lg shadow-red-600/10"
-                : "border-stone-200 dark:border-white/10 hover:border-red-500/50 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
-            )}
-          >
-            <div className="w-full h-20 mb-3 rounded-xl bg-[#0d0708] border border-red-900/50 p-2 flex flex-col gap-1.5">
-               <div className="w-1/2 h-3 rounded-full bg-red-700/60"></div>
-               <div className="w-full h-7 rounded-lg bg-red-950/40 border border-red-900/30"></div>
-            </div>
-            <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">🩸 Grimdark Horror</span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">Escuro sombrio, acentos vermelho sangue e ferro</span>
-            {theme === 'grimdark' && <div className="absolute top-4 right-4 text-red-500"><Check size={18} /></div>}
-          </button>
-
-          {/* 5. Cyberpunk HUD */}
-          <button
-            onClick={() => setTheme('cyber')}
-            className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
-              theme === 'cyber'
-                ? "border-cyan-400 bg-cyan-950/30 shadow-lg shadow-cyan-400/10"
-                : "border-stone-200 dark:border-white/10 hover:border-cyan-400/50 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
-            )}
-          >
-            <div className="w-full h-20 mb-3 rounded-xl bg-[#020d0d] border border-cyan-500/40 p-2 flex flex-col gap-1.5">
-               <div className="w-1/2 h-3 rounded-full bg-cyan-400/50"></div>
-               <div className="w-full h-7 rounded-lg bg-cyan-950/50 border border-cyan-500/30"></div>
-            </div>
-            <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">⚡ Cyberpunk HUD</span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">Interface tática militar, fonte mono, ciano neon</span>
-            {theme === 'cyber' && <div className="absolute top-4 right-4 text-cyan-400"><Check size={18} /></div>}
-          </button>
-
-          {/* 6. Taverna Vintage */}
-          <button
-            onClick={() => setTheme('taverna')}
-            className={clsx(
-              "relative flex flex-col items-start p-4 text-left border transition-all duration-300 group rounded-[1.5rem]",
-              theme === 'taverna'
-                ? "border-amber-500 bg-amber-950/30 shadow-lg shadow-amber-500/10"
-                : "border-stone-200 dark:border-white/10 hover:border-amber-400/50 dark:hover:border-white/20 bg-stone-50/50 dark:bg-white/5"
-            )}
-          >
-            <div className="w-full h-20 mb-3 rounded-xl bg-[#1a1410] border border-amber-800/50 p-2 flex flex-col gap-1.5">
-               <div className="w-1/2 h-3 rounded-full bg-amber-500/50"></div>
-               <div className="w-full h-7 rounded-lg bg-amber-950/40 border border-amber-800/40"></div>
-            </div>
-            <span className="font-semibold text-stone-900 dark:text-white flex items-center gap-1.5 text-sm">🕯️ Taverna Vintage</span>
-            <span className="text-xs text-stone-500 dark:text-neutral-400 mt-0.5">Madeira aquecida, iluminação acolhedora de ocre</span>
-            {theme === 'taverna' && <div className="absolute top-4 right-4 text-amber-500"><Check size={18} /></div>}
+            {theme === 'light' && <div className="absolute top-4 right-4 text-[#1831D7] dark:text-[#7F95FF]"><Check size={18} /></div>}
           </button>
         </div>
       </div>
 
       <div>
-        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+        <h3 className="mb-4 text-sm font-semibold tracking-wide uppercase text-stone-500 dark:text-neutral-400">
           Efeito Visual de Áudio
         </h3>
-        <div className={clsx(
-          "p-4 border transition-all duration-300 space-y-5",
-          theme === 'ethereal' ? "border-white/10 bg-white/5 rounded-[1.5rem]" : "border-neutral-800 bg-neutral-950 rounded-lg"
-        )}>
+        <div className="p-4 border border-stone-200 dark:border-white/10 bg-stone-50/50 dark:bg-white/5 rounded-[1.5rem] transition-all duration-300 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <div className="font-medium text-sm text-neutral-200">Brilho nas Bordas</div>
@@ -329,7 +253,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               onClick={() => setAudioVizEnabled(!audioVizEnabled)}
               className={clsx(
                 "relative w-11 h-6 rounded-full transition-colors duration-200",
-                audioVizEnabled ? "bg-indigo-500" : "bg-neutral-700"
+                audioVizEnabled ? "bg-[#1831D7]" : "bg-neutral-700"
               )}
             >
               <span className={clsx(
@@ -347,7 +271,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
               onClick={() => setAreaRippleEnabled(!areaRippleEnabled)}
               className={clsx(
                 "relative w-11 h-6 rounded-full transition-colors duration-200",
-                areaRippleEnabled ? "bg-indigo-500" : "bg-neutral-700"
+                areaRippleEnabled ? "bg-[#1831D7]" : "bg-neutral-700"
               )}
             >
               <span className={clsx(
@@ -364,7 +288,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   <div className="text-xs text-neutral-500">Escolha a cor do brilho</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {['#818cf8', '#f472b6', '#34d399', '#fbbf24', '#f87171', '#a78bfa'].map(color => (
+                  {['#7F95FF', '#52B1FF', '#1831D7', '#B4D3F1', '#17192A'].map(color => (
                     <button
                       key={color}
                       onClick={() => setAudioVizColor(color)}
@@ -398,7 +322,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   max="200"
                   value={Math.round(audioVizIntensity * 100)}
                   onChange={(e) => setAudioVizIntensity(Number(e.target.value) / 100)}
-                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-neutral-700 accent-indigo-500"
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-neutral-700 accent-[#1831D7]"
                 />
               </div>
               <div 
@@ -418,15 +342,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
   const renderSystemTab = () => (
     <div className="space-y-8">
+      <AppUpdateSettingsSection />
+
       <div>
-        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", isLight ? "text-stone-500" : "text-[#B4D3F1]/80")}>
           Geral
         </h3>
-        <div className={clsx("p-4 border", theme === 'ethereal' ? "border-white/10 bg-white/5 rounded-[1.5rem]" : "border-neutral-800 bg-neutral-900/50 rounded-xl")}>
+        <div className={clsx("p-4 border", isLight ? "border-stone-200 bg-stone-50/70 rounded-xl" : "border-[#7F95FF]/15 bg-[#17192A]/50 rounded-xl")}>
           <div className="flex items-center justify-between">
             <div className="pr-4">
-              <h4 className="font-medium text-neutral-200">Modo Preview</h4>
-              <p className="text-sm text-neutral-400 mt-1">
+              <h4 className={clsx("font-medium", isLight ? "text-stone-800" : "text-[#F4F0E6]")}>Modo Preview</h4>
+              <p className={clsx("text-sm mt-1", isLight ? "text-stone-500" : "text-neutral-400")}>
                 Faça alterações no mapa sem afetar o que os jogadores veem.
               </p>
             </div>
@@ -439,7 +365,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 "px-4 py-2 font-medium transition-all text-sm rounded-lg whitespace-nowrap",
                 isPreviewMode 
                   ? "bg-amber-500/20 text-amber-500 hover:bg-amber-500/30" 
-                  : (theme === 'ethereal' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-neutral-800 hover:bg-neutral-700 text-white")
+                  : (isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-900" : "bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6]")
               )}
             >
               {isPreviewMode ? 'Desativar Preview' : 'Ativar Preview'}
@@ -450,20 +376,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
       {currentProjectId && (
         <div>
-          <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+          <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", isLight ? "text-stone-500" : "text-[#B4D3F1]/80")}>
             Logs da Sessão
           </h3>
           <button
             onClick={() => setIsChatLogModalOpen(true)}
             className={clsx(
-              "flex items-center gap-3 p-4 border transition-all duration-300 w-full hover:scale-[1.01]",
-              theme === 'ethereal'
-                ? "border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400"
-                : "border-neutral-800 bg-neutral-950 hover:border-purple-600 text-neutral-300 hover:text-purple-500",
-              theme === 'ethereal' ? "rounded-[1.5rem]" : "rounded-lg"
+              "flex items-center gap-3 p-4 border transition-all duration-300 w-full hover:scale-[1.01] rounded-xl",
+              isLight
+                ? "border-stone-200 bg-white hover:border-[#1831D7] text-stone-800 hover:text-[#1831D7]"
+                : "border-[#7F95FF]/20 bg-[#17192A]/70 hover:border-[#7F95FF] text-[#F4F0E6] hover:text-[#7F95FF]"
             )}
           >
-            <MessageSquareText size={24} className="flex-shrink-0" />
+            <MessageSquareText size={24} className="flex-shrink-0 text-[#7F95FF]" />
             <div className="text-left">
               <div className="font-medium text-inherit">Histórico do Chat</div>
               <div className="text-xs opacity-70">Visualize, baixe ou apague o log permanente de mensagens e rolagens.</div>
@@ -477,21 +402,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const renderBackupTab = () => (
     <div className="space-y-8">
       <div>
-        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", isLight ? "text-stone-500" : "text-[#B4D3F1]/80")}>
           Exportação e Backup
         </h3>
         <div className="flex gap-4">
           <button
             onClick={() => setIsExportModalOpen(true)}
             className={clsx(
-              "flex items-center gap-3 p-4 border transition-all duration-300 w-1/2 hover:scale-[1.02]",
-              theme === 'ethereal'
-                ? "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
-                : "border-neutral-800 bg-neutral-950 hover:border-emerald-600 text-neutral-300 hover:text-emerald-500",
-              theme === 'ethereal' ? "rounded-[1.5rem]" : "rounded-lg"
+              "flex items-center gap-3 p-4 border transition-all duration-300 w-1/2 hover:scale-[1.02] rounded-xl",
+              isLight
+                ? "border-stone-200 bg-white hover:border-emerald-600 text-stone-800 hover:text-emerald-600"
+                : "border-[#7F95FF]/20 bg-[#17192A]/70 hover:border-emerald-500 text-[#F4F0E6] hover:text-emerald-400"
             )}
           >
-            <DownloadCloud size={24} className="flex-shrink-0" />
+            <DownloadCloud size={24} className="flex-shrink-0 text-emerald-400" />
             <div className="text-left">
               <div className="font-medium text-inherit">Exportar Dados</div>
               <div className="text-xs opacity-70">Faça o download.</div>
@@ -500,14 +424,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           <label
             className={clsx(
-              "flex items-center gap-3 p-4 border transition-all duration-300 w-1/2 hover:scale-[1.02] cursor-pointer",
-              theme === 'ethereal'
-                ? "border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
-                : "border-neutral-800 bg-neutral-950 hover:border-blue-600 text-neutral-300 hover:text-blue-500",
-              theme === 'ethereal' ? "rounded-[1.5rem]" : "rounded-lg"
+              "flex items-center gap-3 p-4 border transition-all duration-300 w-1/2 hover:scale-[1.02] cursor-pointer rounded-xl",
+              isLight
+                ? "border-stone-200 bg-white hover:border-[#1831D7] text-stone-800 hover:text-[#1831D7]"
+                : "border-[#7F95FF]/20 bg-[#17192A]/70 hover:border-[#7F95FF] text-[#F4F0E6] hover:text-[#7F95FF]"
             )}
           >
-            <UploadCloud size={24} className="flex-shrink-0" />
+            <UploadCloud size={24} className="flex-shrink-0 text-[#7F95FF]" />
             <div className="text-left">
               <div className="font-medium text-inherit">Importar Backup</div>
               <div className="text-xs opacity-70">Carregar arquivo .zip.</div>
@@ -540,20 +463,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     <div className="space-y-6">
       {shortcutCategories.map((category) => (
         <div key={category.name}>
-          <h3 className={clsx("mb-3 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+          <h3 className={clsx("mb-3 text-sm font-semibold tracking-wide uppercase", isLight ? "text-stone-500" : "text-[#B4D3F1]/80")}>
             {category.name}
           </h3>
-          <div className={clsx("divide-y border", theme === 'ethereal' ? "divide-white/10 border-white/10 bg-white/5 rounded-[1.5rem]" : "divide-neutral-800 border-neutral-800 bg-neutral-900/50 rounded-xl")}>
+          <div className={clsx("divide-y border rounded-xl", isLight ? "divide-stone-200 border-stone-200 bg-white" : "divide-white/10 border-[#7F95FF]/20 bg-[#17192A]/50")}>
             {category.actions.map((action) => (
               <div key={action.id} className="flex items-center justify-between p-4">
-                <span className="text-sm font-medium text-neutral-200">{action.label}</span>
+                <span className={clsx("text-sm font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>{action.label}</span>
                 <button
                   onClick={() => setListeningFor(action.id)}
                   className={clsx(
                     "px-3 py-1.5 rounded-md text-sm font-medium transition-colors border",
                     listeningFor === action.id 
-                      ? "bg-blue-500/20 text-blue-400 border-blue-500/50 animate-pulse" 
-                      : (theme === 'ethereal' ? "bg-white/5 text-neutral-300 border-white/10 hover:bg-white/10 hover:text-white" : "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700 hover:text-white")
+                      ? "bg-[#1831D7]/20 text-[#7F95FF] border-[#7F95FF]/50 animate-pulse" 
+                      : (isLight ? "bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200" : "bg-white/5 text-neutral-300 border-white/10 hover:bg-white/10 hover:text-white")
                   )}
                 >
                   {listeningFor === action.id ? "Pressione..." : (bindings[action.id] || "Não definido")}
@@ -570,18 +493,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const renderMinigamesTab = () => (
     <div className="space-y-8">
       <div>
-        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", theme === 'ethereal' ? "text-neutral-500" : "text-neutral-400")}>
+        <h3 className={clsx("mb-4 text-sm font-semibold tracking-wide uppercase", isLight ? "text-stone-500" : "text-[#B4D3F1]/80")}>
           Minigames e Desafios
         </h3>
         <div className="space-y-4">
           
           {/* Clicker Minigame */}
-          <div className={clsx("p-4 border", theme === 'ethereal' ? "border-white/10 bg-white/5 rounded-[1.5rem]" : "border-neutral-800 bg-neutral-900/50 rounded-xl")}>
+          <div className={clsx("p-4 border rounded-xl", isLight ? "border-stone-200 bg-stone-50/70" : "border-[#7F95FF]/15 bg-[#17192A]/50")}>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="pr-4">
-                  <h4 className="font-medium text-neutral-200">Desafio de Cliques</h4>
-                  <p className="text-sm text-neutral-400 mt-1">
+                  <h4 className={clsx("font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Desafio de Cliques</h4>
+                  <p className={clsx("text-sm mt-1", isLight ? "text-stone-500" : "text-neutral-400")}>
                     Inicie um minigame onde os jogadores devem clicar rapidamente para atingir uma meta.
                   </p>
                 </div>
@@ -599,19 +522,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   }}
                   className={clsx(
                     "px-4 py-2 font-medium transition-all text-sm rounded-lg whitespace-nowrap",
-                    theme === 'ethereal' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-900" : "bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6]"
                   )}
                 >
                   Novo Desafio
                 </button>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-neutral-800 dark:border-white/10">
-                <div className="text-sm text-neutral-400">Fixar botão no menu lateral</div>
+                <div className={clsx("text-sm", isLight ? "text-stone-500" : "text-neutral-400")}>Fixar botão no menu lateral</div>
                 <button
                   onClick={() => useThemeStore.getState().togglePinnedMinigame('clicker')}
                   className={clsx(
                     "relative w-11 h-6 rounded-full transition-colors duration-200",
-                    useThemeStore.getState().pinnedMinigames.includes('clicker') ? "bg-indigo-500" : "bg-neutral-700"
+                    useThemeStore.getState().pinnedMinigames.includes('clicker') ? "bg-[#1831D7] dark:bg-[#7F95FF]" : "bg-neutral-700"
                   )}
                 >
                   <span className={clsx(
@@ -624,12 +547,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           </div>
 
           {/* Coin Flip Minigame */}
-          <div className={clsx("p-4 border", theme === 'ethereal' ? "border-white/10 bg-white/5 rounded-[1.5rem]" : "border-neutral-800 bg-neutral-900/50 rounded-xl")}>
+          <div className={clsx("p-4 border rounded-xl", isLight ? "border-stone-200 bg-stone-50/70" : "border-[#7F95FF]/15 bg-[#17192A]/50")}>
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="pr-4">
-                  <h4 className="font-medium text-neutral-200">Cara ou Coroa</h4>
-                  <p className="text-sm text-neutral-400 mt-1">
+                  <h4 className={clsx("font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Cara ou Coroa</h4>
+                  <p className={clsx("text-sm mt-1", isLight ? "text-stone-500" : "text-neutral-400")}>
                     Gire uma moeda 3D em tempo real. Você pode predefinir ou forçar o resultado.
                   </p>
                 </div>
@@ -647,19 +570,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   }}
                   className={clsx(
                     "px-4 py-2 font-medium transition-all text-sm rounded-lg whitespace-nowrap",
-                    theme === 'ethereal' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-900" : "bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6]"
                   )}
                 >
                   Novo Desafio
                 </button>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-neutral-800 dark:border-white/10">
-                <div className="text-sm text-neutral-400">Fixar botão no menu lateral</div>
+                <div className={clsx("text-sm", isLight ? "text-stone-500" : "text-neutral-400")}>Fixar botão no menu lateral</div>
                 <button
                   onClick={() => useThemeStore.getState().togglePinnedMinigame('coin_flip')}
                   className={clsx(
                     "relative w-11 h-6 rounded-full transition-colors duration-200",
-                    useThemeStore.getState().pinnedMinigames.includes('coin_flip') ? "bg-indigo-500" : "bg-neutral-700"
+                    useThemeStore.getState().pinnedMinigames.includes('coin_flip') ? "bg-[#1831D7] dark:bg-[#7F95FF]" : "bg-neutral-700"
                   )}
                 >
                   <span className={clsx(
@@ -674,26 +597,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Cartas Minigame */}
           <div className={clsx(
             "p-6 rounded-2xl border transition-all",
-            theme === 'ethereal' ? "bg-white/5 border-white/10" : "bg-neutral-800/50 border-neutral-800"
+            isLight ? "bg-white border-stone-200" : "bg-[#17192A]/50 border-[#7F95FF]/15"
           )}>
             <div className="flex items-center gap-4 mb-4">
               <div className={clsx(
                 "p-3 rounded-xl",
-                theme === 'ethereal' ? "bg-white/10 text-white" : "bg-indigo-500/10 text-indigo-400"
+                isLight ? "bg-[#1831D7]/10 text-[#1831D7]" : "bg-[#7F95FF]/10 text-[#7F95FF]"
               )}>
                 <Gamepad2 size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-neutral-200">Cartas</h3>
-                <span className="text-xs text-indigo-400 font-medium">Novo</span>
+                <h3 className={clsx("text-lg font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Cartas</h3>
+                <span className="text-xs text-[#7F95FF] font-medium">Novo</span>
               </div>
             </div>
             
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="pr-4">
-                  <h4 className="font-medium text-neutral-200">Distribuição de Cartas</h4>
-                  <p className="text-sm text-neutral-400 mt-1">
+                  <h4 className={clsx("font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Distribuição de Cartas</h4>
+                  <p className={clsx("text-sm mt-1", isLight ? "text-stone-500" : "text-neutral-400")}>
                     Exiba cartas personalizadas para os ouvintes, com opções de face inicial e revelação (secreta ou pública).
                   </p>
                 </div>
@@ -711,19 +634,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   }}
                   className={clsx(
                     "px-4 py-2 font-medium transition-all text-sm rounded-lg whitespace-nowrap",
-                    theme === 'ethereal' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-900" : "bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6]"
                   )}
                 >
                   Novo Desafio
                 </button>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-neutral-800 dark:border-white/10">
-                <div className="text-sm text-neutral-400">Fixar botão no menu lateral</div>
+                <div className={clsx("text-sm", isLight ? "text-stone-500" : "text-neutral-400")}>Fixar botão no menu lateral</div>
                 <button
                   onClick={() => useThemeStore.getState().togglePinnedMinigame('cards')}
                   className={clsx(
                     "relative w-11 h-6 rounded-full transition-colors duration-200",
-                    useThemeStore.getState().pinnedMinigames.includes('cards') ? "bg-indigo-500" : "bg-neutral-700"
+                    useThemeStore.getState().pinnedMinigames.includes('cards') ? "bg-[#1831D7] dark:bg-[#7F95FF]" : "bg-neutral-700"
                   )}
                 >
                   <span className={clsx(
@@ -738,17 +661,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           {/* Lockpicker de Precisao Minigame */}
           <div className={clsx(
             "p-6 rounded-2xl border transition-all",
-            theme === 'ethereal' ? "bg-white/5 border-white/10" : "bg-neutral-800/50 border-neutral-800"
+            isLight ? "bg-white border-stone-200" : "bg-[#17192A]/50 border-[#7F95FF]/15"
           )}>
             <div className="flex items-center gap-4 mb-4">
               <div className={clsx(
                 "p-3 rounded-xl",
-                theme === 'ethereal' ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "bg-amber-500/10 text-amber-400"
+                isLight ? "bg-amber-500/10 text-amber-600 border border-amber-500/20" : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
               )}>
                 <KeyRound size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-medium text-neutral-200">Lockpicker de Precisão</h3>
+                <h3 className={clsx("text-lg font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Lockpicker de Precisão</h3>
                 <span className="text-xs text-amber-400 font-medium">Novo</span>
               </div>
             </div>
@@ -756,8 +679,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="pr-4">
-                  <h4 className="font-medium text-neutral-200">Decodificador de Fechaduras</h4>
-                  <p className="text-sm text-neutral-400 mt-1">
+                  <h4 className={clsx("font-medium", isLight ? "text-stone-800" : "text-neutral-200")}>Decodificador de Fechaduras</h4>
+                  <p className={clsx("text-sm mt-1", isLight ? "text-stone-500" : "text-neutral-400")}>
                     Desafio tátil em 2 fases: sintonize o tremor da agulha para achar o ponto secreto e gire o cilindro como chave!
                   </p>
                 </div>
@@ -775,19 +698,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                   }}
                   className={clsx(
                     "px-4 py-2 font-medium transition-all text-sm rounded-lg whitespace-nowrap",
-                    theme === 'ethereal' ? "bg-white/10 hover:bg-white/20 text-white" : "bg-neutral-800 hover:bg-neutral-700 text-white"
+                    isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-900" : "bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6]"
                   )}
                 >
                   Novo Desafio
                 </button>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-neutral-800 dark:border-white/10">
-                <div className="text-sm text-neutral-400">Fixar botão no menu lateral</div>
+                <div className={clsx("text-sm", isLight ? "text-stone-500" : "text-neutral-400")}>Fixar botão no menu lateral</div>
                 <button
                   onClick={() => useThemeStore.getState().togglePinnedMinigame('dial_lock')}
                   className={clsx(
                     "relative w-11 h-6 rounded-full transition-colors duration-200",
-                    useThemeStore.getState().pinnedMinigames.includes('dial_lock') ? "bg-indigo-500" : "bg-neutral-700"
+                    useThemeStore.getState().pinnedMinigames.includes('dial_lock') ? "bg-[#1831D7] dark:bg-[#7F95FF]" : "bg-neutral-700"
                   )}
                 >
                   <span className={clsx(
@@ -808,18 +731,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
       <div 
         className={clsx(
           "w-full max-w-4xl flex flex-col overflow-hidden transition-all duration-300 h-[80vh]",
-          theme === 'ethereal' 
-            ? "bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl text-white" 
-            : isLight
-            ? "bg-white border border-stone-200/80 rounded-[2rem] shadow-2xl text-stone-900"
-            : "bg-[#14141B] border border-white/10 rounded-[2rem] shadow-2xl text-stone-100"
+          isLight
+            ? "bg-[#F4F0E6] border border-stone-200/80 rounded-[2rem] shadow-2xl text-[#17192A]"
+            : "bg-[#17192A] border border-[#7F95FF]/20 rounded-[2rem] shadow-2xl text-[#F4F0E6]"
         )}
       >
         <div className={clsx(
           "flex items-center justify-between p-6 border-b shrink-0",
-          isLight ? "border-stone-200/80" : "border-white/10"
+          isLight ? "border-[#1831D7]/15" : "border-white/10"
         )}>
-          <h2 className={clsx("text-xl font-bold tracking-tight", isLight ? "text-stone-900" : "text-white")}>
+          <h2 className={clsx("text-xl font-bold tracking-tight", isLight ? "text-[#17192A]" : "text-white")}>
             Configurações
           </h2>
           <button 

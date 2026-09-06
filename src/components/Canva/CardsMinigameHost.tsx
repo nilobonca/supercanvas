@@ -126,7 +126,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
     }
   };
 
-  const isEthereal = theme === 'ethereal';
+  const isEthereal = false;
 
   const inputClass = clsx(
     "w-full px-3 py-2 text-xs rounded-xl border transition-all font-['Outfit',sans-serif] focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/50",
@@ -171,7 +171,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                 </div>
                 <div>
                   <label className="block text-[11px] mb-1 text-neutral-300 font-semibold tracking-wide flex items-center gap-1.5">
-                    <Sparkles size={12} className="text-indigo-400" />
+                    <Sparkles size={12} className="text-[#7F95FF]" />
                     Subtítulo para Convidados
                   </label>
                   <input 
@@ -253,50 +253,43 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                                 return { ...prev, cards: newCards };
                               });
                             }}
-                            className="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/15 transition-colors flex items-center gap-1 text-xs"
-                            title="Remover Carta"
+                            className="p-1 rounded-lg text-neutral-400 hover:text-rose-400 hover:bg-rose-500/20 transition-all cursor-pointer"
+                            title="Excluir carta"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={13} />
                           </button>
                         </div>
                         
                         {card.type === 'text' ? (
-                          <textarea 
-                            placeholder="Conteúdo ou valor (ex: Dragão, 10, Artefato Ritual)..."
-                            className={clsx(inputClass, "w-full font-['Cinzel',serif] text-xs py-1.5 resize-y min-h-[44px] max-h-[120px]")}
-                            rows={2}
-                            value={card.value || ''}
-                            onPointerDownCapture={e => e.stopPropagation()}
-                            onPointerDown={e => e.stopPropagation()}
-                            onMouseDown={e => e.stopPropagation()}
-                            onTouchStart={e => e.stopPropagation()}
-                            onChange={e => {
-                              const val = e.target.value;
-                              updateGameConfig(id, (prev) => {
-                                const newCards = [...(prev.cards || [])];
-                                newCards[idx] = { ...newCards[idx], value: val };
-                                return { ...prev, cards: newCards };
-                              });
-                            }}
-                          />
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="text" 
+                              placeholder="Texto ou Valor da carta (ex: '20 de Dano', 'Fracasso')..."
+                              className={clsx(inputClass, "flex-1 font-['Cinzel',serif]")}
+                              value={card.value || ''} 
+                              onChange={e => {
+                                const val = e.target.value;
+                                updateGameConfig(id, (prev) => {
+                                  const newCards = [...(prev.cards || [])];
+                                  newCards[idx] = { ...newCards[idx], value: val };
+                                  return { ...prev, cards: newCards };
+                                });
+                              }} 
+                            />
+                          </div>
                         ) : (
-                          <div className="w-full flex flex-col gap-2">
-                            <div className="flex gap-2">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
                               <input 
                                 type="text" 
-                                placeholder="URL da Imagem ou arraste um Asset..."
-                                className={clsx(inputClass, "flex-1")}
+                                placeholder="URL da imagem (ou arraste do canvas)..."
+                                className={clsx(inputClass, "flex-1 text-xs")}
                                 value={card.value?.startsWith('data:') ? 'Imagem carregada' : (card.value || '')}
-                                onDragOver={(e) => {
+                                onDragOver={e => e.preventDefault()}
+                                onDrop={e => {
                                   e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                                onDrop={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  const itemType = e.dataTransfer.getData('itemType');
-                                  const itemId = e.dataTransfer.getData('itemId');
-                                  if (itemType === 'image') {
+                                  const itemId = e.dataTransfer.getData('text/plain');
+                                  if (itemId) {
                                     const event = new CustomEvent('cards_minigame_drop_image', { detail: { idx, itemId }});
                                     window.dispatchEvent(event);
                                   }
@@ -312,7 +305,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                                   }
                                 }}
                               />
-                              <label className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 rounded-xl text-xs cursor-pointer text-center font-medium transition-all flex items-center justify-center gap-1 shadow-sm">
+                              <label className="px-3 py-1.5 bg-[#1831D7]/20 hover:bg-[#1831D7]/30 border border-[#1831D7]/40 text-[#B4D3F1] rounded-xl text-xs cursor-pointer text-center font-medium transition-all flex items-center justify-center gap-1 shadow-sm">
                                 <Upload size={12} />
                                 <span>Upload</span>
                                 <input 
@@ -400,8 +393,8 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                     Adicionar Carta
                   </button>
 
-                  <label className="flex-1 py-1.5 px-3 text-xs bg-gradient-to-r from-indigo-600/40 to-purple-600/40 hover:from-indigo-600/60 hover:to-purple-600/60 border border-indigo-400/30 text-indigo-100 rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 font-medium shadow-md">
-                    <FileImage size={13} className="text-indigo-300" />
+                  <label className="flex-1 py-1.5 px-3 text-xs bg-[#1831D7]/30 hover:bg-[#1831D7]/50 border border-[#7F95FF]/30 text-white rounded-xl transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 font-medium shadow-md">
+                    <FileImage size={13} className="text-[#7F95FF]" />
                     <span>+ Várias Imagens</span>
                     <input
                       type="file"
@@ -505,8 +498,8 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
 
               {/* Permissions Section */}
               <div className={glassCardClass}>
-                <label className="block text-xs font-bold text-indigo-300 tracking-wider flex items-center gap-1.5 mb-2.5 uppercase">
-                  <ShieldCheck size={14} className="text-indigo-400" />
+                <label className="block text-xs font-bold text-[#B4D3F1] tracking-wider flex items-center gap-1.5 mb-2.5 uppercase">
+                  <ShieldCheck size={14} className="text-[#7F95FF]" />
                   Permissões dos Jogadores
                 </label>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1 scrollbar-thin">
@@ -519,7 +512,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                         </span>
                         <div className="flex gap-3 flex-wrap">
                           <label className="flex items-center gap-1 text-[11px] text-neutral-300 cursor-pointer">
-                            <input type="checkbox" className="accent-indigo-500 rounded" checked={p.canSee} onChange={(e) => {
+                            <input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canSee} onChange={(e) => {
                               const newPerms = { ...permissions, [listener.listenerId]: { ...p, canSee: e.target.checked } };
                               updateGame(id, { config: { ...game.config, permissions: newPerms } });
                               if (broadcastEvent) {
@@ -536,7 +529,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                             Ver
                           </label>
                           <label className="flex items-center gap-1 text-[11px] text-neutral-300 cursor-pointer">
-                            <input type="checkbox" className="accent-indigo-500 rounded" checked={p.canInteract} onChange={(e) => {
+                            <input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canInteract} onChange={(e) => {
                               const newPerms = { ...permissions, [listener.listenerId]: { ...p, canInteract: e.target.checked } };
                               updateGame(id, { config: { ...game.config, permissions: newPerms } });
                               if (broadcastEvent) {
@@ -554,7 +547,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                           </label>
                           {initialFace === 'down' && (
                             <label className="flex items-center gap-1 text-[11px] text-neutral-300 cursor-pointer">
-                              <input type="checkbox" className="accent-indigo-500 rounded" checked={p.canSeeResult} onChange={(e) => {
+                              <input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canSeeResult} onChange={(e) => {
                                 const newPerms = { ...permissions, [listener.listenerId]: { ...p, canSeeResult: e.target.checked } };
                                 updateGame(id, { config: { ...game.config, permissions: newPerms } });
                                 if (broadcastEvent) {
@@ -584,7 +577,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
               <div className="mt-auto pt-2">
                 <button 
                   onClick={handleStart}
-                  className="w-full py-2.5 bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:via-indigo-500 hover:to-purple-500 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2.5 bg-brand-gradient-h hover:brightness-110 text-white rounded-xl font-bold tracking-wide transition-all shadow-lg hover:shadow-[#1831D7]/25 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Play size={16} fill="currentColor" />
                   Iniciar Desafio de Cartas
@@ -627,13 +620,13 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                         <span className="truncate max-w-[180px]" title={listenerId}>{progress.name || listenerId}</span>
                       </div>
                       {progress.cardResult ? (
-                        <div className="flex flex-col gap-2 p-2 rounded-xl text-sm font-medium bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 shadow-inner">
+                        <div className="flex flex-col gap-2 p-2 rounded-xl text-sm font-medium bg-[#1831D7]/15 border border-[#1831D7]/30 text-[#B4D3F1] shadow-inner">
                           <div className="flex items-center gap-2.5">
-                            <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-indigo-600/40 border border-indigo-400/40 text-indigo-100">
+                            <span className="text-xs font-bold font-mono px-2 py-0.5 rounded bg-[#1831D7]/40 border border-[#7F95FF]/40 text-[#F4F0E6]">
                               Carta #{progress.cardResult.index + 1}
                             </span>
                             {progress.cardResult.card?.type === 'image' && progress.cardResult.card?.value && (
-                              <img src={progress.cardResult.card.value} alt="Card" className="w-8 h-10 object-cover rounded-lg border border-indigo-400/40 shadow-sm" />
+                              <img src={progress.cardResult.card.value} alt="Card" className="w-8 h-10 object-cover rounded-lg border border-[#7F95FF]/40 shadow-sm" />
                             )}
                             {progress.cardResult.card?.type === 'text' && (
                               <span className="text-xs font-['Cinzel',serif] font-bold text-amber-300 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
@@ -641,7 +634,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                               </span>
                             )}
                             {!progress.cardResult.card && progress.cardResult.imageUrl && (
-                              <img src={progress.cardResult.imageUrl} alt="Card" className="w-8 h-10 object-cover rounded-lg border border-indigo-400/40 shadow-sm" />
+                              <img src={progress.cardResult.imageUrl} alt="Card" className="w-8 h-10 object-cover rounded-lg border border-[#7F95FF]/40 shadow-sm" />
                             )}
                           </div>
                           {progress.cardResult.card?.title && (
@@ -670,7 +663,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
 
               {game.status === 'running' && (
                 <div className={glassCardClass}>
-                  <label className="block text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Permissões em Tempo Real</label>
+                  <label className="block text-xs font-bold text-[#B4D3F1] uppercase tracking-wider mb-2">Permissões em Tempo Real</label>
                   <div className="space-y-2 max-h-28 overflow-y-auto pr-1 scrollbar-thin">
                     {sessionListeners.map(listener => {
                       const p = permissions[listener.listenerId] || { canSee: true, canInteract: true, canSeeResult: false };
@@ -678,14 +671,14 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                         <div key={listener.listenerId} className="flex flex-col gap-1 text-xs p-2 rounded-lg bg-black/30 border border-white/5">
                           <span className="font-medium text-neutral-300">{listener.name}</span>
                           <div className="flex gap-3">
-                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-indigo-500 rounded" checked={p.canSee} onChange={(e) => {
+                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canSee} onChange={(e) => {
                                 const newPerms = { ...permissions, [listener.listenerId]: { ...p, canSee: e.target.checked } };
                                 updateGame(id, { config: { ...game.config, permissions: newPerms } });
                                 if (broadcastEvent) {
                                   broadcastEvent({ type: 'update_card_permissions', payload: { gameId: id, permissions: newPerms }});
                                 }
                              }} /> Ver</label>
-                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-indigo-500 rounded" checked={p.canInteract} onChange={(e) => {
+                             <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canInteract} onChange={(e) => {
                                 const newPerms = { ...permissions, [listener.listenerId]: { ...p, canInteract: e.target.checked } };
                                 updateGame(id, { config: { ...game.config, permissions: newPerms } });
                                 if (broadcastEvent) {
@@ -693,7 +686,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                                 }
                              }} /> Interagir</label>
                              {initialFace === 'down' && (
-                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-indigo-500 rounded" checked={p.canSeeResult} onChange={(e) => {
+                                <label className="flex items-center gap-1 cursor-pointer"><input type="checkbox" className="accent-[#1831D7] rounded" checked={p.canSeeResult} onChange={(e) => {
                                    const newPerms = { ...permissions, [listener.listenerId]: { ...p, canSeeResult: e.target.checked } };
                                    updateGame(id, { config: { ...game.config, permissions: newPerms } });
                                    if (broadcastEvent) {
@@ -722,7 +715,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                         "w-full py-2 rounded-xl text-xs font-medium border flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md",
                         showPreviewModal
                           ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
-                          : "bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-200 border-indigo-500/30"
+                          : "bg-[#1831D7]/20 hover:bg-[#1831D7]/30 text-[#B4D3F1] border-[#1831D7]/30"
                       )}
                     >
                       <Eye size={14} />
@@ -828,7 +821,7 @@ export const CardsMinigameHost: React.FC<{ id: string; sessionListeners: Session
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="flex-shrink-0 w-28 h-40 rounded-xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950 flex flex-col items-center justify-between p-1.5 relative overflow-hidden shadow-xl transition-all hover:scale-105 hover:border-amber-400/60"
+                    className="flex-shrink-0 w-28 h-40 rounded-xl border border-[#1831D7]/40 bg-gradient-to-b from-[#17192A] to-[#131524] flex flex-col items-center justify-between p-1.5 relative overflow-hidden shadow-xl transition-all hover:scale-105 hover:border-amber-400/60"
                   >
                     <span className="absolute top-1.5 left-1.5 text-[9px] bg-amber-500/90 text-black font-mono font-bold px-1.5 py-0.5 rounded-md z-10 shadow">
                       #{idx + 1}

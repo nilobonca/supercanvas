@@ -4,6 +4,8 @@ export interface UpdateStatusPayload {
   percent?: number;
   speed?: number;
   message?: string;
+  releaseName?: string;
+  releaseNotes?: string;
 }
 
 export interface ElectronAPI {

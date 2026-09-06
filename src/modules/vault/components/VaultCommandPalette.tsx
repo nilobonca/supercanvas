@@ -146,7 +146,7 @@ export const VaultCommandPalette: React.FC = () => {
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-5 py-3.5 border-b border-stone-200 dark:border-white/10 bg-stone-50/50 dark:bg-black/20">
-          <Search className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+          <Search className="w-5 h-5 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -173,14 +173,14 @@ export const VaultCommandPalette: React.FC = () => {
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`flex items-center justify-between px-3.5 py-2 rounded-xl cursor-pointer transition-colors text-sm ${
                   isSelected
-                    ? 'bg-purple-600 text-white font-medium shadow-sm'
+                    ? 'bg-[#1831D7] text-white font-medium shadow-sm'
                     : 'text-stone-700 dark:text-neutral-200 hover:bg-stone-100 dark:hover:bg-white/5 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   {item.kind === 'canvas' ? (
                     item.canvasType === 'board' ? (
-                      <FolderKanban className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
+                      <FolderKanban className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#1831D7] dark:text-[#7F95FF]'}`} />
                     ) : (
                       <Music className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`} />
                     )
@@ -189,11 +189,11 @@ export const VaultCommandPalette: React.FC = () => {
                   ) : item.fileType === 'image' ? (
                     <ImageIcon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
                   ) : (
-                    <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`} />
+                    <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-[#1831D7] dark:text-[#7F95FF]'}`} />
                   )}
                   <span className="truncate">{item.name}</span>
                   {item.kind === 'note' && item.folder && (
-                    <span className={`text-xs truncate ${isSelected ? 'text-purple-200' : 'text-stone-400 dark:text-neutral-500'}`}>
+                    <span className={`text-xs truncate ${isSelected ? 'text-[#B4D3F1]' : 'text-stone-400 dark:text-neutral-500'}`}>
                       em {item.folder}
                     </span>
                   )}
@@ -202,7 +202,7 @@ export const VaultCommandPalette: React.FC = () => {
                       isSelected 
                         ? 'bg-white/20 text-white' 
                         : item.canvasType === 'board'
-                          ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
+                          ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF]'
                           : 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300'
                     }`}>
                       {item.canvasType === 'board' ? 'Quadro de Conexões' : 'Canvas de Áudio'}
@@ -221,8 +221,8 @@ export const VaultCommandPalette: React.FC = () => {
               onMouseEnter={() => setSelectedIndex(results.length)}
               className={`flex items-center justify-between px-3.5 py-2 rounded-xl cursor-pointer transition-colors text-sm border border-dashed ${
                 selectedIndex === results.length
-                  ? 'bg-purple-600 text-white border-purple-400 font-medium'
-                  : 'text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-500/30 bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 font-medium'
+                  ? 'bg-[#1831D7] text-white border-[#7F95FF] font-medium'
+                  : 'text-[#1831D7] dark:text-[#7F95FF] border-[#7F95FF]/40 bg-[#1831D7]/10 hover:bg-[#1831D7]/20 font-medium'
               }`}
             >
               <div className="flex items-center gap-2.5 truncate">

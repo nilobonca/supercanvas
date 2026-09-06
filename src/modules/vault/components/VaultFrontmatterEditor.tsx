@@ -76,7 +76,7 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between cursor-pointer select-none py-1 group"
       >
-        <div className="flex items-center gap-2 text-stone-600 dark:text-neutral-400 font-medium group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+        <div className="flex items-center gap-2 text-stone-600 dark:text-neutral-400 font-medium group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
           {isOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           <span>Propriedades (Frontmatter)</span>
           {totalPropsCount > 0 && (
@@ -113,7 +113,7 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
               {tags.map(tag => (
                 <span 
                   key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 text-[11px]"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#1831D7]/10 border border-[#7F95FF]/30 text-[#1831D7] dark:text-[#7F95FF] text-[11px]"
                 >
                   <Hash className="w-3 h-3 opacity-60" />
                   {tag}
@@ -139,13 +139,13 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
                       if (e.key === 'Escape') setIsAddingTag(false);
                     }}
                     onBlur={handleAddTag}
-                    className="bg-white dark:bg-black/40 border border-purple-400 rounded px-2 py-0.5 text-[11px] outline-none w-24 text-stone-800 dark:text-neutral-200"
+                    className="bg-white dark:bg-black/40 border border-[#7F95FF] rounded px-2 py-0.5 text-[11px] outline-none w-24 text-stone-800 dark:text-neutral-200"
                   />
                 </div>
               ) : (
                 <button
                   onClick={() => setIsAddingTag(true)}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-dashed border-stone-300 dark:border-white/20 hover:border-purple-400 text-stone-400 hover:text-purple-600 dark:hover:text-purple-300 text-[11px] transition-colors"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-dashed border-stone-300 dark:border-white/20 hover:border-[#7F95FF] text-stone-400 hover:text-[#1831D7] dark:hover:text-[#7F95FF] text-[11px] transition-colors"
                 >
                   <Plus className="w-2.5 h-2.5" />
                   <span>tag</span>
@@ -172,21 +172,21 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
                       type="checkbox"
                       checked={val}
                       onChange={e => handleUpdateProp(key, e.target.checked)}
-                      className="w-4 h-4 accent-purple-600 rounded cursor-pointer"
+                      className="w-4 h-4 accent-[#1831D7] rounded cursor-pointer"
                     />
                   ) : isNum ? (
                     <input
                       type="number"
                       value={val}
                       onChange={e => handleUpdateProp(key, parseFloat(e.target.value) || 0)}
-                      className="bg-white dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded px-2 py-0.5 text-xs outline-none focus:border-purple-400 text-stone-800 dark:text-neutral-200 w-32"
+                      className="bg-white dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded px-2 py-0.5 text-xs outline-none focus:border-[#7F95FF] text-stone-800 dark:text-neutral-200 w-32"
                     />
                   ) : (
                     <input
                       type="text"
                       value={val || ''}
                       onChange={e => handleUpdateProp(key, e.target.value)}
-                      className="bg-white dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded px-2 py-0.5 text-xs outline-none focus:border-purple-400 text-stone-800 dark:text-neutral-200 flex-1 max-w-sm"
+                      className="bg-white dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded px-2 py-0.5 text-xs outline-none focus:border-[#7F95FF] text-stone-800 dark:text-neutral-200 flex-1 max-w-sm"
                     />
                   )}
                   <button
@@ -214,7 +214,7 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
                   if (e.key === 'Enter') handleAddProp();
                   if (e.key === 'Escape') setIsAddingProp(false);
                 }}
-                className="bg-white dark:bg-black/40 border border-purple-400 rounded px-2 py-1 text-xs outline-none text-stone-800 dark:text-neutral-200 w-40"
+                className="bg-white dark:bg-black/40 border border-[#7F95FF] rounded px-2 py-1 text-xs outline-none text-stone-800 dark:text-neutral-200 w-40"
               />
               <select
                 value={newPropType}
@@ -228,7 +228,7 @@ export const VaultFrontmatterEditor: React.FC<VaultFrontmatterEditorProps> = ({ 
               </select>
               <button
                 onClick={handleAddProp}
-                className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium"
+                className="px-2.5 py-1 bg-[#1831D7] hover:bg-[#1831D7]/90 text-white rounded text-xs font-medium"
               >
                 Adicionar
               </button>

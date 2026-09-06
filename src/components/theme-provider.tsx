@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "dark" | "light" | "system" | "ethereal" | "grimdark" | "cyber" | "taverna";
+export type Theme = "dark" | "light" | "system";
 
 type ThemeProviderProps = {
     children: React.ReactNode;
@@ -14,7 +14,7 @@ type ThemeProviderState = {
 };
 
 const initialState: ThemeProviderState = {
-    theme: "ethereal",
+    theme: "dark",
     setTheme: () => null,
 };
 
@@ -22,12 +22,14 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
     children,
-    defaultTheme = "ethereal",
+    defaultTheme = "dark",
     storageKey = "vite-ui-theme",
 }: ThemeProviderProps) {
     const [theme, setTheme] = useState<Theme>(() => {
         if (typeof window !== "undefined") {
-            return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+            const stored = localStorage.getItem(storageKey);
+            if (stored === "light") return "light";
+            return "dark";
         }
         return defaultTheme;
     });
@@ -47,11 +49,7 @@ export function ThemeProvider({
             return;
         }
 
-        if (theme === "ethereal" || theme === "grimdark" || theme === "cyber" || theme === "taverna") {
-            root.classList.add("dark", theme);
-        } else {
-            root.classList.add(theme);
-        }
+        root.classList.add(theme === "light" ? "light" : "dark");
     }, [theme]);
 
     const value = {

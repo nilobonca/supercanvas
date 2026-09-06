@@ -36,16 +36,16 @@ export const CardsMinigameGuest: React.FC<CardsMinigameGuestProps> = ({
         
         {/* Glowing Background Ambient Orbs */}
         <div className="absolute -top-20 -left-20 w-72 h-72 bg-amber-500/10 rounded-full blur-[90px] pointer-events-none animate-pulse" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-indigo-500/15 rounded-full blur-[90px] pointer-events-none animate-pulse" style={{ animationDelay: '1.5s' }} />
+        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-[#1831D7]/20 rounded-full blur-[90px] pointer-events-none animate-pulse" style={{ animationDelay: '1.5s' }} />
 
         {/* Header Title & Subtitle */}
         <div className="relative z-10 mb-6 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles size={20} className="text-amber-400 animate-pulse" />
-            <h2 className="font-['Cinzel',serif] text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-indigo-100 to-purple-300 drop-shadow-md tracking-wider">
+            <h2 className="font-['Cinzel',serif] text-2xl sm:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-[#52B1FF] via-[#7F95FF] to-[#B4D3F1] drop-shadow-md tracking-wider">
               {title}
             </h2>
-            <Sparkles size={20} className="text-purple-400 animate-pulse" style={{ animationDelay: '0.7s' }} />
+            <Sparkles size={20} className="text-[#7F95FF] animate-pulse" style={{ animationDelay: '0.7s' }} />
           </div>
 
           <p className="text-xs sm:text-sm text-neutral-300/80 max-w-md font-medium">
@@ -110,15 +110,15 @@ export const CardsMinigameGuest: React.FC<CardsMinigameGuestProps> = ({
                     className={clsx(
                       "absolute inset-0 rounded-2xl border-2 flex flex-col items-center justify-center p-3 shadow-2xl transition-all overflow-hidden",
                       canInteract 
-                        ? "bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-950 border-indigo-500/40 group-hover:border-amber-400/70 group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]" 
+                        ? "bg-gradient-to-br from-[#17192A] via-[#131524] to-[#17192A] border-[#1831D7]/40 group-hover:border-amber-400/70 group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]" 
                         : "bg-slate-950 border-white/10 opacity-80"
                     )}
                     style={{ backfaceVisibility: 'hidden' }}
                   >
                     {/* Dark Fantasy Geometric Back Pattern */}
                     <div className="absolute inset-2 border border-white/10 rounded-xl flex items-center justify-center bg-black/20">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-amber-400/30 rotate-45 flex items-center justify-center bg-indigo-900/20">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 border border-indigo-400/40 rotate-45 flex items-center justify-center bg-purple-900/30">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 border-2 border-amber-400/30 rotate-45 flex items-center justify-center bg-[#1831D7]/20">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 border border-[#7F95FF]/40 rotate-45 flex items-center justify-center bg-[#1831D7]/30">
                           <span className="font-['Cinzel',serif] text-xs sm:text-sm font-bold text-amber-200/80 -rotate-45">
                             #{idx + 1}
                           </span>
@@ -136,7 +136,7 @@ export const CardsMinigameGuest: React.FC<CardsMinigameGuestProps> = ({
 
                   {/* Card Front (Revealed / Face Up) */}
                   <div
-                    className="absolute inset-0 rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-slate-900 via-indigo-950 to-purple-950 flex flex-col items-center justify-between p-2.5 sm:p-3 shadow-2xl overflow-hidden"
+                    className="absolute inset-0 rounded-2xl border-2 border-amber-400/50 bg-gradient-to-b from-[#17192A] via-[#131524] to-[#17192A] flex flex-col items-center justify-between p-2.5 sm:p-3 shadow-2xl overflow-hidden"
                     style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                   >
                     {!cardPermissions.canSeeResult && initialFace === 'down' ? (
@@ -163,18 +163,18 @@ export const CardsMinigameGuest: React.FC<CardsMinigameGuestProps> = ({
                         )}
                       </div>
                     ) : cardData?.type === 'text' && cardData.value ? (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-black/40 rounded-xl border border-indigo-400/30">
+                      <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-black/40 rounded-xl border border-[#7F95FF]/30">
                         <span className="font-['Cinzel',serif] text-base sm:text-lg font-extrabold text-amber-200 text-center break-words line-clamp-6 drop-shadow-md">
                           {cardData.value}
                         </span>
                         {cardData.title && cardData.showTitle && (
-                          <span className="text-[10px] font-['Outfit',sans-serif] text-indigo-300 mt-2 font-medium">
+                          <span className="text-[10px] font-['Outfit',sans-serif] text-[#52B1FF] mt-2 font-medium">
                             {cardData.title}
                           </span>
                         )}
                       </div>
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-black/40 rounded-xl border border-indigo-400/30">
+                      <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-black/40 rounded-xl border border-[#7F95FF]/30">
                         <span className="font-['Cinzel',serif] text-2xl font-black text-amber-300">
                           {idx + 1}
                         </span>

@@ -43,15 +43,15 @@ export const MinigameWindow: React.FC<MinigameWindowProps> = ({ id, title, child
     switch (game.gameId) {
       case 'clicker':
         return {
-          icon: <Flame size={15} className="drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]" />,
-          badgeClass: "bg-gradient-to-br from-indigo-500/20 via-blue-500/20 to-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.35)]",
-          dotClass: "bg-cyan-400 shadow-[0_0_8px_#22d3ee]"
+          icon: <Flame size={15} className="drop-shadow-[0_0_8px_rgba(82,177,255,0.8)]" />,
+          badgeClass: "bg-[#52B1FF]/20 text-[#52B1FF] border-[#52B1FF]/40 shadow-[0_0_15px_rgba(82,177,255,0.35)]",
+          dotClass: "bg-[#52B1FF] shadow-[0_0_8px_#52B1FF]"
         };
       case 'cards':
         return {
-          icon: <Sparkles size={15} className="drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]" />,
-          badgeClass: "bg-gradient-to-br from-purple-500/20 via-fuchsia-500/20 to-pink-500/20 text-fuchsia-300 border-fuchsia-500/40 shadow-[0_0_15px_rgba(217,70,239,0.35)]",
-          dotClass: "bg-fuchsia-400 shadow-[0_0_8px_#e879f9]"
+          icon: <Sparkles size={15} className="drop-shadow-[0_0_8px_rgba(127,149,255,0.8)]" />,
+          badgeClass: "bg-[#7F95FF]/20 text-[#7F95FF] border-[#7F95FF]/40 shadow-[0_0_15px_rgba(127,149,255,0.35)]",
+          dotClass: "bg-[#7F95FF] shadow-[0_0_8px_#7F95FF]"
         };
       case 'coin_flip':
         return {
@@ -67,9 +67,9 @@ export const MinigameWindow: React.FC<MinigameWindowProps> = ({ id, title, child
         };
       default:
         return {
-          icon: <Gamepad2 size={15} className="drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]" />,
-          badgeClass: "bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-blue-500/20 text-indigo-300 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.35)]",
-          dotClass: "bg-indigo-400 shadow-[0_0_8px_#818cf8]"
+          icon: <Gamepad2 size={15} className="drop-shadow-[0_0_8px_rgba(24,49,215,0.8)]" />,
+          badgeClass: "bg-[#1831D7]/20 text-[#7F95FF] border-[#1831D7]/40 shadow-[0_0_15px_rgba(24,49,215,0.35)]",
+          dotClass: "bg-[#7F95FF] shadow-[0_0_8px_#7F95FF]"
         };
     }
   };
@@ -94,8 +94,8 @@ export const MinigameWindow: React.FC<MinigameWindowProps> = ({ id, title, child
   };
 
   const PINNED_SHORTCUTS = [
-    { gameId: 'clicker', label: 'Cliques', title: 'Desafio de Cliques', icon: MousePointerClick, activeBg: 'border-cyan-500/40 text-cyan-300 bg-cyan-500/10' },
-    { gameId: 'cards', label: 'Cartas', title: 'Escolha uma Carta', icon: Sparkles, activeBg: 'border-fuchsia-500/40 text-fuchsia-300 bg-fuchsia-500/10' },
+    { gameId: 'clicker', label: 'Cliques', title: 'Desafio de Cliques', icon: MousePointerClick, activeBg: 'border-[#52B1FF]/40 text-[#52B1FF] bg-[#52B1FF]/10' },
+    { gameId: 'cards', label: 'Cartas', title: 'Escolha uma Carta', icon: Sparkles, activeBg: 'border-[#7F95FF]/40 text-[#7F95FF] bg-[#7F95FF]/10' },
     { gameId: 'coin_flip', label: 'Moeda', title: 'Cara ou Coroa', icon: Coins, activeBg: 'border-amber-500/40 text-amber-300 bg-amber-500/10' },
     { gameId: 'dial_lock', label: 'Lockpick', title: 'Lockpicker de Precisão', icon: KeyRound, activeBg: 'border-amber-500/40 text-amber-300 bg-amber-500/10' },
   ];
@@ -203,7 +203,7 @@ export const MinigameWindow: React.FC<MinigameWindowProps> = ({ id, title, child
       {/* Atalhos de Minigames Fixados Strip */}
       <div className="px-3 py-1.5 border-b border-white/5 bg-black/40 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-500 mr-1 select-none flex items-center gap-1">
-          <Gamepad2 size={11} className="text-indigo-400" />
+          <Gamepad2 size={11} className="text-[#7F95FF]" />
           Atalhos:
         </span>
         {PINNED_SHORTCUTS.map(sc => {

@@ -182,7 +182,7 @@ export const useWebRTCAudioStreamer = ({
           name: listener.name,
           enabled: true,
           icon: 'ear',
-          color: '#6366f1'
+          color: '#7F95FF'
         };
         addPinPersisted(newPin, activeProjectId);
       }

@@ -77,7 +77,7 @@ export const BoardNoteActions: React.FC<BoardNoteActionsProps> = ({
                 }}
                 className={clsx(
                   "w-6 h-6 rounded-lg border-2 transition-transform hover:scale-110 cursor-pointer shrink-0",
-                  t.border.toLowerCase() === themeBorder.toLowerCase() ? "border-purple-600 scale-105" : "border-transparent"
+                  t.border.toLowerCase() === themeBorder.toLowerCase() ? "border-[#1831D7] scale-105" : "border-transparent"
                 )}
                 style={{
                   backgroundColor: t.border,
@@ -115,7 +115,7 @@ export const BoardNoteActions: React.FC<BoardNoteActionsProps> = ({
         className={clsx(
           "p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center",
           isEditing
-            ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 hover:bg-purple-500/25"
+            ? "bg-[#1831D7]/15 text-[#1831D7] dark:text-[#7F95FF] hover:bg-[#1831D7]/25"
             : "text-stone-600 dark:text-neutral-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/10"
         )}
         title={isEditing ? "Concluir edição (Esc)" : "Editar nota (Clique duplo)"}

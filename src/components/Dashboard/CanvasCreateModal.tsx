@@ -72,7 +72,7 @@ export const CanvasCreateModal: React.FC<CanvasCreateModalProps> = ({
         {/* Vault Destination Selector */}
         <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-black/25 border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <SafeIcon size={16} className="text-purple-600 dark:text-purple-400 shrink-0" />
+            <SafeIcon size={16} className="text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
             <div>
               <span className="text-xs font-semibold block text-stone-800 dark:text-neutral-200">
                 Salvar no Vault:
@@ -86,7 +86,7 @@ export const CanvasCreateModal: React.FC<CanvasCreateModalProps> = ({
           <select
             value={selectedVaultId}
             onChange={(e) => setSelectedVaultId(e.target.value)}
-            className="text-xs font-medium bg-white dark:bg-[#1E1E28] border border-black/10 dark:border-white/10 rounded-xl px-3 py-1.5 text-stone-900 dark:text-white outline-none focus:border-purple-500 shadow-xs"
+            className="text-xs font-medium bg-white dark:bg-[#1E1E28] border border-black/10 dark:border-white/10 rounded-xl px-3 py-1.5 text-stone-900 dark:text-white outline-none focus:border-[#7F95FF] shadow-xs"
           >
             <option value="__general__">Caixa Geral (Sem Vault específico)</option>
             {vaults.map(v => (
@@ -102,20 +102,20 @@ export const CanvasCreateModal: React.FC<CanvasCreateModalProps> = ({
           {/* Option 1: Canvas de Conexões */}
           <div
             onClick={() => handleSelectType('board')}
-            className="group p-5 rounded-2xl bg-stone-50/80 hover:bg-purple-50/60 dark:bg-white/5 dark:hover:bg-purple-600/15 border border-stone-200/80 hover:border-purple-400 dark:border-white/10 dark:hover:border-purple-500/60 cursor-pointer transition-all flex flex-col gap-3 shadow-xs hover:shadow-md"
+            className="group p-5 rounded-2xl bg-stone-50/80 hover:bg-[#1831D7]/5 dark:bg-white/5 dark:hover:bg-[#1831D7]/15 border border-stone-200/80 hover:border-[#1831D7] dark:border-white/10 dark:hover:border-[#7F95FF]/60 cursor-pointer transition-all flex flex-col gap-3 shadow-xs hover:shadow-md"
           >
-            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/30 flex items-center justify-center group-hover:scale-110 transition-transform">
               <FolderKanban className="w-6 h-6" />
             </div>
             <div>
-              <h4 className="text-sm font-bold group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+              <h4 className="text-sm font-bold group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                 Canvas de Conexões
               </h4>
               <p className="text-xs text-stone-500 dark:text-neutral-400 leading-relaxed mt-1">
                 Quadro visual infinito de Notas, Wikilinks, Áudio, Imagens e Setas conectadas dinamicamente.
               </p>
             </div>
-            <span className="mt-auto text-[11px] font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+            <span className="mt-auto text-[11px] font-semibold text-[#1831D7] dark:text-[#7F95FF] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
               Criar Conexões &rarr;
             </span>
           </div>

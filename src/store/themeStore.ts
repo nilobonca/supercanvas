@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type ThemeType = 'light' | 'dark' | 'ethereal' | 'grimdark' | 'cyber' | 'taverna' | 'default';
+export type ThemeType = 'light' | 'dark';
 
 type ThemeState = {
   theme: ThemeType;
@@ -27,11 +27,11 @@ export const useThemeStore = create<ThemeState>()(
       theme: 'dark',
       isSettingsOpen: false,
       audioVizEnabled: true,
-      audioVizColor: '#818cf8', // indigo-400
+      audioVizColor: '#7F95FF',
       audioVizIntensity: 1.0,
       areaRippleEnabled: true,
       pinnedMinigames: [], 
-      setTheme: (theme) => set({ theme }),
+      setTheme: (theme) => set({ theme: theme === 'light' ? 'light' : 'dark' }),
       toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       setIsSettingsOpen: (isOpen) => set({ isSettingsOpen: isOpen }),
       setAudioVizEnabled: (enabled) => set({ audioVizEnabled: enabled }),
@@ -46,6 +46,13 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'vsd-theme-storage',
+      // Garante migração automática de temas antigos ('ethereal', 'cyber', etc.) para 'dark'
+      migrate: (persistedState: any) => {
+        if (persistedState && persistedState.theme !== 'light') {
+          persistedState.theme = 'dark';
+        }
+        return persistedState as ThemeState;
+      }
     }
   )
 );

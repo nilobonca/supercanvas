@@ -122,25 +122,25 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
           ============================================================ */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-purple-600 dark:text-purple-400 font-bold">
+          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#1831D7] dark:text-[#7F95FF] font-bold">
             Vault Selecionado
           </span>
 
           {/* Tag de Status solicitada */}
           {isFSA ? (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#52B1FF]/10 text-[#52B1FF] border border-[#52B1FF]/25">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#52B1FF] shadow-[0_0_8px_rgba(82,177,255,0.8)] animate-pulse" />
               <span>HD LOCAL (WINDOWS)</span>
             </div>
           ) : (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#1831D7]/15 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/30">
               <Database size={11} />
               <span>INDEXEDDB</span>
             </div>
           )}
         </div>
 
-        <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-white">
+        <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-[#F4F0E6]">
           Configurações do Último Vault
         </h3>
       </div>
@@ -149,7 +149,7 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
           VAULT NAME (INLINE EDITABLE)
           ============================================================ */}
       <div className="p-3.5 rounded-2xl border border-black/[0.08] dark:border-white/[0.08] bg-black/[0.02] dark:bg-white/[0.03]">
-        <span className="text-[10px] uppercase font-bold text-stone-400 dark:text-neutral-500 tracking-wider">
+        <span className="text-[10px] uppercase font-bold text-stone-400 dark:text-[#B4D3F1]/70 tracking-wider">
           Nome do Vault
         </span>
 
@@ -164,7 +164,7 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
                 if (e.key === 'Escape') setIsEditingName(false);
               }}
               autoFocus
-              className="w-full bg-white dark:bg-black/60 border border-purple-500 rounded-lg px-2.5 py-1 text-sm font-bold text-stone-900 dark:text-white outline-none"
+              className="w-full bg-white dark:bg-black/60 border border-[#7F95FF] rounded-lg px-2.5 py-1 text-sm font-bold text-stone-900 dark:text-white outline-none"
             />
             <button
               onClick={handleSaveName}
@@ -241,29 +241,29 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
           STATISTICS: NOTAS SALVAS & CANVASES VINCULADOS
           ============================================================ */}
       <div className="grid grid-cols-2 gap-2.5">
-        <div className="p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#15151D] flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+        <div className="p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#131524] flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#1831D7]/15 text-[#7F95FF] flex items-center justify-center shrink-0">
             <FileText size={16} />
           </div>
           <div>
             <div className="text-base font-extrabold text-stone-900 dark:text-white leading-none">
               {activeVault.documentCount || 0}
             </div>
-            <div className="text-[10px] text-stone-400 dark:text-neutral-500 mt-1">
+            <div className="text-[10px] text-stone-400 dark:text-[#B4D3F1]/80 mt-1">
               Notas & Arquivos
             </div>
           </div>
         </div>
 
-        <div className="p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#15151D] flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+        <div className="p-3 rounded-xl border border-black/[0.06] dark:border-white/[0.07] bg-white dark:bg-[#131524] flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-[#52B1FF]/15 text-[#52B1FF] flex items-center justify-center shrink-0">
             <Layers size={16} />
           </div>
           <div>
             <div className="text-base font-extrabold text-stone-900 dark:text-white leading-none">
               {activeVault.canvasCount || 0}
             </div>
-            <div className="text-[10px] text-stone-400 dark:text-neutral-500 mt-1">
+            <div className="text-[10px] text-stone-400 dark:text-[#B4D3F1]/80 mt-1">
               Canvases Vinculados
             </div>
           </div>
@@ -280,10 +280,10 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
           }
           router.push('/vault');
         }}
-        className="w-full group relative overflow-hidden rounded-xl p-3 bg-stone-900 text-white hover:bg-stone-800 dark:bg-purple-600 dark:hover:bg-purple-500 font-bold text-xs flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-md shadow-purple-600/15 cursor-pointer"
+        className="w-full group relative overflow-hidden rounded-xl p-3 bg-[#1831D7] text-[#F4F0E6] hover:bg-[#1831D7]/90 font-bold text-xs flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-md shadow-[#1831D7]/20 cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <SafeIcon size={16} className="text-purple-300 dark:text-purple-200" />
+          <SafeIcon size={16} className="text-[#B4D3F1]" />
           <span>Abrir Vault no Editor</span>
         </div>
 

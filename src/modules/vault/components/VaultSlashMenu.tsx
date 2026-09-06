@@ -67,14 +67,14 @@ export const VaultSlashMenu: React.FC<VaultSlashMenuProps> = ({
               }}
               className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer ${
                 isSelected
-                  ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-900 dark:text-purple-200'
+                  ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF]'
                   : 'hover:bg-stone-100 dark:hover:bg-white/5 text-stone-700 dark:text-neutral-300'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 border ${
                   isSelected
-                    ? 'bg-white dark:bg-white/10 border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-300'
+                    ? 'bg-white dark:bg-white/10 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
                     : 'bg-stone-100 dark:bg-white/5 border-stone-200/60 dark:border-white/10 text-stone-500 dark:text-neutral-400'
                 }`}>
                   <IconComponent className="w-3.5 h-3.5" />

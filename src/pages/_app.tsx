@@ -1,3 +1,4 @@
+import "@/utils/cryptoPolyfill";
 import "@/styles/globals.css";
 import "katex/dist/katex.min.css";
 import { IDBProvider } from "@/utils/indexedDB";
@@ -11,12 +12,18 @@ import { FeedbackWidget } from "@/components/Feedback/FeedbackWidget";
 import { AppUpdateToast } from "@/components/common/AppUpdateToast";
 import { PollsProvider } from "@/contexts/PollsContext";
 import { useThemeStore } from "@/store/themeStore";
+import { useAppUpdateStore } from "@/store/useAppUpdateStore";
+import { useAdaptiveFavicon } from "@/hooks/useAdaptiveFavicon";
 import { SettingsModal } from "@/components/SettingsModal/SettingsModal";
 import clsx from "clsx";
 
 export default function App({ Component, pageProps }: AppProps) {
   const { theme, isSettingsOpen, setIsSettingsOpen } = useThemeStore();
   const [mounted, setMounted] = useState(false);
+  const initAppUpdate = useAppUpdateStore((state) => state.init);
+
+  // Dynamically adapt browser favicon to match theme
+  useAdaptiveFavicon();
 
   useEffect(() => {
     setMounted(true);
@@ -45,12 +52,16 @@ export default function App({ Component, pageProps }: AppProps) {
       });
     }
 
+    // Initialize auto-updater store and auto-check on startup
+    const unsubUpdate = initAppUpdate();
+
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       unsubMute?.();
       unsubTrigger?.();
+      unsubUpdate?.();
     };
-  }, []);
+  }, [initAppUpdate]);
 
   const activeTheme = mounted ? theme : 'dark';
 
@@ -58,13 +69,7 @@ export default function App({ Component, pageProps }: AppProps) {
     if (!mounted) return;
     const root = document.documentElement;
     root.classList.remove('light', 'dark', 'ethereal', 'grimdark', 'cyber', 'taverna');
-    if (activeTheme === 'ethereal' || activeTheme === 'grimdark' || activeTheme === 'cyber' || activeTheme === 'taverna') {
-      root.classList.add('dark', activeTheme);
-    } else if (activeTheme === 'dark' || activeTheme === 'default') {
-      root.classList.add('dark');
-    } else if (activeTheme === 'light') {
-      root.classList.add('light');
-    }
+    root.classList.add(activeTheme === 'light' ? 'light' : 'dark');
   }, [activeTheme, mounted]);
 
   return (
@@ -81,8 +86,9 @@ export default function App({ Component, pageProps }: AppProps) {
               <div className={clsx(
                 "w-screen h-screen overflow-hidden flex flex-col transition-colors duration-300", 
                 activeTheme,
-                activeTheme === 'light' ? 'bg-[#FAF9F6] text-[#1C1917]' : 
-                activeTheme === 'dark' || activeTheme === 'default' ? 'bg-[#0F0F13] text-[#F4F4F6]' : ''
+                activeTheme === 'light' 
+                  ? 'bg-[#F4F0E6] text-[#17192A]' 
+                  : 'bg-[#17192A] text-[#F4F0E6]'
               )}>
                 <div className="flex-1 w-full h-full overflow-hidden relative">
                   <Component {...pageProps} />

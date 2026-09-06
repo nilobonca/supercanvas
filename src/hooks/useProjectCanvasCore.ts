@@ -49,10 +49,7 @@ export const useProjectCanvasCore = () => {
     });
   }, [setBroadcastEvent, connectionsRef]);
 
-  const { theme } = useThemeStore();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
-  const isEthereal = mounted && theme === 'ethereal';
+  const isEthereal = false;
 
   const [isDiceTrayOpen, setIsDiceTrayOpen] = useState(false);
 

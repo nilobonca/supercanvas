@@ -103,8 +103,8 @@ export const VaultSettingsModal: React.FC = () => {
         {/* Header */}
         <div className="px-5 py-4 border-b border-stone-200/90 dark:border-white/10 flex items-center justify-between bg-stone-50/70 dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-              <SafeIcon size={20} className="text-purple-600 dark:text-purple-400" />
+            <div className="w-9 h-9 rounded-xl bg-[#1831D7]/10 border border-[#7F95FF]/30 flex items-center justify-center text-[#1831D7] dark:text-[#7F95FF] shrink-0">
+              <SafeIcon size={20} className="text-[#1831D7] dark:text-[#7F95FF]" />
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 dark:text-neutral-100">
@@ -131,7 +131,7 @@ export const VaultSettingsModal: React.FC = () => {
           {/* Section 1: Vincular Pasta do Windows (FSA / Local File System) */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Laptop className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <Laptop className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF]" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
                 Vincular Pasta do Windows & Armazenamento
               </h3>
@@ -175,20 +175,20 @@ export const VaultSettingsModal: React.FC = () => {
                     onClick={handleSwitchToIDB}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-700 dark:text-neutral-300 font-medium text-xs border border-stone-200 dark:border-white/10 transition-colors cursor-pointer"
                   >
-                    <Database className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <Database className="w-3.5 h-3.5 text-[#1831D7] dark:text-[#7F95FF]" />
                     <span>Usar Banco IndexedDB</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="p-4 rounded-xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/30 flex flex-col gap-3">
+              <div className="p-4 rounded-xl bg-[#1831D7]/10 border border-[#7F95FF]/30 flex flex-col gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center text-purple-700 dark:text-purple-300 shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#1831D7]/20 flex items-center justify-center text-[#1831D7] dark:text-[#7F95FF] shrink-0">
                     <Database className="w-4 h-4" />
                   </div>
                   <div className="flex-1">
-                    <span className="font-semibold text-xs text-purple-900 dark:text-purple-200 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                    <span className="font-semibold text-xs text-[#1831D7] dark:text-[#7F95FF] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#1831D7]" />
                       Armazenamento Local no Navegador (IndexedDB)
                     </span>
                     <p className="text-[11px] text-stone-600 dark:text-neutral-400 mt-0.5 leading-relaxed">
@@ -197,11 +197,11 @@ export const VaultSettingsModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-purple-200/60 dark:border-purple-800/30">
+                <div className="pt-2 border-t border-[#7F95FF]/30">
                   <button
                     onClick={handleConnectWindowsFolder}
                     disabled={isConnecting}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs transition-all cursor-pointer shadow-md shadow-purple-500/10 disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 text-white font-semibold text-xs transition-all cursor-pointer shadow-md shadow-[#1831D7]/20 disabled:opacity-50"
                   >
                     {isConnecting ? (
                       <RefreshCw className="w-4 h-4 animate-spin" />
@@ -218,7 +218,7 @@ export const VaultSettingsModal: React.FC = () => {
           {/* Section 2: Nome do Vault (Identidade) */}
           <div className="space-y-3 pt-2 border-t border-stone-200/80 dark:border-white/5">
             <div className="flex items-center gap-2">
-              <Edit2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <Edit2 className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF]" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
                 Nome do Vault
               </h3>
@@ -233,12 +233,12 @@ export const VaultSettingsModal: React.FC = () => {
                   if (e.key === 'Enter') handleSaveName();
                 }}
                 placeholder="Nome do seu Vault..."
-                className="flex-1 bg-stone-50 dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-purple-500"
+                className="flex-1 bg-stone-50 dark:bg-black/30 border border-stone-200 dark:border-white/10 rounded-lg px-3 py-2 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-[#7F95FF]"
               />
               <button
                 onClick={handleSaveName}
                 disabled={!nameInput.trim() || nameInput.trim() === vaultName}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white font-medium text-xs transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1831D7] hover:bg-[#1831D7]/90 disabled:opacity-40 text-white font-medium text-xs transition-colors cursor-pointer"
               >
                 {nameSaved ? <Check className="w-3.5 h-3.5" /> : null}
                 <span>{nameSaved ? 'Salvo!' : 'Salvar Nome'}</span>
@@ -249,7 +249,7 @@ export const VaultSettingsModal: React.FC = () => {
           {/* Section 3: Lixeira & Confirmação de Exclusão */}
           <div className="space-y-3 pt-2 border-t border-stone-200/80 dark:border-white/5">
             <div className="flex items-center gap-2">
-              <Trash2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <Trash2 className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF]" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
                 Lixeira & Confirmação de Exclusão
               </h3>
@@ -272,7 +272,7 @@ export const VaultSettingsModal: React.FC = () => {
                   onChange={(e) => handleToggleConfirmDelete(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#1831D7]"></div>
               </label>
             </div>
           </div>

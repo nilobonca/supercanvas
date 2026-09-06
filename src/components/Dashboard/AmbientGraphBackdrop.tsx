@@ -154,30 +154,30 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
     <div
       ref={containerRef}
       className={clsx(
-        "relative w-full h-full min-h-[560px] overflow-hidden select-none bg-[#08080C]",
+        "relative w-full h-full min-h-[560px] overflow-hidden select-none bg-[#17192A]",
         "border-l border-white/[0.05] transition-colors duration-500",
         className
       )}
-      style={{ backgroundColor: '#08080C' }}
+      style={{ backgroundColor: '#17192A' }}
     >
       {/* Top subtle synchronization shimmer line when loading */}
       {isLoading && (
-        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/80 to-transparent animate-pulse z-40" />
+        <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#7F95FF]/80 to-transparent animate-pulse z-40" />
       )}
 
-      {/* Deep Atmospheric Gradient Glow Orbs */}
+      {/* Deep Atmospheric Gradient Glow Orbs with Brand Colors */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
         <div 
           className="absolute -top-32 -left-20 w-[550px] h-[550px] rounded-full blur-[140px] opacity-70"
-          style={{ background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(8, 8, 12, 0) 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(82, 177, 255, 0.14) 0%, rgba(23, 25, 42, 0) 70%)' }}
         />
         <div 
           className="absolute top-1/3 -right-24 w-[600px] h-[600px] rounded-full blur-[160px] opacity-60"
-          style={{ background: 'radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, rgba(8, 8, 12, 0) 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(127, 149, 255, 0.12) 0%, rgba(23, 25, 42, 0) 70%)' }}
         />
         <div 
           className="absolute -bottom-24 left-1/4 w-[500px] h-[500px] rounded-full blur-[130px] opacity-50"
-          style={{ background: 'radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, rgba(8, 8, 12, 0) 70%)' }}
+          style={{ background: 'radial-gradient(circle, rgba(0, 31, 255, 0.10) 0%, rgba(23, 25, 42, 0) 70%)' }}
         />
       </div>
 
@@ -239,11 +239,11 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/[0.08] shadow-lg text-xs">
             {isLoading ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7F95FF]" />
                 <span className="font-semibold text-neutral-200 tracking-wide">
                   {vaultName}
                 </span>
-                <span className="text-[10px] uppercase font-bold text-purple-400 tracking-widest pl-1 border-l border-white/10 animate-pulse">
+                <span className="text-[10px] uppercase font-bold text-[#7F95FF] tracking-widest pl-1 border-l border-white/10 animate-pulse">
                   Sincronizando
                 </span>
               </>
@@ -316,7 +316,7 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
       {/* Bottom Floating Ambient Hint */}
       <footer className="absolute bottom-4 inset-x-6 z-30 flex items-center justify-between pointer-events-none text-[11px] text-neutral-500">
         <div className="flex items-center gap-2 pointer-events-auto">
-          <Compass className="w-3.5 h-3.5 text-purple-400/70" />
+          <Compass className="w-3.5 h-3.5 text-[#7F95FF]/70" />
           <span className="hidden sm:inline">
             Arraste os nós estelares e cards para reorganizar a constelação
           </span>
@@ -326,7 +326,7 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-400/50" />
+          <span className="w-1.5 h-1.5 rounded-full bg-[#7F95FF]/50" />
           <span className="text-[10px] tracking-wider uppercase">Grafo GPU 60fps</span>
         </div>
       </footer>

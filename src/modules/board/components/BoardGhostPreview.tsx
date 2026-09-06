@@ -36,7 +36,7 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
           </div>
 
           {/* Cartão Nota com estilo idêntico */}
-          <div className="w-full h-full rounded-2xl border-[3px] border-indigo-500 bg-[#faf5ff] shadow-2xl p-4 flex flex-col justify-between opacity-95 ring-4 ring-indigo-500/20">
+          <div className="w-full h-full rounded-2xl border-[3px] border-[#1831D7] bg-[#F4F0E6] shadow-2xl p-4 flex flex-col justify-between opacity-95 ring-4 ring-[#1831D7]/20">
             <div>
               <h1 className="text-base font-bold text-neutral-900 tracking-tight mb-1">
                 Nova Nota
@@ -45,7 +45,7 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
                 Solte para criar esta nota aqui
               </p>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-indigo-600 font-medium">
+            <div className="flex items-center gap-1.5 text-[11px] text-[#1831D7] font-medium">
               <StickyNote className="w-3.5 h-3.5" />
               <span>Inserir no canvas</span>
             </div>
@@ -72,11 +72,11 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
           }}
           className="pointer-events-none select-none transition-transform duration-75 ease-out"
         >
-          <div className="w-full h-full rounded-xl border-2 border-dashed border-indigo-400 bg-neutral-900/90 backdrop-blur-sm p-3 flex items-center gap-2.5 text-indigo-200 shadow-xl ring-2 ring-indigo-500/20">
-            <Type className="w-5 h-5 text-indigo-400 shrink-0" />
+          <div className="w-full h-full rounded-xl border-2 border-dashed border-[#7F95FF] bg-[#17192A]/90 backdrop-blur-sm p-3 flex items-center gap-2.5 text-[#B4D3F1] shadow-xl ring-2 ring-[#7F95FF]/20">
+            <Type className="w-5 h-5 text-[#7F95FF] shrink-0" />
             <div>
               <p className="text-xs font-semibold">Novo Bloco de Texto</p>
-              <p className="text-[10px] text-indigo-300/70">Solte para posicionar</p>
+              <p className="text-[10px] text-[#B4D3F1]/70">Solte para posicionar</p>
             </div>
           </div>
         </div>
@@ -101,9 +101,9 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
           }}
           className="pointer-events-none select-none transition-transform duration-75 ease-out"
         >
-          <div className="w-full h-full rounded-2xl border-2 border-dashed border-violet-500 bg-neutral-900/90 shadow-2xl p-4 flex flex-col justify-between text-white ring-4 ring-violet-500/20">
+          <div className="w-full h-full rounded-2xl border-2 border-dashed border-[#1831D7] bg-[#17192A]/90 shadow-2xl p-4 flex flex-col justify-between text-[#F4F0E6] ring-4 ring-[#1831D7]/20">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400">
+              <div className="w-8 h-8 rounded-lg bg-[#1831D7]/30 flex items-center justify-center text-[#7F95FF]">
                 <Music className="w-4 h-4" />
               </div>
               <div>
@@ -111,8 +111,8 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
                 <p className="text-[10px] text-neutral-400">Solte para escolher o som</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-violet-400 font-mono">
-              <span className="w-2 h-2 rounded-full bg-violet-500 animate-ping" />
+            <div className="flex items-center gap-1.5 text-[10px] text-[#7F95FF] font-mono">
+              <span className="w-2 h-2 rounded-full bg-[#1831D7] animate-ping" />
               <span>Pronto para soltar</span>
             </div>
           </div>
@@ -205,9 +205,9 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
           }}
           className="pointer-events-none select-none transition-transform duration-75 ease-out"
         >
-          <div className="w-full h-full rounded-2xl border-2 border-dashed border-violet-500 bg-neutral-900/90 shadow-2xl p-4 flex flex-col justify-between text-white ring-4 ring-violet-500/20">
+          <div className="w-full h-full rounded-2xl border-2 border-dashed border-[#1831D7] bg-[#17192A]/90 shadow-2xl p-4 flex flex-col justify-between text-[#F4F0E6] ring-4 ring-[#1831D7]/20">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-violet-600/30 flex items-center justify-center text-violet-400">
+              <div className="w-8 h-8 rounded-lg bg-[#1831D7]/30 flex items-center justify-center text-[#7F95FF]">
                 <Search className="w-4 h-4" />
               </div>
               <div>
@@ -215,8 +215,8 @@ export const BoardGhostPreview: React.FC<BoardGhostPreviewProps> = ({
                 <p className="text-[10px] text-neutral-400">Solte para buscar o elemento</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-violet-400 font-mono">
-              <span className="w-2 h-2 rounded-full bg-violet-500 animate-ping" />
+            <div className="flex items-center gap-1.5 text-[10px] text-[#7F95FF] font-mono">
+              <span className="w-2 h-2 rounded-full bg-[#1831D7] animate-ping" />
               <span>Buscar no Vault</span>
             </div>
           </div>

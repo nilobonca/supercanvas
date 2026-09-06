@@ -132,9 +132,15 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     const trimmed = titleInput.trim();
     if (trimmed && trimmed !== title && activePath) {
       const parts = activePath.split('/');
-      parts[parts.length - 1] = `${trimmed}.md`;
+      const isTxt = activePath.toLowerCase().endsWith('.txt');
+      const defaultExt = isTxt ? 'txt' : 'md';
+      let finalName = trimmed;
+      if (!finalName.toLowerCase().endsWith('.md') && !finalName.toLowerCase().endsWith('.txt')) {
+        finalName = `${finalName}.${defaultExt}`;
+      }
+      parts[parts.length - 1] = finalName;
       await renameNode(activePath, parts.join('/'), false);
-      setTitle(trimmed);
+      setTitle(finalName.replace(/\.(md|txt)$/i, ''));
     }
     setIsEditingTitle(false);
   };
@@ -303,7 +309,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-violet-400 underline hover:text-violet-300 cursor-pointer',
+          class: 'text-[#7F95FF] underline hover:text-[#52B1FF] cursor-pointer',
         },
       }),
       TaskList,
@@ -786,7 +792,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                     if (e.key === 'Escape') setIsEditingTitle(false);
                   }}
                   onBlur={handleSaveTitle}
-                  className="bg-stone-50 dark:bg-[#16161D] border border-purple-500 rounded-md px-2 py-0.5 text-base font-semibold text-stone-900 dark:text-neutral-100 outline-none w-56"
+                  className="bg-stone-50 dark:bg-[#16161D] border border-[#1831D7] rounded-md px-2 py-0.5 text-base font-semibold text-stone-900 dark:text-neutral-100 outline-none w-56"
                 />
                 <button
                   onClick={handleSaveTitle}
@@ -804,7 +810,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                 className="group/title flex items-center gap-1.5 cursor-pointer truncate"
                 title="Clique para renomear esta nota"
               >
-                <h1 className="text-lg font-bold text-stone-900 dark:text-neutral-100 tracking-tight truncate group-hover/title:text-purple-600 dark:group-hover/title:text-purple-300 transition-colors">
+                <h1 className="text-lg font-bold text-stone-900 dark:text-neutral-100 tracking-tight truncate group-hover/title:text-[#1831D7] dark:group-hover/title:text-[#7F95FF] transition-colors">
                   {title || 'Sem título'}
                 </h1>
                 <Edit2 className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0" />
@@ -840,7 +846,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
               }}
               className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
                 searchOpen
-                  ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-300 text-purple-700 dark:text-purple-300'
+                  ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
                   : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
               }`}
               title="Localizar e Substituir na nota (Ctrl+F / Ctrl+H)"
@@ -863,7 +869,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
               onClick={() => setBacklinksPanelOpen(!backlinksPanelOpen)}
               className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center ${
                 backlinksPanelOpen
-                  ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+                  ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
                   : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
               }`}
               title="Propriedades e Backlinks da Nota"
@@ -876,17 +882,17 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
         {/* Quick Contextual Table Controls (when cursor is inside a table) */}
         {editor && viewMode === 'live' && editor.isActive('table') && (
-          <div className="flex items-center gap-1 bg-purple-50/90 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 p-1 rounded-lg w-fit animate-in fade-in duration-100 text-xs">
-            <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300 px-1">Tabela:</span>
+          <div className="flex items-center gap-1 bg-[#1831D7]/10 border border-[#7F95FF]/30 p-1 rounded-lg w-fit animate-in fade-in duration-100 text-xs">
+            <span className="text-[10px] font-semibold text-[#1831D7] dark:text-[#7F95FF] px-1">Tabela:</span>
             <button
               onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="px-2 py-0.5 text-[11px] rounded hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium cursor-pointer"
+              className="px-2 py-0.5 text-[11px] rounded hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
             >
               +Linha
             </button>
             <button
               onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="px-2 py-0.5 text-[11px] rounded hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-medium cursor-pointer"
+              className="px-2 py-0.5 text-[11px] rounded hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
             >
               +Coluna
             </button>
@@ -930,7 +936,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                   }
                   if (e.key === 'Escape') setSearchOpen(false);
                 }}
-                className="w-full bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-purple-500 pr-14"
+                className="w-full bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-[#7F95FF] pr-14"
               />
               <span className="absolute right-2 text-[10px] text-stone-400 dark:text-neutral-500 font-mono select-none">
                 {searchTerm ? (matches.length > 0 ? `${currentMatchIndex + 1}/${matches.length}` : '0/0') : ''}
@@ -939,7 +945,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
             <button
               onClick={() => setCaseSensitive(!caseSensitive)}
-              className={`px-1.5 py-1 rounded font-mono text-[10px] border transition-colors cursor-pointer ${caseSensitive ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-400 text-purple-700 dark:text-purple-300 font-bold' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
+              className={`px-1.5 py-1 rounded font-mono text-[10px] border transition-colors cursor-pointer ${caseSensitive ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF] text-[#1831D7] dark:text-[#7F95FF] font-bold' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
               title="Diferenciar maiúsculas/minúsculas"
             >
               Aa
@@ -965,7 +971,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
             <button
               onClick={() => setReplaceMode(!replaceMode)}
-              className={`p-1 rounded border transition-colors cursor-pointer ${replaceMode ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-400 text-purple-700 dark:text-purple-300' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
+              className={`p-1 rounded border transition-colors cursor-pointer ${replaceMode ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF] text-[#1831D7] dark:text-[#7F95FF]' : 'border-stone-200 dark:border-white/10 text-stone-500 hover:bg-stone-100 dark:hover:bg-white/5'}`}
               title="Alternar modo Substituir"
             >
               <Replace className="w-3.5 h-3.5" />
@@ -991,7 +997,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                   if (e.key === 'Enter') handleReplaceCurrent();
                   if (e.key === 'Escape') setSearchOpen(false);
                 }}
-                className="flex-1 bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-purple-500"
+                className="flex-1 bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-white/10 rounded-lg px-2.5 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none focus:border-[#7F95FF]"
               />
               <button
                 onClick={handleReplaceCurrent}
@@ -1003,7 +1009,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
               <button
                 onClick={handleReplaceAll}
                 disabled={matches.length === 0}
-                className="px-2 py-1 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 rounded-lg text-[11px] font-medium disabled:opacity-30 cursor-pointer"
+                className="px-2 py-1 bg-[#1831D7]/10 hover:bg-[#1831D7]/20 border border-[#7F95FF]/30 text-[#1831D7] dark:text-[#7F95FF] rounded-lg text-[11px] font-medium disabled:opacity-30 cursor-pointer"
               >
                 Tudo
               </button>
@@ -1066,7 +1072,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
             >
               <div className="px-3 py-1.5 bg-stone-50 dark:bg-black/40 border-b border-stone-200 dark:border-white/10 text-[11px] text-stone-500 dark:text-neutral-400 flex items-center justify-between">
                 <span>Linkar com nota ou canvas:</span>
-                <span className="font-mono text-purple-600 dark:text-purple-400 font-semibold truncate max-w-[120px]">[[{suggestionQuery}</span>
+                <span className="font-mono text-[#1831D7] dark:text-[#7F95FF] font-semibold truncate max-w-[120px]">[[{suggestionQuery}</span>
               </div>
               <div className="max-h-56 overflow-y-auto p-1 space-y-0.5 custom-scrollbar">
                 {suggestions.map((item, idx) => {
@@ -1088,21 +1094,21 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                         isSelected
                           ? isCanvas
                             ? isBoard
-                              ? 'bg-indigo-600 text-white font-medium shadow-xs'
+                              ? 'bg-[#1831D7] text-white font-medium shadow-xs'
                               : 'bg-cyan-600 text-white font-medium shadow-xs'
-                            : 'bg-purple-600 text-white font-medium shadow-xs'
+                            : 'bg-[#1831D7] text-white font-medium shadow-xs'
                           : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5'
                       }`}
                     >
                       <div className="flex items-center gap-2 min-w-0 truncate">
                         {isCanvas ? (
                           isBoard ? (
-                            <FolderKanban className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-indigo-500 dark:text-indigo-400'}`} />
+                            <FolderKanban className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-[#1831D7] dark:text-[#7F95FF]'}`} />
                           ) : (
                             <Music className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-cyan-500 dark:text-cyan-400'}`} />
                           )
                         ) : (
-                          <FileText className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-purple-500 dark:text-purple-400'}`} />
+                          <FileText className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-[#1831D7] dark:text-[#7F95FF]'}`} />
                         )}
                         <span className="truncate font-medium">{item.name}</span>
                         {item.folder && (
@@ -1117,7 +1123,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                           ? 'bg-white/20 text-white'
                           : isCanvas
                             ? isBoard
-                              ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40'
+                              ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/30'
                               : 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/40'
                             : 'bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-neutral-400'
                       }`}>

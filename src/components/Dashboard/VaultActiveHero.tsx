@@ -62,7 +62,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
       {/* Glow highlight for aesthetics */}
       <div className={clsx(
         "absolute -top-24 -right-24 w-72 h-72 rounded-full blur-[100px] pointer-events-none opacity-40",
-        isFSA ? "bg-emerald-500/25" : "bg-purple-600/25"
+        isFSA ? "bg-[#52B1FF]/25" : "bg-[#1831D7]/25"
       )} />
 
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -74,11 +74,11 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
               "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold shadow-xs border transition-all",
               isFSA
                 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25 dark:border-emerald-500/30"
-                : "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/25 dark:border-purple-500/30"
+                : "bg-[#1831D7]/10 text-[#1831D7] dark:text-[#7F95FF] border-[#7F95FF]/25 dark:border-[#7F95FF]/30"
             )}>
               <span className={clsx(
                 "w-2 h-2 rounded-full animate-pulse",
-                isFSA ? "bg-emerald-500" : "bg-purple-500"
+                isFSA ? "bg-[#52B1FF]" : "bg-[#1831D7]"
               )} />
               {isFSA ? (
                 <span className="flex items-center gap-1.5">
@@ -94,7 +94,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
             </div>
 
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-stone-500 dark:text-neutral-400 border border-black/5 dark:border-white/5">
-              <SafeIcon size={12} className="text-purple-600 dark:text-purple-400" />
+              <SafeIcon size={12} className="text-[#1831D7] dark:text-[#7F95FF]" />
               Vault Ativo
             </span>
           </div>
@@ -112,7 +112,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
                     if (e.key === 'Escape') handleCancelEditing();
                   }}
                   autoFocus
-                  className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-white dark:bg-black/50 border-2 border-purple-500 rounded-xl px-3 py-1 text-stone-900 dark:text-white outline-none w-full"
+                  className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-white dark:bg-black/50 border-2 border-[#1831D7] rounded-xl px-3 py-1 text-stone-900 dark:text-white outline-none w-full"
                 />
                 <button
                   onClick={handleSaveName}
@@ -154,7 +154,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
           {/* Key Metrics Chips */}
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/5 dark:border-white/5">
-              <FileText size={15} className="text-purple-600 dark:text-purple-400" />
+              <FileText size={15} className="text-[#1831D7] dark:text-[#7F95FF]" />
               <div className="text-xs">
                 <span className="font-bold text-stone-900 dark:text-white mr-1">
                   {activeVault.documentCount || 0}
@@ -185,7 +185,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
           {/* Main Action: Abrir Vault no Editor */}
           <button
             onClick={() => router.push('/vault')}
-            className="w-full btn-island bg-stone-900 text-white hover:bg-stone-800 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-500 shadow-lg shadow-purple-500/10 font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2.5 transition-all group"
+            className="w-full btn-island bg-[#1831D7] text-white hover:bg-[#1831D7]/90 shadow-lg shadow-[#1831D7]/20 font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2.5 transition-all group"
           >
             <SafeIcon size={18} className="group-hover:scale-105 transition-transform" />
             <span>Abrir Vault no Editor</span>

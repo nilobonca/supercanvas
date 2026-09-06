@@ -336,18 +336,20 @@ export class IDBStorageProvider implements IVaultStorageProvider {
         tx.oncomplete = () => resolve();
       });
     } else {
-      const isMd = oldPath.endsWith('.md') || oldPath.endsWith('.txt');
-      if (isMd) {
-        try {
-          const content = await this.readDocument(oldPath);
-          await this.saveDocument(newPath, content);
-          await this.deleteNode(oldPath, false);
-        } catch {
-          // If not found in docs, try media file
-          const blob = await this.getFileBlob(oldPath);
-          await this.saveFile(newPath, blob);
-          await this.deleteNode(oldPath, false);
-        }
+      const db = await this.getDB();
+      const docId = this.buildDocId(oldPath);
+      const isDoc = await new Promise<boolean>((resolve) => {
+        const tx = db.transaction('vault_documents', 'readonly');
+        const store = tx.objectStore('vault_documents');
+        const req = store.get(docId);
+        req.onsuccess = () => resolve(!!req.result);
+        req.onerror = () => resolve(false);
+      });
+
+      if (isDoc) {
+        const content = await this.readDocument(oldPath);
+        await this.saveDocument(newPath, content);
+        await this.deleteNode(oldPath, false);
       } else {
         const blob = await this.getFileBlob(oldPath);
         await this.saveFile(newPath, blob);

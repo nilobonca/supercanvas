@@ -178,7 +178,7 @@ export function markdownToHtml(raw: string): string {
   // Process Transclusions / Embed Notes: ![[Note]] or ![[Note|Alias]]
   clean = clean.replace(/!\[\[([^[\]|]+)(?:\|([^\]]+))?\]\]/g, (_m, target) => {
     const title = target.trim();
-    return `<div data-type="embed-note" data-embed-title="${title}" class="vault-embed-note border border-purple-300/40 dark:border-purple-500/30 rounded-xl p-3.5 my-3 bg-purple-50/50 dark:bg-purple-950/20 shadow-xs"><div class="flex items-center gap-2 text-xs font-semibold text-purple-700 dark:text-purple-300 cursor-pointer hover:underline" data-wikilink-title="${title.split('#')[0]}"><span class="w-2 h-2 rounded-full bg-purple-500"></span><span>Nota incorporada: ${title}</span></div><div class="text-[11px] text-stone-500 dark:text-neutral-400 mt-1 italic">[[${title}]]</div></div>`;
+    return `<div data-type="embed-note" data-embed-title="${title}" class="vault-embed-note border border-[#1831D7]/30 dark:border-[#7F95FF]/30 rounded-xl p-3.5 my-3 bg-[#1831D7]/5 dark:bg-[#1831D7]/15 shadow-xs"><div class="flex items-center gap-2 text-xs font-semibold text-[#1831D7] dark:text-[#7F95FF] cursor-pointer hover:underline" data-wikilink-title="${title.split('#')[0]}"><span class="w-2 h-2 rounded-full bg-[#1831D7] dark:bg-[#7F95FF]"></span><span>Nota incorporada: ${title}</span></div><div class="text-[11px] text-stone-500 dark:text-neutral-400 mt-1 italic">[[${title}]]</div></div>`;
   });
 
   // Process LaTeX Block formulas: $$...$$

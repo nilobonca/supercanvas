@@ -37,8 +37,8 @@ export const BoardToolbar: React.FC<BoardToolbarProps> = ({
     <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-none">
       {/* Tooltip de instrução de conexões */}
       {showHint && (
-        <div className="pointer-events-auto bg-white/95 dark:bg-[#161622]/95 border border-purple-400/40 dark:border-purple-500/40 text-stone-800 dark:text-neutral-200 text-xs py-2 px-3.5 rounded-xl shadow-xl backdrop-blur-md max-w-xs text-center animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <p className="font-semibold text-purple-600 dark:text-purple-300 mb-0.5">Como ligar com setas?</p>
+        <div className="pointer-events-auto bg-white/95 dark:bg-[#161622]/95 border border-[#7F95FF]/40 text-stone-800 dark:text-neutral-200 text-xs py-2 px-3.5 rounded-xl shadow-xl backdrop-blur-md max-w-xs text-center animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <p className="font-semibold text-[#1831D7] dark:text-[#7F95FF] mb-0.5">Como ligar com setas?</p>
           <p className="text-[11px] text-stone-500 dark:text-neutral-400">
             Passe o mouse sobre qualquer elemento e arraste uma seta a partir do <strong>ponto central de qualquer uma das 4 bordas</strong>. Se soltar no vazio, um novo elemento do mesmo tipo será criado e conectado automaticamente!
           </p>
@@ -100,7 +100,7 @@ export const BoardToolbar: React.FC<BoardToolbarProps> = ({
           className={clsx(
             "p-2 rounded-xl transition-all",
             showHint 
-              ? "bg-purple-100 dark:bg-purple-600/20 text-purple-600 dark:text-purple-300" 
+              ? "bg-[#1831D7]/15 text-[#1831D7] dark:text-[#7F95FF]" 
               : "hover:bg-stone-100 dark:hover:bg-white/10 text-stone-400 hover:text-stone-700 dark:text-neutral-400 dark:hover:text-white"
           )}
           title="Dica de Setas"

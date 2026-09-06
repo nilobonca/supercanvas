@@ -50,15 +50,13 @@ function getContrastTextColor(hexColor?: string): string {
 }
 
 const PRESET_COLORS = [
-  { name: 'Amarelo', hex: '#fef08a' },
-  { name: 'Rosa', hex: '#fbcfe8' },
-  { name: 'Azul', hex: '#bae6fd' },
-  { name: 'Verde', hex: '#bbf7d0' },
-  { name: 'Lavanda', hex: '#ede9fe' },
-  { name: 'Pêssego', hex: '#fed7aa' },
-  { name: 'Cinza', hex: '#f3f4f6' },
-  { name: 'Ardósia', hex: '#1e293b' },
-  { name: 'Branco', hex: '#ffffff' },
+  { name: 'Cobalto Oficial', hex: '#1831D7' },
+  { name: 'Soft Periwinkle', hex: '#7F95FF' },
+  { name: 'Sky Cyan', hex: '#52B1FF' },
+  { name: 'Ice Blue Pastel', hex: '#B4D3F1' },
+  { name: 'Marfim Claro', hex: '#F4F0E6' },
+  { name: 'Midnight Navy', hex: '#17192A' },
+  { name: 'Deep Midnight', hex: '#131524' },
 ];
 
 export default function NoteItem({
@@ -244,9 +242,9 @@ export default function NoteItem({
   const isOutlined = note.fillMode === 'outlined';
   const isTransparent = note.fillMode === 'transparent';
 
-  const bgColor = isFilled ? (note.color || '#fef08a') : 'transparent';
+  const bgColor = isFilled ? (note.color || '#F4F0E6') : 'transparent';
   const borderColor = isOutlined 
-    ? (note.borderColor || '#8b5cf6') 
+    ? (note.borderColor || '#7F95FF') 
     : isTransparent 
       ? (isSelected ? 'rgba(59, 130, 246, 0.4)' : 'transparent') 
       : 'rgba(0,0,0,0.08)';
@@ -301,8 +299,8 @@ export default function NoteItem({
               <div 
                 className="w-3.5 h-3.5 rounded-full border border-black/20 dark:border-white/20 shadow-2xs transition-transform hover:scale-110"
                 style={{
-                  backgroundColor: isFilled ? (note.color || '#fef08a') : 'transparent',
-                  borderColor: isOutlined ? (note.borderColor || '#8b5cf6') : undefined,
+                  backgroundColor: isFilled ? (note.color || '#F4F0E6') : 'transparent',
+                  borderColor: isOutlined ? (note.borderColor || '#7F95FF') : undefined,
                   borderWidth: isOutlined ? 2 : 1
                 }}
               />
@@ -370,7 +368,7 @@ export default function NoteItem({
                         onClick={() => isOutlined ? handleBorderColorChange(c.hex) : handleColorChange(c.hex)}
                         className={cn(
                           "w-7 h-7 rounded-lg border border-black/10 dark:border-white/10 transition-transform hover:scale-110 cursor-pointer flex items-center justify-center relative",
-                          (isOutlined ? note.borderColor === c.hex : note.color === c.hex) && "ring-2 ring-purple-500 scale-105"
+                          (isOutlined ? note.borderColor === c.hex : note.color === c.hex) && "ring-2 ring-[#7F95FF] scale-105"
                         )}
                         style={{ backgroundColor: c.hex }}
                         title={c.name}
@@ -383,7 +381,7 @@ export default function NoteItem({
                     >
                       <input
                         type="color"
-                        value={isOutlined ? (note.borderColor || '#8b5cf6') : (note.color || '#fef08a')}
+                        value={isOutlined ? (note.borderColor || '#7F95FF') : (note.color || '#F4F0E6')}
                         onChange={(e) => isOutlined ? handleBorderColorChange(e.target.value) : handleColorChange(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                       />
@@ -425,7 +423,7 @@ export default function NoteItem({
                       className={cn(
                         "p-1 rounded cursor-pointer transition-colors",
                         (note.textAlign === 'left' || !note.textAlign) 
-                          ? "bg-white dark:bg-white/15 text-purple-600 dark:text-purple-300 shadow-2xs" 
+                          ? "bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] shadow-2xs" 
                           : "text-stone-500 hover:text-stone-900 dark:text-neutral-400"
                       )}
                       title="Alinhar à esquerda"
@@ -438,7 +436,7 @@ export default function NoteItem({
                       className={cn(
                         "p-1 rounded cursor-pointer transition-colors",
                         note.textAlign === 'center' 
-                          ? "bg-white dark:bg-white/15 text-purple-600 dark:text-purple-300 shadow-2xs" 
+                          ? "bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] shadow-2xs" 
                           : "text-stone-500 hover:text-stone-900 dark:text-neutral-400"
                       )}
                       title="Centralizar texto"
@@ -451,7 +449,7 @@ export default function NoteItem({
                       className={cn(
                         "p-1 rounded cursor-pointer transition-colors",
                         note.textAlign === 'right' 
-                          ? "bg-white dark:bg-white/15 text-purple-600 dark:text-purple-300 shadow-2xs" 
+                          ? "bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] shadow-2xs" 
                           : "text-stone-500 hover:text-stone-900 dark:text-neutral-400"
                       )}
                       title="Alinhar à direita"
@@ -487,7 +485,7 @@ export default function NoteItem({
             className={cn(
               "p-1.5 rounded-lg transition-colors cursor-pointer flex items-center justify-center",
               isEditing 
-                ? "bg-purple-500/15 text-purple-600 dark:text-purple-400 hover:bg-purple-500/25" 
+                ? "bg-[#1831D7]/15 text-[#1831D7] dark:text-[#7F95FF] hover:bg-[#1831D7]/25" 
                 : "text-stone-600 dark:text-neutral-300 hover:text-stone-950 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-white/10"
             )}
             title={isEditing ? "Concluir edição (Esc)" : "Editar nota (Clique duplo)"}
@@ -524,8 +522,8 @@ export default function NoteItem({
           "rounded-2xl transition-all duration-150 relative overflow-hidden",
           isFilled && "shadow-md hover:shadow-lg",
           isEditing 
-            ? "ring-2 ring-purple-500 shadow-xl" 
-            : (isSelected ? "ring-2 ring-blue-500/80 shadow-md" : "hover:ring-1 hover:ring-black/15 dark:hover:ring-white/15")
+            ? "ring-2 ring-[#7F95FF] shadow-xl" 
+            : (isSelected ? "ring-2 ring-[#1831D7]/80 shadow-md" : "hover:ring-1 hover:ring-black/15 dark:hover:ring-white/15")
         )}
         style={{
           backgroundColor: bgColor,

@@ -135,8 +135,8 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
     if (lowerFolder.includes('quest')) return '#f59e0b'; // amber
     if (lowerFolder.includes('local') || lowerFolder.includes('cidade')) return '#06b6d4'; // cyan
     if (lowerFolder.includes('sess') || lowerFolder.includes('diario')) return '#ec4899'; // pink
-    if (node.connections > 3) return '#a855f7'; // strong purple
-    return '#8b5cf6'; // default violet
+    if (node.connections > 3) return '#1831D7'; // strong cobalt
+    return '#7F95FF'; // brand periwinkle
   };
 
   // D3 Force Simulation Effect
@@ -242,7 +242,7 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
 
         // Highlight links
         linkElements
-          .attr('stroke', (l: any) => (l.source.id === d.id || l.target.id === d.id ? '#a855f7' : '#27272a'))
+          .attr('stroke', (l: any) => (l.source.id === d.id || l.target.id === d.id ? '#7F95FF' : '#27272a'))
           .attr('stroke-opacity', (l: any) => (l.source.id === d.id || l.target.id === d.id ? 1 : 0.1))
           .attr('stroke-width', (l: any) => (l.source.id === d.id || l.target.id === d.id ? 2.5 : 1));
 
@@ -287,13 +287,13 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
       {/* Top Header Bar */}
       <div className="h-14 border-b border-neutral-800 bg-neutral-900/60 px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+          <div className="w-8 h-8 rounded-lg bg-[#1831D7]/20 border border-[#7F95FF]/30 flex items-center justify-center text-[#7F95FF]">
             <Network className="w-4 h-4" />
           </div>
           <div>
             <h2 className="text-sm font-semibold text-neutral-100 flex items-center gap-2">
               <span>Grafo de Conexões (Graph View)</span>
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-300 font-mono">
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#1831D7]/20 text-[#7F95FF] font-mono">
                 {nodes.length} notas · {links.length} links
               </span>
             </h2>
@@ -309,7 +309,7 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
               placeholder="Filtrar notas no grafo..."
               value={filterText}
               onChange={(e) => setFilterText(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-200 placeholder-neutral-500 outline-none focus:border-violet-500"
+              className="w-full bg-neutral-900 border border-neutral-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-neutral-200 placeholder-neutral-500 outline-none focus:border-[#7F95FF]"
             />
           </div>
 
@@ -340,7 +340,7 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
       <div ref={containerRef} className="flex-1 w-full h-full relative overflow-hidden bg-neutral-950">
         {isLoadingData ? (
           <div className="absolute inset-0 flex items-center justify-center text-neutral-400 text-xs gap-2">
-            <Network className="w-5 h-5 animate-pulse text-violet-500" />
+            <Network className="w-5 h-5 animate-pulse text-[#7F95FF]" />
             <span>Mapeando conexões [[wikilinks]] do Vault...</span>
           </div>
         ) : (
@@ -353,7 +353,7 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Quests</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-cyan-500" /> Locais</span>
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-pink-500" /> Sessões</span>
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-violet-500" /> Notas Gerais</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#7F95FF]" /> Notas Gerais</span>
         </div>
 
         {/* Selected Node Details Card */}
@@ -361,7 +361,7 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
           <div className="absolute top-4 right-4 w-72 p-4 rounded-xl bg-neutral-900/90 border border-neutral-700/80 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-2">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-center gap-2 truncate">
-                <FileText className="w-4 h-4 text-violet-400 shrink-0" />
+                <FileText className="w-4 h-4 text-[#7F95FF] shrink-0" />
                 <h4 className="text-sm font-semibold text-neutral-100 truncate">{selectedNode.name}</h4>
               </div>
               <button
@@ -374,12 +374,12 @@ export const VaultGraphView: React.FC<VaultGraphViewProps> = ({ onClose }) => {
 
             <div className="text-xs text-neutral-400 space-y-1 mb-4">
               {selectedNode.folder && <div>Pasta: <strong className="text-neutral-200">{selectedNode.folder}</strong></div>}
-              <div>Conexões diretas: <strong className="text-violet-400">{selectedNode.connections}</strong></div>
+              <div>Conexões diretas: <strong className="text-[#7F95FF]">{selectedNode.connections}</strong></div>
             </div>
 
             <button
               onClick={() => handleOpenSelectedNote(selectedNode.path)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-medium shadow-md transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-[#1831D7] hover:bg-[#1831D7]/90 text-white text-xs font-medium shadow-md transition-colors"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               <span>Abrir Nota no Editor</span>

@@ -261,7 +261,6 @@ export default function Dashboard() {
 
   const currentTheme = mounted ? theme : 'dark';
   const isLight = currentTheme === 'light';
-  const isEthereal = currentTheme === 'ethereal';
 
   return (
     <>
@@ -272,14 +271,12 @@ export default function Dashboard() {
 
       <div className={clsx(
         "w-full h-full overflow-hidden flex flex-row select-none transition-colors duration-200 relative",
-        isEthereal 
-          ? "bg-[#08070D] text-white" 
-          : isLight 
-            ? "bg-[#FAF9F6] text-[#1C1917]" 
-            : "bg-[#0A0A0E] text-[#F4F4F6]"
+        isLight 
+          ? "bg-[#F4F0E6] text-[#17192A]" 
+          : "bg-[#17192A] text-[#F4F0E6]"
       )}>
         {/* ============================================================
-            1. MENU LATERAL DE ÍCONES (RIBBON ~58px)
+            1. MENU LATERAL DE ÍCONES (RIBBON w-11 / 44px)
             ============================================================ */}
         <DashboardSidebarRibbon
           activeTab={activeTab}

@@ -459,7 +459,7 @@ const HeaderCab: React.FC<HeaderProps> = ({
         key={`${itemType}-${item.id}`} 
         data-item-type={itemType}
         data-item-id={item.id}
-        className={`group p-2 flex items-center gap-3 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-xl border border-transparent shadow-sm hover:border-violet-500/30 hover:shadow-md hover:bg-white dark:hover:bg-neutral-700 transition-all duration-300 ease-out cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 scale-95 z-50 shadow-xl border-violet-500/50 bg-white dark:bg-neutral-700' : ''} ${dropIndicatorClass}`} 
+        className={`group p-2 flex items-center gap-3 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm rounded-xl border border-transparent shadow-sm hover:border-[#7F95FF]/30 hover:shadow-md hover:bg-white dark:hover:bg-neutral-700 transition-all duration-300 ease-out cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50 scale-95 z-50 shadow-xl border-[#7F95FF]/50 bg-white dark:bg-neutral-700' : ''} ${dropIndicatorClass}`} 
         draggable={true} 
         onDragStart={(e) => handleDragStartItem(e, item, itemType, item.folderId)} 
         onDragOver={(e) => handleDragOverItem(e, itemType, item.id, item.folderId)}
@@ -491,10 +491,10 @@ const HeaderCab: React.FC<HeaderProps> = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
-                className="text-xs font-medium bg-white dark:bg-neutral-900 text-black dark:text-white px-2 py-1 rounded-md outline-none border border-violet-500 shadow-sm w-full focus:ring-2 focus:ring-violet-500/20"
+                className="text-xs font-medium bg-white dark:bg-neutral-900 text-black dark:text-white px-2 py-1 rounded-md outline-none border border-[#7F95FF] shadow-sm w-full focus:ring-2 focus:ring-[#7F95FF]/20"
               />
             ) : (
-              <p className="text-[13px] font-medium truncate text-gray-700 dark:text-neutral-200 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors" title={item.name}>{item.name}</p>
+              <p className="text-[13px] font-medium truncate text-gray-700 dark:text-neutral-200 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors" title={item.name}>{item.name}</p>
             )}
           </div>
         </div>
@@ -521,7 +521,7 @@ const HeaderCab: React.FC<HeaderProps> = ({
           key={`folder-${folder.id}`} 
           data-item-type="folder"
           data-item-id={folder.id}
-          className={`group/folder rounded-xl bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm shadow-sm transition-all duration-300 border ${isDragOver ? 'border-violet-500 shadow-md' : 'border-transparent hover:border-violet-500/20 hover:shadow-md'} ${isDragging ? 'opacity-50 scale-95 z-50 shadow-xl border-violet-500/50' : ''}`}
+          className={`group/folder rounded-xl bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm shadow-sm transition-all duration-300 border ${isDragOver ? 'border-[#1831D7] shadow-md' : 'border-transparent hover:border-[#7F95FF]/20 hover:shadow-md'} ${isDragging ? 'opacity-50 scale-95 z-50 shadow-xl border-[#7F95FF]/50' : ''}`}
           draggable={true}
           onDragStart={(e) => handleDragStartItem(e, folder, 'folder')}
           onDragOver={(e) => handleDragOverItem(e, 'folder', folder.id)}
@@ -629,7 +629,7 @@ const HeaderCab: React.FC<HeaderProps> = ({
           ) : (
             <div className="flex flex-col items-center justify-center flex-1 h-full z-10 text-gray-400 dark:text-neutral-500 py-10 space-y-4">
               <div className="p-5 bg-white dark:bg-neutral-800 rounded-full shadow-sm border border-gray-100 dark:border-neutral-700">
-                <FolderOpen size={32} className="opacity-40 text-violet-500" />
+                <FolderOpen size={32} className="opacity-40 text-[#7F95FF]" />
               </div>
               <div className="text-center space-y-1">
                 <p className="text-sm font-semibold text-gray-500 dark:text-neutral-400">Sua biblioteca está vazia</p>
@@ -678,7 +678,7 @@ const HeaderCab: React.FC<HeaderProps> = ({
           }}
         >
           <div className="flex items-center gap-2 px-1">
-            <div className="w-8 h-1 rounded-full bg-gray-300 dark:bg-neutral-600 transition-colors group-hover/header:bg-violet-400" />
+            <div className="w-8 h-1 rounded-full bg-gray-300 dark:bg-neutral-600 transition-colors group-hover/header:bg-[#7F95FF]" />
           </div>
           <div className="flex items-center gap-1.5">
             {onClose && (

@@ -121,7 +121,7 @@ export const BoardTextElement: React.FC<BoardTextElementProps> = ({
             }}
             className={clsx(
               "p-1 rounded text-xs transition-colors cursor-pointer",
-              data.isBold ? "bg-indigo-600 text-white" : "text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white"
+              data.isBold ? "bg-[#1831D7] text-white" : "text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white"
             )}
             title="Negrito"
           >
@@ -145,7 +145,7 @@ export const BoardTextElement: React.FC<BoardTextElementProps> = ({
         className={clsx(
           "w-full h-full p-2 rounded-lg cursor-grab active:cursor-grabbing transition-all duration-150 flex flex-col justify-center border",
           isSelected
-            ? "border-indigo-500/60 bg-indigo-500/5 ring-1 ring-indigo-500/40"
+            ? "border-[#1831D7]/60 bg-[#1831D7]/5 ring-1 ring-[#1831D7]/40"
             : isHovered
             ? (isLight ? "border-stone-300 bg-stone-100/70" : "border-neutral-700/80 bg-neutral-800/20")
             : "border-transparent bg-transparent"
@@ -182,7 +182,7 @@ export const BoardTextElement: React.FC<BoardTextElementProps> = ({
         {isSelected && (
           <div
             {...bindResize()}
-            className="absolute bottom-0 right-0 w-3.5 h-3.5 cursor-se-resize flex items-center justify-center text-indigo-400"
+            className="absolute bottom-0 right-0 w-3.5 h-3.5 cursor-se-resize flex items-center justify-center text-[#7F95FF]"
           >
             <svg className="w-2 h-2" viewBox="0 0 6 6" fill="currentColor">
               <circle cx="5" cy="5" r="1" />

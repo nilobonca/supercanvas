@@ -26,7 +26,7 @@ export const FloatingLoreCard: React.FC<FloatingLoreCardProps> = ({
   tags,
   excerpt,
   connectionsCount,
-  accentColor = '#a855f7',
+  accentColor = '#7F95FF',
   defaultPosition,
   path,
   isCanvas,
@@ -70,7 +70,7 @@ export const FloatingLoreCard: React.FC<FloatingLoreCardProps> = ({
       }}
       className={clsx(
         "absolute z-20 w-[280px] sm:w-[310px] p-4 rounded-2xl select-none",
-        "backdrop-blur-xl bg-[#0F0E18]/85 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.6)]",
+        "backdrop-blur-xl bg-[#131524]/90 border border-white/[0.08] shadow-[0_16px_40px_rgba(0,0,0,0.6)]",
         "transition-colors duration-300 group cursor-grab"
       )}
       style={{
@@ -115,7 +115,7 @@ export const FloatingLoreCard: React.FC<FloatingLoreCardProps> = ({
       </div>
 
       {/* Note Title */}
-      <h3 className="text-sm font-semibold text-white tracking-tight leading-snug group-hover:text-purple-200 transition-colors flex items-center justify-between">
+      <h3 className="text-sm font-semibold text-white tracking-tight leading-snug group-hover:text-[#B4D3F1] transition-colors flex items-center justify-between">
         <span className="truncate">{title}</span>
         {onSelect && (
           <button
@@ -155,7 +155,7 @@ export const FloatingLoreCard: React.FC<FloatingLoreCardProps> = ({
           <span>{connectionsCount} conexões</span>
         </div>
 
-        <div className="flex items-center gap-1 text-purple-400/90 font-medium text-[10px] tracking-wide">
+        <div className="flex items-center gap-1 text-[#7F95FF] font-medium text-[10px] tracking-wide">
           <Sparkles className="w-2.5 h-2.5" />
           <span>Vault Live</span>
         </div>

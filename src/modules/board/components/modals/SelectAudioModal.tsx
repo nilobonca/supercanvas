@@ -67,7 +67,7 @@ export const SelectAudioModal: React.FC<SelectAudioModalProps> = ({
       >
         <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-violet-600/20 text-violet-400 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-[#1831D7]/20 text-[#7F95FF] flex items-center justify-center">
               <Music className="w-4 h-4" />
             </div>
             <div>
@@ -81,8 +81,8 @@ export const SelectAudioModal: React.FC<SelectAudioModalProps> = ({
         </div>
 
         {/* Upload direto */}
-        <label className="border-2 border-dashed border-neutral-800 hover:border-violet-500/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-violet-500/5 transition-all group">
-          <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-violet-600/20 text-neutral-400 group-hover:text-violet-400 flex items-center justify-center transition-colors">
+        <label className="border-2 border-dashed border-neutral-800 hover:border-[#7F95FF]/50 rounded-xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1831D7]/5 transition-all group">
+          <div className="w-10 h-10 rounded-full bg-neutral-800 group-hover:bg-[#1831D7]/20 text-neutral-400 group-hover:text-[#7F95FF] flex items-center justify-center transition-colors">
             <Upload className="w-5 h-5" />
           </div>
           <span className="text-xs font-medium text-neutral-300 group-hover:text-white">
@@ -117,12 +117,12 @@ export const SelectAudioModal: React.FC<SelectAudioModalProps> = ({
                     });
                     onClose();
                   }}
-                  className="flex items-center justify-between p-2 rounded-xl bg-neutral-800/40 hover:bg-violet-600/15 border border-neutral-800 hover:border-violet-500/30 cursor-pointer transition-all group"
+                  className="flex items-center justify-between p-2 rounded-xl bg-neutral-800/40 hover:bg-[#1831D7]/15 border border-neutral-800 hover:border-[#7F95FF]/30 cursor-pointer transition-all group"
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
                     <button
                       onClick={(e) => handleTogglePreview(e, audio.id, audio.url)}
-                      className="w-7 h-7 rounded-lg bg-neutral-800 group-hover:bg-violet-600 text-neutral-300 group-hover:text-white flex items-center justify-center shrink-0 transition-colors"
+                      className="w-7 h-7 rounded-lg bg-neutral-800 group-hover:bg-[#1831D7] text-neutral-300 group-hover:text-white flex items-center justify-center shrink-0 transition-colors"
                       title="Pré-escutar"
                     >
                       {playingId === audio.id ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -131,7 +131,7 @@ export const SelectAudioModal: React.FC<SelectAudioModalProps> = ({
                       {audio.name}
                     </span>
                   </div>
-                  <button className="text-xs text-violet-400 font-medium px-2 py-1 rounded bg-violet-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                  <button className="text-xs text-[#7F95FF] font-medium px-2 py-1 rounded bg-[#1831D7]/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                     <Check className="w-3 h-3" />
                     <span>Usar</span>
                   </button>

@@ -95,10 +95,10 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
     }, timeLimit * 1000);
   };
 
-  const isEthereal = theme === 'ethereal';
+  const isEthereal = false;
 
   const glassInputClass = clsx(
-    "w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400/50 transition-all font-sans text-sm",
+    "w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#7F95FF]/40 focus:border-[#7F95FF]/50 transition-all font-sans text-sm",
     isEthereal 
       ? "bg-white/5 border-white/10 text-white placeholder-neutral-500" 
       : "bg-neutral-950/60 border-neutral-800 text-neutral-200 placeholder-neutral-500"
@@ -112,14 +112,14 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
       {(!game.status || game.status === 'idle') && (
         <div className="space-y-4 flex flex-col flex-1 overflow-y-auto pr-1">
           {/* Preset Manager Bar */}
-          <div className="p-1 rounded-xl bg-indigo-500/5 border border-indigo-500/10">
+          <div className="p-1 rounded-xl bg-[#1831D7]/5 border border-[#1831D7]/10">
             <MinigamePresetBar activeGameId={id} gameId="clicker" currentConfig={game.config} />
           </div>
 
           {/* Custom Guest Title & Subtitle */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 border border-white/10 rounded-2xl bg-neutral-950/40 backdrop-blur-md shadow-inner">
             <div>
-              <label className="block text-xs mb-1 text-indigo-300/80 font-[Cinzel] font-semibold uppercase tracking-wider">
+              <label className="block text-xs mb-1 text-[#B4D3F1] font-[Cinzel] font-semibold uppercase tracking-wider">
                 Título para Convidados
               </label>
               <input 
@@ -134,7 +134,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
               />
             </div>
             <div>
-              <label className="block text-xs mb-1 text-indigo-300/80 font-[Cinzel] font-semibold uppercase tracking-wider">
+              <label className="block text-xs mb-1 text-[#B4D3F1] font-[Cinzel] font-semibold uppercase tracking-wider">
                 Subtítulo para Convidados
               </label>
               <input 
@@ -153,7 +153,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs mb-1 text-neutral-300 font-[Cinzel] font-semibold uppercase tracking-wider flex items-center gap-1">
-                <MousePointerClick size={12} className="text-indigo-400" />
+                <MousePointerClick size={12} className="text-[#7F95FF]" />
                 Cliques Necessários
               </label>
               <input 
@@ -168,7 +168,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
             </div>
             <div>
               <label className="block text-xs mb-1 text-neutral-300 font-[Cinzel] font-semibold uppercase tracking-wider flex items-center gap-1">
-                <Timer size={12} className="text-indigo-400" />
+                <Timer size={12} className="text-[#7F95FF]" />
                 Tempo Limite (segundos)
               </label>
               <input 
@@ -186,7 +186,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
           {/* Central Image Picker */}
           <div className="p-3 border border-white/10 rounded-2xl bg-neutral-950/40 backdrop-blur-md space-y-2">
             <label className="block text-xs text-neutral-300 font-[Cinzel] font-semibold uppercase tracking-wider flex items-center gap-1">
-              <ImageIcon size={12} className="text-indigo-400" />
+              <ImageIcon size={12} className="text-[#7F95FF]" />
               Imagem Central do Botão (Opcional)
             </label>
             <div className="flex gap-2">
@@ -235,14 +235,14 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
 
           {/* Options & Checkboxes */}
           <div className="space-y-2.5 p-3 border border-white/10 rounded-2xl bg-neutral-950/30 backdrop-blur-md">
-            <label className="flex items-center gap-2.5 text-xs text-indigo-200 font-semibold cursor-pointer p-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/15 transition-colors">
+            <label className="flex items-center gap-2.5 text-xs text-[#B4D3F1] font-semibold cursor-pointer p-2 rounded-xl border border-[#1831D7]/30 bg-[#1831D7]/10 hover:bg-[#1831D7]/15 transition-colors">
               <input 
                 type="checkbox" 
-                className="rounded border-white/20 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/20 w-4 h-4"
+                className="rounded border-white/20 bg-neutral-900 accent-[#1831D7] text-[#1831D7] focus:ring-[#1831D7]/20 w-4 h-4"
                 checked={isCooperative}
                 onChange={e => updateGame(id, { config: { ...game.config, isCooperative: e.target.checked } })}
               />
-              <Users size={14} className="text-indigo-400" />
+              <Users size={14} className="text-[#7F95FF]" />
               <span>Modo Cooperativo (Somar cliques de todos os convidados)</span>
             </label>
 
@@ -250,7 +250,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
               <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer hover:text-white transition-colors">
                 <input 
                   type="checkbox" 
-                  className="rounded border-white/20 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/20"
+                  className="rounded border-white/20 bg-neutral-900 accent-[#1831D7] text-[#1831D7] focus:ring-[#1831D7]/20"
                   checked={hideTarget}
                   onChange={e => updateGame(id, { config: { ...game.config, hideTarget: e.target.checked } })}
                 />
@@ -260,7 +260,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
               <label className="flex items-center gap-2 text-xs text-neutral-300 cursor-pointer hover:text-white transition-colors">
                 <input 
                   type="checkbox" 
-                  className="rounded border-white/20 bg-neutral-900 text-indigo-500 focus:ring-indigo-500/20"
+                  className="rounded border-white/20 bg-neutral-900 accent-[#1831D7] text-[#1831D7] focus:ring-[#1831D7]/20"
                   checked={autoClose}
                   onChange={e => updateGame(id, { config: { ...game.config, autoClose: e.target.checked } })}
                 />
@@ -287,7 +287,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
           {/* Guest Permissions List */}
           <div className="p-3 border border-white/10 rounded-2xl bg-neutral-950/30 backdrop-blur-md">
             <div className="flex items-center gap-1.5 mb-2 text-neutral-300">
-              <Shield size={14} className="text-indigo-400" />
+              <Shield size={14} className="text-[#7F95FF]" />
               <label className="text-xs font-[Cinzel] font-bold uppercase tracking-wider">
                 Permissões dos Convidados
               </label>
@@ -304,7 +304,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
                       <label className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white cursor-pointer transition-colors">
                         <input 
                           type="checkbox" 
-                          className="rounded border-white/20 bg-black/40 text-indigo-500 focus:ring-indigo-500/20"
+                          className="rounded border-white/20 bg-black/40 accent-[#1831D7] text-[#1831D7] focus:ring-[#1831D7]/20"
                           checked={p.canSee} 
                           onChange={(e) => {
                             const newPerms = { ...permissions, [listener.listenerId]: { ...p, canSee: e.target.checked } };
@@ -319,7 +319,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
                       <label className="flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white cursor-pointer transition-colors">
                         <input 
                           type="checkbox" 
-                          className="rounded border-white/20 bg-black/40 text-indigo-500 focus:ring-indigo-500/20"
+                          className="rounded border-white/20 bg-black/40 accent-[#1831D7] text-[#1831D7] focus:ring-[#1831D7]/20"
                           checked={p.canInteract} 
                           onChange={(e) => {
                             const newPerms = { ...permissions, [listener.listenerId]: { ...p, canInteract: e.target.checked } };
@@ -346,7 +346,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
           <div className="mt-auto pt-2">
             <button 
               onClick={handleStart}
-              className="w-full py-2.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-[Cinzel] font-bold tracking-wider uppercase rounded-xl shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-brand-gradient-h hover:brightness-110 text-white font-[Cinzel] font-bold tracking-wider uppercase rounded-xl shadow-lg shadow-[#1831D7]/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Play size={16} fill="currentColor" />
               Iniciar Desafio
@@ -359,8 +359,8 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
         <div className="space-y-4 flex flex-col flex-1">
           <div className="flex items-center justify-between border-b border-white/10 pb-2">
             <div className="flex items-center gap-2">
-              <Trophy size={16} className="text-indigo-400" />
-              <h3 className="text-xs text-indigo-200 font-[Cinzel] font-bold uppercase tracking-wider">
+              <Trophy size={16} className="text-[#7F95FF]" />
+              <h3 className="text-xs text-[#B4D3F1] font-[Cinzel] font-bold uppercase tracking-wider">
                 Progresso dos Jogadores
               </h3>
             </div>
@@ -377,19 +377,19 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
           </div>
 
           {isCooperative && (
-            <div className="p-3 rounded-2xl border border-indigo-500/30 bg-indigo-950/40 backdrop-blur-md space-y-2 shadow-inner">
-              <div className="flex justify-between items-center text-xs text-indigo-200 font-bold">
+            <div className="p-3 rounded-2xl border border-[#1831D7]/30 bg-[#131524]/60 backdrop-blur-md space-y-2 shadow-inner">
+              <div className="flex justify-between items-center text-xs text-[#B4D3F1] font-bold">
                 <span className="font-[Cinzel] tracking-wider uppercase flex items-center gap-1.5">
-                  <Users size={14} className="text-indigo-400" />
+                  <Users size={14} className="text-[#7F95FF]" />
                   Progresso Coletivo Total
                 </span>
-                <span className="font-['JetBrains_Mono'] text-indigo-300">
+                <span className="font-['JetBrains_Mono'] text-[#52B1FF]">
                   {totalCooperativeClicks} / {targetClicks} ({Math.round(coopPercent)}%)
                 </span>
               </div>
-              <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden border border-indigo-500/30 p-0.5">
+              <div className="h-3 w-full bg-black/50 rounded-full overflow-hidden border border-[#1831D7]/30 p-0.5">
                 <div 
-                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-400 transition-all duration-300 shadow-[0_0_12px_rgba(99,102,241,0.5)]" 
+                  className="h-full rounded-full bg-brand-gradient-h transition-all duration-300 shadow-[0_0_12px_rgba(24,49,215,0.5)]" 
                   style={{ width: `${coopPercent}%` }} 
                 />
               </div>
@@ -407,7 +407,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
                     <span className="font-medium truncate max-w-[150px]" title={listenerId}>
                       {progress.name || listenerId}
                     </span>
-                    <span className="font-['JetBrains_Mono'] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
+                    <span className="font-['JetBrains_Mono'] text-[#52B1FF] bg-[#1831D7]/10 px-2 py-0.5 rounded-md border border-[#1831D7]/20">
                       {clicks} / {targetClicks}
                     </span>
                   </div>
@@ -415,7 +415,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
                     <div 
                       className={clsx(
                         "h-full rounded-full transition-all duration-300 relative",
-                        percent >= 100 ? "bg-gradient-to-r from-emerald-500 to-teal-400" : "bg-gradient-to-r from-indigo-500 to-purple-500"
+                        percent >= 100 ? "bg-emerald-500" : "bg-brand-gradient-h"
                       )}
                       style={{ width: `${percent}%` }}
                     >
@@ -450,7 +450,7 @@ export const ClickerMinigameHost: React.FC<{ id: string, sessionListeners?: Sess
             {game.status === 'finished' && (
                <button 
                  onClick={() => updateGame(id, { status: 'idle' })}
-                 className="w-full py-2.5 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-500/40 rounded-xl font-[Cinzel] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
+                 className="w-full py-2.5 bg-[#1831D7]/20 hover:bg-[#1831D7]/30 text-[#B4D3F1] border border-[#1831D7]/40 rounded-xl font-[Cinzel] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95"
                >
                  <RotateCcw size={14} />
                  Novo Desafio

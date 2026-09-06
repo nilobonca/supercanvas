@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState } from 'react';
 import { Reorder } from 'framer-motion';
 import { GripVertical, Eye, EyeOff, Edit2, Trash2, User, Ear, MapPin } from 'lucide-react';
@@ -38,7 +38,7 @@ export const PinItem: React.FC<PinItemProps> = ({ pin, onToggle, onRename, onUpd
             onContextMenu={(e) => e.preventDefault()}
             className={`group flex items-center justify-between p-2 rounded-xl border transition-all duration-200 ${
                 pin.enabled 
-                ? 'bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm border-transparent shadow-sm hover:shadow-md hover:border-violet-500/30' 
+                ? 'bg-white/80 dark:bg-neutral-800/80 backdrop-blur-sm border-transparent shadow-sm hover:shadow-md hover:border-[#7F95FF]/30' 
                 : 'bg-white/40 dark:bg-neutral-800/40 backdrop-blur-sm border-transparent opacity-60 hover:opacity-100'
             }`}
         >
@@ -50,7 +50,7 @@ export const PinItem: React.FC<PinItemProps> = ({ pin, onToggle, onRename, onUpd
                 {/* Icon Toggle */}
                 <button
                     onClick={cycleIcon}
-                    className="p-1.5 flex-shrink-0 text-violet-500 bg-violet-100 dark:bg-violet-900/30 dark:text-violet-400 rounded-lg hover:bg-violet-200 dark:hover:bg-violet-900/50 transition-colors"
+                    className="p-1.5 flex-shrink-0 text-[#1831D7] dark:text-[#7F95FF] bg-[#1831D7]/10 dark:bg-[#1831D7]/20 rounded-lg hover:bg-[#1831D7]/20 dark:hover:bg-[#1831D7]/30 transition-colors"
                     title="Mudar Ícone"
                 >
                     <Icon size={14} />
@@ -70,11 +70,11 @@ export const PinItem: React.FC<PinItemProps> = ({ pin, onToggle, onRename, onUpd
                             }
                         }}
                         autoFocus
-                        className="flex-1 bg-white/50 dark:bg-neutral-900/50 border border-violet-500 rounded-lg px-2 min-w-0 h-7 text-[13px] outline-none focus:ring-2 focus:ring-violet-500/20"
+                        className="flex-1 bg-white/50 dark:bg-neutral-900/50 border border-[#7F95FF] rounded-lg px-2 min-w-0 h-7 text-[13px] outline-none focus:ring-2 focus:ring-[#7F95FF]/20"
                     />
                 ) : (
                     <span
-                        className="text-[13px] font-medium text-gray-700 dark:text-neutral-200 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors flex-1 truncate cursor-pointer ml-1"
+                        className="text-[13px] font-medium text-gray-700 dark:text-neutral-200 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors flex-1 truncate cursor-pointer ml-1"
                         onDoubleClick={() => setIsEditing(true)}
                         title={pin.name}
                     >
@@ -86,7 +86,7 @@ export const PinItem: React.FC<PinItemProps> = ({ pin, onToggle, onRename, onUpd
             <div className="flex items-center gap-0.5 ml-2">
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="p-1.5 text-gray-400 hover:text-violet-500 rounded-lg hover:bg-white dark:hover:bg-neutral-700 transition-colors opacity-0 group-hover:opacity-100"
+                    className="p-1.5 text-gray-400 hover:text-[#1831D7] dark:hover:text-[#7F95FF] rounded-lg hover:bg-white dark:hover:bg-neutral-700 transition-colors opacity-0 group-hover:opacity-100"
                     title="Renomear"
                 >
                     <Edit2 size={14} />

@@ -16,7 +16,7 @@ export default function DockedMenu({ activeTab, onTabChange, onClose, onUndock, 
         { id: 'layers', label: 'Camadas', icon: <Layers size={18} />, activeColor: 'text-blue-400' },
         { id: 'pins', label: 'Pins Espaciais', icon: <MapPin size={18} />, activeColor: 'text-amber-400' },
         { id: 'history', label: 'Histórico', icon: <Clock size={18} />, activeColor: 'text-neutral-300' },
-        { id: 'assets', label: 'Assets', icon: <Folder size={18} />, activeColor: 'text-purple-400' },
+        { id: 'assets', label: 'Assets', icon: <Folder size={18} />, activeColor: 'text-[#7F95FF]' },
         { id: 'soundboard', label: 'Soundboard', icon: <Circle size={18} />, activeColor: 'text-emerald-400' },
         { id: 'globalTracks', label: 'Música de Fundo', icon: <Music size={18} />, activeColor: 'text-pink-400' },
         { id: 'activePlayers', label: 'Players Ativos', icon: <Volume2 size={18} />, activeColor: 'text-cyan-400' },
@@ -45,7 +45,7 @@ export default function DockedMenu({ activeTab, onTabChange, onClose, onUndock, 
                                 {isActive && (
                                     <motion.div
                                         layoutId="activeTabIndicator"
-                                        className="absolute -bottom-1 left-2 right-2 h-0.5 bg-purple-500 rounded-full"
+                                        className="absolute -bottom-1 left-2 right-2 h-0.5 bg-[#1831D7] dark:bg-[#7F95FF] rounded-full"
                                         transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                     />
                                 )}

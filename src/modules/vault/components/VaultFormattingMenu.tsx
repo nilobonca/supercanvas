@@ -57,7 +57,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
         disabled={disabled}
         className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center ${
           isOpen
-            ? 'bg-purple-100 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+            ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
             : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
         } disabled:opacity-40 disabled:cursor-not-allowed`}
         title="Opções de exibição, formatação e ações da nota (...)"
@@ -87,7 +87,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                 }}
                 className={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-md text-xs transition-colors cursor-pointer ${
                   viewMode === 'live'
-                    ? 'bg-white dark:bg-white/15 text-purple-700 dark:text-purple-300 font-semibold shadow-xs'
+                    ? 'bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] font-semibold shadow-xs'
                     : 'text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-neutral-200'
                 }`}
                 title="Live Preview (Edição rica em tempo real)"
@@ -102,7 +102,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                 }}
                 className={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-md text-xs transition-colors cursor-pointer ${
                   viewMode === 'source'
-                    ? 'bg-white dark:bg-white/15 text-purple-700 dark:text-purple-300 font-semibold shadow-xs'
+                    ? 'bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] font-semibold shadow-xs'
                     : 'text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-neutral-200'
                 }`}
                 title="Modo Fonte (Markdown puro com frontmatter)"
@@ -117,7 +117,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                 }}
                 className={`flex flex-col items-center justify-center gap-1 py-1.5 px-1 rounded-md text-xs transition-colors cursor-pointer ${
                   viewMode === 'reading'
-                    ? 'bg-white dark:bg-white/15 text-purple-700 dark:text-purple-300 font-semibold shadow-xs'
+                    ? 'bg-white dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF] font-semibold shadow-xs'
                     : 'text-stone-600 dark:text-neutral-400 hover:text-stone-900 dark:hover:text-neutral-200'
                 }`}
                 title="Modo Leitura (Visualização estática sem edição)"
@@ -151,12 +151,12 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                           onClick={() => handleCommandClick(cmd)}
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer ${
                             isActive
-                              ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 font-medium'
+                              ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium'
                               : 'hover:bg-stone-100 dark:hover:bg-white/5 text-stone-700 dark:text-neutral-300'
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-purple-600 dark:text-purple-400' : 'text-stone-400 dark:text-neutral-400'}`} />
+                            <IconComponent className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#1831D7] dark:text-[#7F95FF]' : 'text-stone-400 dark:text-neutral-400'}`} />
                             <span className="text-xs truncate">{cmd.title}</span>
                           </div>
 
@@ -166,7 +166,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                                 {cmd.shortcut}
                               </span>
                             )}
-                            {isActive && <Check className="w-3 h-3 text-purple-600 dark:text-purple-400" />}
+                            {isActive && <Check className="w-3 h-3 text-[#1831D7] dark:text-[#7F95FF]" />}
                           </div>
                         </button>
                       );
@@ -183,7 +183,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                   onViewModeChange('live');
                   setIsOpen(false);
                 }}
-                className="text-xs text-purple-600 dark:text-purple-400 hover:underline font-medium cursor-pointer"
+                className="text-xs text-[#1831D7] dark:text-[#7F95FF] hover:underline font-medium cursor-pointer"
               >
                 Alternar para Live Preview
               </button>
@@ -215,7 +215,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
                       {templateSuccess ? (
                         <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                       ) : (
-                        <BookmarkPlus className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+                        <BookmarkPlus className="w-3.5 h-3.5 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
                       )}
                       <span className="text-xs truncate">
                         {templateSuccess ? 'Template Salvo com Sucesso!' : 'Tornar Template'}

@@ -40,7 +40,7 @@ export const MarkdownSyntaxReveal = Extension.create({
                       decorations.push(
                         Decoration.widget(startPos, () => {
                           const span = document.createElement('span');
-                          span.className = 'md-raw-syntax text-violet-400 font-mono font-medium select-none mr-1.5 opacity-80 text-sm';
+                          span.className = 'md-raw-syntax text-[#7F95FF] font-mono font-medium select-none mr-1.5 opacity-80 text-sm';
                           span.textContent = markerText;
                           return span;
                         }, { side: -1 })
@@ -52,7 +52,7 @@ export const MarkdownSyntaxReveal = Extension.create({
                     decorations.push(
                       Decoration.widget(startPos, () => {
                         const span = document.createElement('span');
-                        span.className = 'md-raw-syntax text-violet-400 font-mono font-medium select-none mr-1 opacity-80';
+                        span.className = 'md-raw-syntax text-[#7F95FF] font-mono font-medium select-none mr-1 opacity-80';
                         span.textContent = '> ';
                         return span;
                       }, { side: -1 })

@@ -10,6 +10,7 @@ import {
   Sparkle
 } from 'lucide-react';
 import { SafeIcon } from '@/components/common/SafeIcon';
+import { ConchaLogo } from '@/components/common/ConchaLogo';
 import clsx from 'clsx';
 
 export type DashboardTab = 'active-vault' | 'vaults-library' | 'canvases';
@@ -62,50 +63,34 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
   className,
 }) => {
   const isLight = theme === 'light';
-  const isEthereal = theme === 'ethereal';
 
-  const getThemeIcon = () => {
-    if (isEthereal) return Sparkles;
-    if (isLight) return Sun;
-    return Moon;
-  };
-
-  const ThemeIcon = getThemeIcon();
-
-  const themeLabel = isEthereal 
-    ? 'Tema Ethereal Arcane' 
-    : isLight 
-      ? 'Tema Claro Pastel' 
-      : 'Tema Escuro Obsidiana';
+  const ThemeIcon = isLight ? Sun : Moon;
+  const themeLabel = isLight ? 'Alternar para Modo Escuro' : 'Alternar para Modo Claro';
 
   return (
     <aside
       aria-label="Barra de Navegação Lateral"
       className={clsx(
-        "w-[58px] sm:w-[60px] h-full min-h-screen shrink-0 z-30 flex flex-col items-center justify-between py-4 select-none app-region-no-drag",
+        "w-11 h-full min-h-screen shrink-0 z-30 flex flex-col items-center justify-between py-2 select-none app-region-no-drag",
         "border-r transition-colors duration-300",
-        // Visual theme backgrounds
-        isEthereal
-          ? "bg-[#08070D] border-purple-500/20 shadow-[4px_0_24px_rgba(147,51,234,0.06)]"
-          : isLight
-            ? "bg-[#F5F4F0] border-black/[0.08] shadow-[4px_0_24px_rgba(0,0,0,0.03)]"
-            : "bg-[#08080C] border-white/[0.07] shadow-[4px_0_24px_rgba(0,0,0,0.4)]",
+        isLight
+          ? "bg-[#EDE8DD] border-black/[0.08] shadow-[4px_0_24px_rgba(0,0,0,0.03)]"
+          : "bg-[#131524] border-white/[0.07] shadow-[4px_0_24px_rgba(0,0,0,0.4)]",
         className
       )}
     >
       {/* ============================================================
           TOP: LOGO / MARCA CONCHA
           ============================================================ */}
-      <div className="flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-2">
         <div className="relative group cursor-pointer" title="Concha">
-          {/* Outer glow ring on hover */}
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 opacity-0 group-hover:opacity-60 blur-xs transition-opacity duration-300" />
+          {/* Outer glow ring on hover with brand gradient */}
+          <div className="absolute -inset-1 rounded-xl bg-brand-gradient opacity-0 group-hover:opacity-75 blur-xs transition-opacity duration-300" />
           
-          <div className="relative w-10 h-10 rounded-xl flex items-center justify-center bg-black/5 dark:bg-white/[0.06] border border-black/10 dark:border-white/10 group-hover:border-purple-500/50 transition-all duration-300 active:scale-95 p-1.5 overflow-hidden">
-            <img 
-              src="/favicon.png" 
-              alt="Concha" 
+          <div className="relative w-7 h-7 rounded-lg flex items-center justify-center bg-black/5 dark:bg-white/[0.06] border border-black/10 dark:border-white/10 group-hover:border-[#7F95FF]/50 transition-all duration-300 active:scale-95 p-1.5 overflow-hidden shadow-xs">
+            <ConchaLogo 
               className="w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-110" 
+              theme={theme}
             />
           </div>
 
@@ -116,12 +101,12 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
         </div>
 
         {/* Subtle Separator */}
-        <div className="w-6 h-[1px] bg-black/[0.08] dark:bg-white/[0.08]" />
+        <div className="w-5 h-px bg-black/[0.08] dark:bg-white/[0.08] my-0.5" />
 
         {/* ============================================================
             NAVIGATION ITEMS (EXACT 3 ICONS)
             ============================================================ */}
-        <nav className="flex flex-col items-center gap-3" role="tablist">
+        <nav className="flex flex-col items-center gap-1.5" role="tablist">
           {NAVIGATION_ITEMS.map((item) => {
             const Icon = item.icon;
             const isSelected = activeTab === item.id;
@@ -133,36 +118,31 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
                   aria-selected={isSelected}
                   onClick={() => onSelectTab(item.id)}
                   className={clsx(
-                    "relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none",
-                    "active:scale-95 focus-visible:ring-2 focus-visible:ring-purple-500",
+                    "relative p-2 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none",
+                    "active:scale-95 focus-visible:ring-2 focus-visible:ring-[#7F95FF]",
                     isSelected
                       ? isLight
-                        ? "bg-white text-stone-950 shadow-sm border border-black/10 font-bold"
-                        : "bg-white/[0.12] text-white shadow-[0_0_16px_rgba(255,255,255,0.06)] border border-white/20"
+                        ? "bg-white text-[#1831D7] shadow-sm border border-black/10 font-bold"
+                        : "bg-white/[0.12] text-white shadow-[0_0_16px_rgba(127,149,255,0.15)] border border-[#7F95FF]/30"
                       : isLight
                         ? "text-stone-500 hover:text-stone-900 hover:bg-black/5"
                         : "text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.06]"
                   )}
                   aria-label={item.label}
                 >
-                  <Icon size={18} className={clsx("stroke-[1.75]", isSelected && "scale-105")} />
+                  <Icon size={16} className={clsx("stroke-[1.75]", isSelected && "scale-105")} />
 
                   {/* Active tab lateral highlight bar */}
                   {isSelected && (
                     <span 
-                      className={clsx(
-                        "absolute -left-3 top-2 bottom-2 w-1 rounded-r-full",
-                        isEthereal 
-                          ? "bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]" 
-                          : "bg-purple-600 dark:bg-purple-400"
-                      )} 
+                      className="absolute -left-1.5 top-1.5 bottom-1.5 w-0.5 rounded-r-full bg-[#1831D7] dark:bg-[#7F95FF] shadow-[0_0_8px_rgba(127,149,255,0.8)]" 
                     />
                   )}
 
                   {/* Luminous Green Active Indicator for 'active-vault' */}
                   {item.showActiveIndicator && isSelected && (
                     <span 
-                      className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#08080C] shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" 
+                      className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-1 ring-[#131524] shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" 
                       title="Vault conectado e ativo"
                     />
                   )}
@@ -189,13 +169,13 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
       {/* ============================================================
           BOTTOM: THEME TOGGLE & GENERAL SETTINGS
           ============================================================ */}
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-1.5">
         {/* Theme Switcher Button */}
         <div className="relative group">
           <button
             onClick={onToggleTheme}
             className={clsx(
-              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none active:scale-95",
+              "p-2 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none active:scale-95",
               isLight
                 ? "text-stone-600 hover:text-stone-900 hover:bg-black/5"
                 : "text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.06]"
@@ -203,19 +183,17 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
             aria-label="Alternar Tema"
           >
             <ThemeIcon 
-              size={18} 
+              size={16} 
               className={clsx(
                 "stroke-[1.75] transition-transform duration-300 group-hover:rotate-12",
-                isEthereal && "text-purple-300",
-                isLight && "text-amber-500",
-                !isLight && !isEthereal && "text-indigo-300"
+                isLight ? "text-[#1831D7]" : "text-[#7F95FF]"
               )} 
             />
           </button>
 
           {/* Floating Tooltip */}
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-[11px] font-medium whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-200 z-50 bg-stone-900 text-stone-100 dark:bg-white dark:text-stone-900 shadow-xl border border-white/10 dark:border-black/10 backdrop-blur-md flex items-center gap-1.5">
-            <Sparkle size={10} className="text-purple-400" />
+            <Sparkle size={10} className="text-[#7F95FF]" />
             <span>{themeLabel}</span>
           </div>
         </div>
@@ -225,14 +203,14 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
           <button
             onClick={onOpenSettings}
             className={clsx(
-              "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none active:scale-95",
+              "p-2 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer outline-none active:scale-95",
               isLight
                 ? "text-stone-600 hover:text-stone-900 hover:bg-black/5"
                 : "text-neutral-400 hover:text-neutral-100 hover:bg-white/[0.06]"
             )}
             aria-label="Configurações Gerais"
           >
-            <Settings size={18} className="stroke-[1.75] transition-transform duration-300 group-hover:rotate-45" />
+            <Settings size={16} className="stroke-[1.75] transition-transform duration-300 group-hover:rotate-45" />
           </button>
 
           {/* Floating Tooltip */}

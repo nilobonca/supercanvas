@@ -24,16 +24,15 @@ interface BoardNoteElementProps {
 }
 
 export const NOTE_THEMES: Record<string, { border: string; bg: string; name: string }> = {
-  purple: { border: '#8b5cf6', bg: '#faf5ff', name: 'Roxo' },
-  yellow: { border: '#eab308', bg: '#fefce8', name: 'Amarelo' },
-  emerald: { border: '#10b981', bg: '#f0fdf4', name: 'Esmeralda' },
-  cyan: { border: '#06b6d4', bg: '#f0fdfa', name: 'Ciano' },
-  rose: { border: '#f43f5e', bg: '#fff1f2', name: 'Rosa' },
-  slate: { border: '#64748b', bg: '#f8fafc', name: 'Cinza' },
+  cobalt: { border: '#1831D7', bg: '#F4F0E6', name: 'Cobalto' },
+  periwinkle: { border: '#7F95FF', bg: '#F4F0E6', name: 'Periwinkle' },
+  cyan: { border: '#52B1FF', bg: '#F4F0E6', name: 'Celeste' },
+  ice: { border: '#B4D3F1', bg: '#F4F0E6', name: 'Gelo' },
+  midnight: { border: '#17192A', bg: '#F4F0E6', name: 'Meia-Noite' },
 };
 
 function getNoteTheme(color?: string) {
-  if (!color) return NOTE_THEMES.purple;
+  if (!color) return NOTE_THEMES.cobalt;
   const lower = color.toLowerCase();
   for (const key of Object.keys(NOTE_THEMES)) {
     const t = NOTE_THEMES[key];
@@ -41,14 +40,13 @@ function getNoteTheme(color?: string) {
       return t;
     }
   }
-  if (lower.includes('yellow') || lower.includes('fef08a') || lower.includes('fde047')) return NOTE_THEMES.yellow;
-  if (lower.includes('emerald') || lower.includes('a7f3d0') || lower.includes('34d399')) return NOTE_THEMES.emerald;
-  if (lower.includes('cyan') || lower.includes('a5f3fc') || lower.includes('38bdf8')) return NOTE_THEMES.cyan;
-  if (lower.includes('purple') || lower.includes('e9d5ff') || lower.includes('a855f7')) return NOTE_THEMES.purple;
-  if (lower.includes('rose') || lower.includes('pink') || lower.includes('fecdd3')) return NOTE_THEMES.rose;
-  if (lower.includes('slate') || lower.includes('gray') || lower.includes('1e293b')) return NOTE_THEMES.slate;
+  if (lower.includes('cobalt') || lower.includes('1831d7')) return NOTE_THEMES.cobalt;
+  if (lower.includes('periwinkle') || lower.includes('7f95ff')) return NOTE_THEMES.periwinkle;
+  if (lower.includes('cyan') || lower.includes('52b1ff')) return NOTE_THEMES.cyan;
+  if (lower.includes('ice') || lower.includes('b4d3f1')) return NOTE_THEMES.ice;
+  if (lower.includes('midnight') || lower.includes('17192a')) return NOTE_THEMES.midnight;
 
-  return { border: color, bg: '#fbfbfe', name: 'Custom' };
+  return NOTE_THEMES.cobalt;
 }
 
 function processMarkdownForPreview(markdown: string): string {

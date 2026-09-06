@@ -56,18 +56,14 @@ export interface VaultRealGraphData {
   refresh: () => Promise<void>;
 }
 
-// Paleta harmônica de cores estelares para o grafo
+// Paleta harmônica oficial do Supercanvas para o grafo
 const THEME_PALETTE = [
-  '#c084fc', // Lilás / Arcano
-  '#38bdf8', // Ciano / Local / Áudio
-  '#f87171', // Coral / Perigo / Monstro
-  '#fbbf24', // Âmbar / Tesouro / Item
-  '#34d399', // Esmeralda / Natureza
-  '#818cf8', // Índigo / Sessão / Diário
-  '#f472b6', // Rosa / Pessoal
-  '#22d3ee', // Celeste / Elementar
-  '#fb923c', // Laranja / NPCs
-  '#a78bfa', // Violeta / Místico
+  '#1831D7', // Royal Cobalt
+  '#7F95FF', // Soft Periwinkle
+  '#52B1FF', // Sky Cyan
+  '#B4D3F1', // Ice Blue Pastel
+  '#F4F0E6', // Warm Ivory
+  '#17192A', // Midnight Navy
 ];
 
 // Posições padrão dos cards em destaque
@@ -162,43 +158,43 @@ function deriveAccentColor(
   const normalizedTags = tags.map(t => t.toLowerCase().replace(/^#/, ''));
   const folderLower = (folder || '').toLowerCase();
 
-  // 1. Prioridade para tags temáticas de RPG
+  // 1. Prioridade para tags temáticas de RPG mapeadas na paleta oficial
   if (normalizedTags.some(t => ['antagonista', 'inimigo', 'vilao', 'boss', 'monstro', 'perigo', 'combate'].includes(t))) {
-    return '#f87171'; // Coral / Perigo
+    return '#1831D7'; // Cobalto Real
   }
   if (normalizedTags.some(t => ['npc', 'personagem', 'aliado', 'heroi', 'comerciante', 'povo'].includes(t))) {
-    return '#fb923c'; // Laranja quente
+    return '#7F95FF'; // Soft Periwinkle
   }
   if (normalizedTags.some(t => ['local', 'cidade', 'vila', 'reino', 'mapa', 'taverna', 'castelo', 'fortaleza', 'cenario'].includes(t))) {
-    return '#38bdf8'; // Ciano / Azul
+    return '#52B1FF'; // Sky Cyan
   }
   if (normalizedTags.some(t => ['item', 'artefato', 'arma', 'armadura', 'tesouro', 'reliquia', 'loot'].includes(t))) {
-    return '#fbbf24'; // Âmbar / Dourado
+    return '#7F95FF'; // Soft Periwinkle
   }
   if (normalizedTags.some(t => ['lore', 'historia', 'faccao', 'cla', 'origem', 'religiao', 'divindade', 'seita'].includes(t))) {
-    return '#c084fc'; // Lilás
+    return '#7F95FF'; // Soft Periwinkle
   }
   if (normalizedTags.some(t => ['magia', 'feitico', 'ritual', 'arcano', 'necromancia'].includes(t))) {
-    return '#a855f7'; // Violeta
+    return '#1831D7'; // Cobalto Real
   }
   if (normalizedTags.some(t => ['sessao', 'diario', 'registro', 'campanha', 'resumo'].includes(t))) {
-    return '#818cf8'; // Índigo
+    return '#1831D7'; // Cobalto Real
   }
   if (normalizedTags.some(t => ['natureza', 'floresta', 'pantano', 'montanha', 'bioma'].includes(t))) {
-    return '#34d399'; // Esmeralda
+    return '#52B1FF'; // Sky Cyan
   }
   if (normalizedTags.some(t => ['audio', 'som', 'trilha', 'musica', 'efeito'].includes(t))) {
-    return '#22d3ee'; // Celeste
+    return '#52B1FF'; // Sky Cyan
   }
 
   // 2. Mapeamento por palavras-chave na pasta
-  if (folderLower.includes('npc') || folderLower.includes('personagen')) return '#fb923c';
-  if (folderLower.includes('local') || folderLower.includes('cenario') || folderLower.includes('mapa')) return '#38bdf8';
-  if (folderLower.includes('item') || folderLower.includes('artefato') || folderLower.includes('equip')) return '#fbbf24';
-  if (folderLower.includes('lore') || folderLower.includes('historia') || folderLower.includes('faccao')) return '#c084fc';
-  if (folderLower.includes('magia') || folderLower.includes('feitico')) return '#a855f7';
-  if (folderLower.includes('sessao') || folderLower.includes('diario') || folderLower.includes('log')) return '#818cf8';
-  if (folderLower.includes('audio') || folderLower.includes('som')) return '#22d3ee';
+  if (folderLower.includes('npc') || folderLower.includes('personagen')) return '#7F95FF';
+  if (folderLower.includes('local') || folderLower.includes('cenario') || folderLower.includes('mapa')) return '#52B1FF';
+  if (folderLower.includes('item') || folderLower.includes('artefato') || folderLower.includes('equip')) return '#7F95FF';
+  if (folderLower.includes('lore') || folderLower.includes('historia') || folderLower.includes('faccao')) return '#7F95FF';
+  if (folderLower.includes('magia') || folderLower.includes('feitico')) return '#1831D7';
+  if (folderLower.includes('sessao') || folderLower.includes('diario') || folderLower.includes('log')) return '#1831D7';
+  if (folderLower.includes('audio') || folderLower.includes('som')) return '#52B1FF';
 
   // 3. Hashing determinístico como fallback
   const seedString = folder ? folder.toLowerCase() : title.toLowerCase();

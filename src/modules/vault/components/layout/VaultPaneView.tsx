@@ -179,7 +179,7 @@ export const VaultPaneView: React.FC<VaultPaneViewProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={`flex flex-col h-full w-full min-w-0 min-h-0 relative bg-white dark:bg-[#0E0E12] overflow-hidden ${
-        isActivePane ? 'ring-1 ring-purple-500/20 dark:ring-purple-400/20' : ''
+        isActivePane ? 'ring-1 ring-[#1831D7]/30 dark:ring-[#7F95FF]/30' : ''
       }`}
     >
       {/* Tab Bar */}
@@ -214,7 +214,7 @@ export const VaultPaneView: React.FC<VaultPaneViewProps> = ({
               onClick={() => setCommandPaletteOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white hover:bg-stone-100 dark:bg-white/5 dark:hover:bg-white/10 text-xs font-medium text-stone-700 dark:text-neutral-200 border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
             >
-              <Search className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <Search className="w-3.5 h-3.5 text-[#1831D7] dark:text-[#7F95FF]" />
               <span>Buscar (Ctrl+P)</span>
             </button>
           </div>

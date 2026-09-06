@@ -78,7 +78,7 @@ export function ProjectSessionUI({
         <button
           onClick={() => setShowInviteModal(true)}
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
-          className="app-region-no-drag flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors cursor-pointer shadow-sm shadow-indigo-500/10"
+          className="app-region-no-drag flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#1831D7] hover:bg-[#1831D7]/90 text-white rounded transition-colors cursor-pointer shadow-sm shadow-[#1831D7]/20"
         >
           <Users size={14} />
           Convidar
@@ -91,7 +91,7 @@ export function ProjectSessionUI({
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
           className={`app-region-no-drag flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors cursor-pointer ${
             isDiceTrayOpen 
-              ? 'bg-indigo-600 text-white' 
+              ? 'bg-[#1831D7] text-white' 
               : 'bg-transparent text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
           }`}
         >
@@ -119,7 +119,7 @@ export function ProjectSessionUI({
               style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
               className={`app-region-no-drag flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded transition-colors cursor-pointer relative ${
                 isChatOpen 
-                  ? 'bg-indigo-600 text-white' 
+                  ? 'bg-[#1831D7] text-white' 
                   : hasUnreadMessages
                     ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
                     : 'bg-transparent text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800'
@@ -150,7 +150,7 @@ export function ProjectSessionUI({
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Users className="text-indigo-500" size={20} />
+                  <Users className="text-[#1831D7] dark:text-[#7F95FF]" size={20} />
                   Sessão Compartilhada
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-neutral-400 mt-1">
@@ -179,7 +179,7 @@ export function ProjectSessionUI({
                   className={`px-4 py-1.5 text-xs font-bold rounded transition-colors cursor-pointer ${
                     isSessionActive
                       ? 'bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-500'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/10'
+                      : 'bg-[#1831D7] hover:bg-[#1831D7]/90 text-white shadow-md shadow-[#1831D7]/20'
                   }`}
                 >
                   {isSessionActive ? 'Desativar' : 'Ativar Sessão'}
@@ -223,7 +223,7 @@ export function ProjectSessionUI({
                           setTimeout(() => setCopied(false), 2000);
                         }
                       }}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-w-[80px]"
+                      className="bg-[#1831D7] hover:bg-[#1831D7]/90 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 min-w-[80px]"
                     >
                       {copied ? (
                         <>
@@ -263,7 +263,7 @@ export function ProjectSessionUI({
         <div className="fixed top-16 right-4 z-50 w-64 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md border border-gray-200/50 dark:border-white/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="bg-gray-50 dark:bg-neutral-800/50 px-3 py-2 border-b border-gray-200 dark:border-neutral-800 flex justify-between items-center">
             <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300">Ouvintes Conectados</span>
-            <span className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-[#1831D7]/10 text-[#1831D7] dark:bg-[#1831D7]/20 dark:text-[#7F95FF] text-[10px] font-bold px-1.5 py-0.5 rounded-full">
               {sessionListeners.length}
             </span>
           </div>
@@ -276,8 +276,8 @@ export function ProjectSessionUI({
               <ul className="divide-y divide-gray-100 dark:divide-neutral-800/50">
                 {sessionListeners.map(listener => (
                   <li key={listener.listenerId} className="px-3 py-2.5 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-neutral-800/50 transition-colors">
-                    <div className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
-                      <Users size={12} className="text-indigo-600 dark:text-indigo-400" />
+                    <div className="w-6 h-6 rounded-full bg-[#1831D7]/10 dark:bg-[#1831D7]/20 flex items-center justify-center shrink-0">
+                      <Users size={12} className="text-[#1831D7] dark:text-[#7F95FF]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-gray-900 dark:text-neutral-200 truncate">

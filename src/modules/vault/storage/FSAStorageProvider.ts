@@ -169,24 +169,30 @@ export class FSAStorageProvider implements IVaultStorageProvider {
         });
       } else if (handle.kind === 'file') {
         const ext = name.split('.').pop()?.toLowerCase() || '';
-        const isMarkdown = ['md', 'txt'].includes(ext);
+        const isMarkdown = ['md', 'markdown'].includes(ext);
+        const isText = ext === 'txt';
         const isAudio = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus'].includes(ext);
-        const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+        const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif', 'ico'].includes(ext);
 
-        if (isMarkdown || isAudio || isImage) {
-          const file = await (handle as FileSystemFileHandle).getFile();
-          const fileType: 'note' | 'audio' | 'image' = isAudio ? 'audio' : isImage ? 'image' : 'note';
-          nodes.push({
-            id: currentPath,
-            name: isMarkdown ? name.replace(/\.(md|txt)$/, '') : name,
-            path: currentPath,
-            type: 'file',
-            fileType,
-            extension: ext,
-            size: file.size,
-            updatedAt: file.lastModified
-          });
-        }
+        const file = await (handle as FileSystemFileHandle).getFile();
+        const fileType: 'note' | 'audio' | 'image' | 'file' = isAudio
+          ? 'audio'
+          : isImage
+          ? 'image'
+          : isMarkdown || isText
+          ? 'note'
+          : 'file';
+
+        nodes.push({
+          id: currentPath,
+          name: isMarkdown || isText ? name.replace(/\.(md|markdown|txt)$/i, '') : name,
+          path: currentPath,
+          type: 'file',
+          fileType,
+          extension: ext,
+          size: file.size,
+          updatedAt: file.lastModified
+        });
       }
     }
 

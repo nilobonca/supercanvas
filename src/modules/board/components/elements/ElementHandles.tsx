@@ -42,7 +42,7 @@ export const ElementHandles: React.FC<ElementHandlesProps> = ({
           >
             {/* Anel de Snap pulsante quando estiver atraindo a seta */}
             {isSnapped && (
-              <span className="absolute inset-0 rounded-full bg-indigo-500/40 animate-ping" />
+              <span className="absolute inset-0 rounded-full bg-[#1831D7]/40 animate-ping" />
             )}
 
             {/* Ponto central da alça */}
@@ -50,8 +50,8 @@ export const ElementHandles: React.FC<ElementHandlesProps> = ({
               className={clsx(
                 "w-3 h-3 rounded-full border-2 transition-transform duration-100 hover:scale-135 shadow-md",
                 isSnapped
-                  ? "bg-indigo-400 border-white ring-4 ring-indigo-500/50 scale-125"
-                  : "bg-white border-indigo-600 hover:bg-indigo-500 hover:border-white"
+                  ? "bg-[#7F95FF] border-white ring-4 ring-[#1831D7]/50 scale-125"
+                  : "bg-white border-[#1831D7] hover:bg-[#1831D7] hover:border-white"
               )}
             />
           </div>

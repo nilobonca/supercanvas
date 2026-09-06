@@ -6,6 +6,7 @@ import { ActiveVaultPanelSection } from './adaptive/ActiveVaultPanelSection';
 import { VaultsLibraryPanelSection } from './adaptive/VaultsLibraryPanelSection';
 import { CanvasesQuickPanelSection } from './adaptive/CanvasesQuickPanelSection';
 import { WindowControls } from '@/components/common/WindowControls';
+import { ConchaLogo } from '@/components/common/ConchaLogo';
 import clsx from 'clsx';
 
 export interface DashboardAdaptivePanelProps {
@@ -59,7 +60,6 @@ export const DashboardAdaptivePanel: React.FC<DashboardAdaptivePanelProps> = ({
   theme,
 }) => {
   const isLight = theme === 'light';
-  const isEthereal = theme === 'ethereal';
 
   return (
     <aside
@@ -67,12 +67,9 @@ export const DashboardAdaptivePanel: React.FC<DashboardAdaptivePanelProps> = ({
       className={clsx(
         "w-full sm:w-[370px] lg:w-[380px] h-full min-h-screen shrink-0 z-20 flex flex-col p-4 sm:p-5 overflow-y-auto app-region-no-drag",
         "border-r transition-colors duration-300",
-        // Visual theme backgrounds
-        isEthereal
-          ? "bg-[#0A0813]/95 border-purple-500/20 shadow-[10px_0_30px_rgba(147,51,234,0.08)]"
-          : isLight
-            ? "bg-[#FDFBF7] border-black/[0.08] shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
-            : "bg-[#0D0D14] border-white/[0.07] shadow-[10px_0_30px_rgba(0,0,0,0.4)]",
+        isLight
+          ? "bg-[#F4F0E6] border-black/[0.08] shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+          : "bg-[#131524] border-white/[0.07] shadow-[10px_0_30px_rgba(0,0,0,0.4)]",
         className
       )}
     >
@@ -84,8 +81,8 @@ export const DashboardAdaptivePanel: React.FC<DashboardAdaptivePanelProps> = ({
           className="flex items-center gap-2 app-region-no-drag pointer-events-auto"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <img src="/favicon.png" alt="Concha" className="w-3.5 h-3.5 object-contain" />
-          <span className="text-xs font-bold text-stone-600 dark:text-neutral-400 tracking-wide">Concha</span>
+          <ConchaLogo className="w-3.5 h-3.5" theme={theme} />
+          <span className="text-xs font-bold text-stone-700 dark:text-neutral-300 tracking-wide">Concha</span>
         </div>
         <div 
           className="flex-1 h-full app-region-drag cursor-default"

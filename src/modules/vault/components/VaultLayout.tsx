@@ -95,15 +95,15 @@ export const VaultLayout: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-screen h-screen bg-neutral-950 flex flex-col items-center justify-center text-neutral-400 gap-3">
-        <RefreshCw className="w-6 h-6 animate-spin text-purple-500" />
+      <div className="w-screen h-screen bg-[#17192A] flex flex-col items-center justify-center text-[#B4D3F1] gap-3">
+        <RefreshCw className="w-6 h-6 animate-spin text-[#7F95FF]" />
         <span className="text-sm font-medium">Carregando Vault e arquivos...</span>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-row bg-white text-stone-900 dark:bg-[#0E0E12] dark:text-neutral-100 overflow-hidden select-none transition-colors duration-200 relative">
+    <div className="w-full h-full flex flex-row bg-white text-stone-900 dark:bg-[#17192A] dark:text-[#F4F0E6] overflow-hidden select-none transition-colors duration-200 relative">
       {/* Controles de Janela do Windows no Canto Superior Direito (.exe Electron) */}
       <div 
         className="absolute top-0 right-0 h-9 z-50 flex items-center pr-1.5 select-none pointer-events-auto app-region-no-drag"
@@ -125,7 +125,7 @@ export const VaultLayout: React.FC = () => {
         {sidebarOpen && <VaultSidebar />}
 
         {/* Center Content: Multi-window docking split-panes */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#0E0E12] min-w-0 relative">
+        <main className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#17192A] min-w-0 relative">
           <VaultPaneContainer node={layout} />
         </main>
 

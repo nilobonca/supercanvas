@@ -140,7 +140,7 @@ export function useBoardConnections(
         fromHandle: sourceHandle,
         toId: snappedTarget.elementId,
         toHandle: snappedTarget.handle,
-        color: '#818cf8', // Indigo elegante
+        color: '#7F95FF', // Brand Periwinkle
       };
 
       setConnections(prev => [...prev, newConnection]);

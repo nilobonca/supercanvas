@@ -84,15 +84,15 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
   const getTabIcon = (tab: VaultTab, isActive: boolean) => {
     const isCanvas = tab.type === 'canvas' || tab.path.startsWith('canvas:');
     if (isCanvas) {
-      return <FolderKanban className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-purple-600 dark:text-purple-400' : 'text-stone-400 dark:text-neutral-500'}`} />;
+      return <FolderKanban className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#1831D7] dark:text-[#7F95FF]' : 'text-stone-400 dark:text-neutral-500'}`} />;
     }
     if (tab.type === 'audio') {
-      return <Music className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-sky-600 dark:text-cyan-400' : 'text-stone-400 dark:text-neutral-500'}`} />;
+      return <Music className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#52B1FF] dark:text-[#52B1FF]' : 'text-stone-400 dark:text-neutral-500'}`} />;
     }
     if (tab.type === 'image') {
       return <ImageIcon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-400 dark:text-neutral-500'}`} />;
     }
-    return <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-purple-600 dark:text-purple-400' : 'text-stone-400 dark:text-neutral-500'}`} />;
+    return <FileText className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-[#1831D7] dark:text-[#7F95FF]' : 'text-stone-400 dark:text-neutral-500'}`} />;
   };
 
   return (
@@ -127,8 +127,8 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
               className={`group flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-t-md cursor-pointer transition-all border-r border-stone-200/60 dark:border-white/5 max-w-[200px] shrink-0 app-region-no-drag ${
                 isActive
                   ? isCanvas
-                    ? 'bg-white dark:bg-[#16161F] text-stone-900 dark:text-indigo-100 border-t-2 border-t-purple-500 font-medium shadow-xs'
-                    : 'bg-white dark:bg-[#16161F] text-stone-900 dark:text-neutral-100 border-t-2 border-t-purple-500 font-medium shadow-xs'
+                    ? 'bg-white dark:bg-[#16161F] text-stone-900 dark:text-[#B4D3F1] border-t-2 border-t-[#1831D7] dark:border-t-[#7F95FF] font-medium shadow-xs'
+                    : 'bg-white dark:bg-[#16161F] text-stone-900 dark:text-neutral-100 border-t-2 border-t-[#1831D7] dark:border-t-[#7F95FF] font-medium shadow-xs'
                   : 'text-stone-500 dark:text-neutral-400 hover:text-stone-800 dark:hover:text-neutral-200 hover:bg-white/50 dark:hover:bg-white/5'
               }`}
             >
@@ -136,7 +136,7 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
               <span className="truncate">{tab.title || 'Sem título'}</span>
 
               {tab.isDirty && (
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" title="Alterações não salvas" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7F95FF] shrink-0" title="Alterações não salvas" />
               )}
 
               <button

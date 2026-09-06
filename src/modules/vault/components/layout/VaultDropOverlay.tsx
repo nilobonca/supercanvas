@@ -41,8 +41,8 @@ export const VaultDropOverlay: React.FC<VaultDropOverlayProps> = ({ zone }) => {
     <div
       className={`absolute ${positionClasses} pointer-events-none z-50 flex items-center justify-center`}
     >
-      <div className="w-full h-full rounded-xl bg-purple-400/35 dark:bg-purple-500/30 border-2 border-purple-400 dark:border-purple-300/80 shadow-[0_0_24px_rgba(168,85,247,0.35)] backdrop-blur-[1px] flex items-center justify-center animate-in fade-in duration-75">
-        <span className="px-3 py-1 rounded-full bg-purple-900/90 dark:bg-purple-950/90 border border-purple-300/60 text-purple-100 text-xs font-semibold shadow-md">
+      <div className="w-full h-full rounded-xl bg-[#1831D7]/25 dark:bg-[#1831D7]/30 border-2 border-[#1831D7] dark:border-[#7F95FF]/80 shadow-[0_0_24px_rgba(24,49,215,0.35)] backdrop-blur-[1px] flex items-center justify-center animate-in fade-in duration-75">
+        <span className="px-3 py-1 rounded-full bg-[#17192A]/90 dark:bg-[#131524]/90 border border-[#7F95FF]/60 text-[#F4F0E6] text-xs font-semibold shadow-md">
           {zone === 'split-top' && 'Dividir acima'}
           {zone === 'split-bottom' && 'Dividir abaixo'}
           {zone === 'split-left' && 'Dividir à esquerda'}

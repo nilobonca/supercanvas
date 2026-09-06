@@ -143,7 +143,7 @@ export const ProjectCanvasMenus: React.FC<ProjectCanvasMenusProps> = ({
     setMounted(true);
   }, []);
 
-  const isEthereal = mounted && theme === 'ethereal';
+  const isEthereal = false;
 
   const buttonClass = clsx(
     "p-3 shadow-lg transition-all duration-200 hover:scale-105 pointer-events-auto",
@@ -430,10 +430,10 @@ export const ProjectCanvasMenus: React.FC<ProjectCanvasMenusProps> = ({
         {/* Vault Navigation Toggle */}
         <button
           onClick={() => router.push('/vault')}
-          className={clsx(buttonClass, "border-violet-500/30 hover:border-violet-500/60")}
+          className={clsx(buttonClass, "border-[#1831D7]/30 hover:border-[#7F95FF]/60")}
           title="Abrir Vault de Anotações"
         >
-          <SafeIcon size={20} className="text-violet-400" />
+          <SafeIcon size={20} className="text-[#7F95FF]" />
         </button>
 
         {/* Minimized Minigames */}

@@ -60,7 +60,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = ({
                                 onChange={(e) => setEditValue(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 autoFocus
-                                className="bg-neutral-900 border border-neutral-700 focus:border-indigo-500 rounded px-2 py-0.5 text-sm font-semibold text-white focus:outline-none w-40"
+                                className="bg-neutral-900 border border-neutral-700 focus:border-[#7F95FF] rounded px-2 py-0.5 text-sm font-semibold text-white focus:outline-none w-40"
                                 placeholder="Seu nome"
                                 maxLength={24}
                             />
@@ -88,7 +88,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = ({
                                         setEditValue(username);
                                         setIsEditing(true);
                                     }}
-                                    className="opacity-60 group-hover:opacity-100 text-neutral-400 hover:text-indigo-400 transition-all p-0.5 rounded cursor-pointer"
+                                    className="opacity-60 group-hover:opacity-100 text-neutral-400 hover:text-[#7F95FF] transition-all p-0.5 rounded cursor-pointer"
                                     title="Alterar seu nome"
                                 >
                                     <Pencil size={12} />
@@ -109,7 +109,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = ({
 
                 {/* Active Audio Count */}
                 <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1 text-xs">
-                    <Activity size={12} className="text-indigo-400" />
+                    <Activity size={12} className="text-[#7F95FF]" />
                     <span className="text-neutral-300 font-mono">{activeCount} canais</span>
                 </div>
 
@@ -118,7 +118,7 @@ export const GuestTopBar: React.FC<GuestTopBarProps> = ({
                     onClick={onToggleDiceTray}
                     className={`flex items-center gap-1.5 border px-3 py-1 text-xs rounded-full transition-colors cursor-pointer ${
                         isDiceTrayOpen 
-                            ? 'bg-indigo-600 border-indigo-500 text-white'
+                            ? 'bg-[#1831D7] border-[#7F95FF] text-white'
                             : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800'
                     }`}
                     title="Rolar Dados"

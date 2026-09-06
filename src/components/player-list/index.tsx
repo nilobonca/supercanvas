@@ -499,7 +499,7 @@ const AudioPlayerList: React.FC<AudioPlayerListProps> = ({
                             className="p-1 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
                             title="Editar áudio"
                         >
-                            <Scissors size={14} className="text-violet-500" />
+                            <Scissors size={14} className="text-[#7F95FF]" />
                         </button>
                     )}
                     <button

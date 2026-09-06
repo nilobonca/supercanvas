@@ -79,12 +79,12 @@ function MasterFrequencyVisualizer() {
                 const x = startX + i * (barWidth + barGap);
                 const y = height - barHeight - 2;
 
-                // Multi-stop Studio Spectrum Gradient: Emerald -> Cyan -> Purple -> Rose Peak
+                // Multi-stop Studio Spectrum Gradient: Royal Cobalt -> Soft Periwinkle -> Sky Cyan -> Ice Blue Pastel
                 const grad = ctx.createLinearGradient(0, height, 0, 0);
-                grad.addColorStop(0, '#10b981');   // Emerald
-                grad.addColorStop(0.5, '#06b6d4'); // Cyan
-                grad.addColorStop(0.8, '#a855f7'); // Purple
-                grad.addColorStop(1, '#f43f5e');   // Rose peak
+                grad.addColorStop(0, '#1831D7');   // Royal Cobalt
+                grad.addColorStop(0.5, '#7F95FF'); // Soft Periwinkle
+                grad.addColorStop(0.8, '#52B1FF'); // Sky Cyan
+                grad.addColorStop(1, '#B4D3F1');   // Ice Blue Pastel
 
                 ctx.fillStyle = grad;
                 ctx.beginPath();
@@ -347,7 +347,7 @@ export default function GlobalAudioMenu({ projectId, onClose, onInteraction, zIn
                                         </button>
                                         <button
                                             onClick={() => useAudioEditorStore.getState().openEditor({ audio })}
-                                            className="p-2 text-gray-400 hover:text-violet-500 hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
+                                            className="p-2 text-gray-400 hover:text-[#1831D7] dark:hover:text-[#7F95FF] hover:bg-gray-100 dark:hover:bg-neutral-700 rounded transition-colors"
                                             title="Editar áudio"
                                         >
                                             <Scissors size={14} />

@@ -101,7 +101,7 @@ export const VaultMediaPreview: React.FC<VaultMediaPreviewProps> = ({ path, type
   if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 gap-2 p-8">
-        <RefreshCw className="w-6 h-6 animate-spin text-violet-500" />
+        <RefreshCw className="w-6 h-6 animate-spin text-[#7F95FF]" />
         <span className="text-xs">Carregando mídia...</span>
       </div>
     );

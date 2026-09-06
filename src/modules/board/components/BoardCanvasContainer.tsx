@@ -360,7 +360,7 @@ export const BoardCanvasContainer: React.FC<BoardCanvasContainerProps> = ({
               title={canvasTheme === 'light' ? "Mudar para fundo escuro" : "Mudar para fundo claro"}
             >
               {canvasTheme === 'light' ? (
-                <Moon className="w-4 h-4 text-purple-600" />
+                <Moon className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF]" />
               ) : (
                 <Sun className="w-4 h-4 text-amber-400" />
               )}

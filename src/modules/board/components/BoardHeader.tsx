@@ -87,11 +87,11 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
                 if (e.key === 'Escape') setIsEditing(false);
               }}
               autoFocus
-              className="bg-stone-50 dark:bg-black/40 border border-purple-500 rounded-lg px-2 py-0.5 text-sm font-semibold outline-none w-48 text-stone-900 dark:text-white"
+              className="bg-stone-50 dark:bg-black/40 border border-[#1831D7] rounded-lg px-2 py-0.5 text-sm font-semibold outline-none w-48 text-stone-900 dark:text-white"
             />
             <button
               onClick={handleSave}
-              className="p-1 hover:bg-purple-100 dark:hover:bg-purple-600/20 text-purple-600 dark:text-purple-400 rounded-lg"
+              className="p-1 hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] rounded-lg"
               title="Salvar nome"
             >
               <Check className="w-4 h-4" />
@@ -106,7 +106,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
             className="flex items-center gap-2 cursor-pointer group"
             title="Clique para renomear"
           >
-            <h1 className="text-sm font-bold group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">
+            <h1 className="text-sm font-bold group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
               {boardName}
             </h1>
             <Edit2 className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -169,7 +169,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
             >
               {canvasTheme === 'light' ? (
                 <>
-                  <Moon className="w-3.5 h-3.5 text-purple-600" />
+                  <Moon className="w-3.5 h-3.5 text-[#1831D7]" />
                   <span>Fundo Escuro</span>
                 </>
               ) : (

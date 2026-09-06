@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { X, AlertTriangle, CheckCircle, Copy, Edit2, SkipForward, Check } from 'lucide-react';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import { ConflictResolution, ParsedImportData, executeImport, ConflictAction } from '@/utils/exportSystem/importUtils';
@@ -144,7 +144,7 @@ export const ImportConflictModal: React.FC<ImportConflictModalProps> = ({
                           onClick={() => handleAction(project.id, 'rename', `${project.name} (Importado)`)}
                           className={clsx(
                             "flex flex-col items-center justify-center p-2 rounded-lg border transition-colors text-xs font-medium gap-1",
-                            action === 'rename' ? "border-purple-500 bg-purple-50 text-purple-700" : "border-gray-200 hover:border-gray-300 text-gray-600"
+                            action === 'rename' ? "border-[#1831D7] bg-[#1831D7]/10 text-[#1831D7]" : "border-gray-200 hover:border-gray-300 text-gray-600"
                           )}
                         >
                           <Edit2 size={16} /> Renomear
@@ -166,7 +166,7 @@ export const ImportConflictModal: React.FC<ImportConflictModalProps> = ({
                             type="text"
                             value={res.newName || ''}
                             onChange={(e) => handleAction(project.id, 'rename', e.target.value)}
-                            className="w-full text-sm p-2 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+                            className="w-full text-sm p-2 border border-[#7F95FF]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7F95FF]/20"
                             placeholder="Novo nome do projeto..."
                           />
                         </div>

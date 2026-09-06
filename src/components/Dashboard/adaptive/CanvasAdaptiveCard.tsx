@@ -68,7 +68,7 @@ export const CanvasAdaptiveCard: React.FC<CanvasAdaptiveCardProps> = ({
   return (
     <div
       onClick={() => onOpen(canvas)}
-      className="group relative rounded-xl border border-black/[0.07] dark:border-white/[0.08] bg-white dark:bg-[#14141C] hover:border-purple-500/40 dark:hover:border-purple-500/40 p-3 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
+      className="group relative rounded-xl border border-black/[0.07] dark:border-white/[0.08] bg-white dark:bg-[#131524] hover:border-[#7F95FF]/40 dark:hover:border-[#7F95FF]/40 p-3 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
     >
       <div className="flex items-start justify-between gap-2.5">
         {/* Left: Icon & Titles */}
@@ -77,20 +77,20 @@ export const CanvasAdaptiveCard: React.FC<CanvasAdaptiveCardProps> = ({
             className={clsx(
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
               isBoard 
-                ? "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
-                : "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                ? "bg-[#1831D7]/20 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF]"
+                : "bg-[#52B1FF]/20 text-[#52B1FF] dark:bg-[#52B1FF]/20 dark:text-[#52B1FF]"
             )}
           >
             {isBoard ? <FolderKanban size={15} /> : <Music size={15} />}
           </div>
 
           <div className="flex-1 min-w-0">
-            {/* Category Pastel Badge */}
+            {/* Category Badge */}
             <div className="flex items-center gap-1.5 mb-1">
               <span
                 className={clsx(
                   "text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border",
-                  isBoard ? "badge-pastel-lavender" : "badge-pastel-sky"
+                  isBoard ? "bg-[#1831D7]/15 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF] border-[#7F95FF]/30" : "bg-[#52B1FF]/15 text-[#52B1FF] border-[#52B1FF]/30"
                 )}
               >
                 {isBoard ? 'Conexões' : 'Áudio RPG'}
@@ -119,7 +119,7 @@ export const CanvasAdaptiveCard: React.FC<CanvasAdaptiveCardProps> = ({
                     if (e.key === 'Escape') handleCancel(e as unknown as React.MouseEvent);
                   }}
                   autoFocus
-                  className="w-full bg-white dark:bg-black/60 border border-purple-500 rounded px-1.5 py-0.5 text-xs font-semibold text-stone-900 dark:text-white outline-none"
+                  className="w-full bg-white dark:bg-black/60 border border-[#7F95FF] rounded px-1.5 py-0.5 text-xs font-semibold text-stone-900 dark:text-white outline-none"
                 />
                 <button
                   onClick={handleSave}
@@ -137,13 +137,13 @@ export const CanvasAdaptiveCard: React.FC<CanvasAdaptiveCardProps> = ({
                 </button>
               </div>
             ) : (
-              <h4 className="text-xs sm:text-[13px] font-bold text-stone-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              <h4 className="text-xs sm:text-[13px] font-bold text-stone-900 dark:text-[#F4F0E6] line-clamp-1 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                 {canvas.name}
               </h4>
             )}
 
             {/* Sub-metrics */}
-            <div className="flex items-center gap-2 text-[10px] text-stone-400 dark:text-neutral-500 mt-1">
+            <div className="flex items-center gap-2 text-[10px] text-stone-400 dark:text-[#B4D3F1]/70 mt-1">
               <span>{isBoard ? 'Quadro Infinito' : `${pageCount} ${pageCount === 1 ? 'página' : 'páginas'}`}</span>
               <span>•</span>
               <span className="font-mono">#{canvas.id.slice(0, 6)}</span>
@@ -176,7 +176,7 @@ export const CanvasAdaptiveCard: React.FC<CanvasAdaptiveCardProps> = ({
           {/* Quick Open Action Pill */}
           <button
             onClick={() => onOpen(canvas)}
-            className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-600 dark:hover:text-white text-stone-600 dark:text-neutral-300 transition-colors"
+            className="p-1.5 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-[#1831D7] hover:text-[#F4F0E6] dark:hover:bg-[#1831D7] dark:hover:text-[#F4F0E6] text-stone-600 dark:text-neutral-300 transition-colors"
             title="Abrir Canvas"
           >
             <ArrowUpRight size={13} />

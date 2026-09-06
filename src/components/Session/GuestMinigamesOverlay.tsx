@@ -51,8 +51,8 @@ export const GuestMinigamesOverlay: React.FC<GuestMinigamesOverlayProps> = ({
             style={{ transitionDuration: `${clickerConfig?.config?.fadeoutTime !== undefined ? clickerConfig.config.fadeoutTime : 2}s` }}
         >
             {/* Animated Background Elements */}
-            <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[140px] opacity-60 animate-pulse" />
-            <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-purple-500/10 rounded-full blur-[140px] opacity-60 animate-pulse" style={{ animationDelay: '2s' }} />
+            <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-[#1831D7]/10 rounded-full blur-[140px] opacity-60 animate-pulse" />
+            <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-[#52B1FF]/10 rounded-full blur-[140px] opacity-60 animate-pulse" style={{ animationDelay: '2s' }} />
 
             {clickerConfig?.gameType === 'cards' ? (
                 <CardsMinigameGuest
@@ -168,14 +168,14 @@ export const GuestMinigamesOverlay: React.FC<GuestMinigamesOverlayProps> = ({
                                         {!clickerConfig?.config?.hideTarget && (
                                             <div className="w-full max-w-sm bg-neutral-900/50 border border-white/5 rounded-full h-2.5 relative overflow-hidden backdrop-blur-sm">
                                                 <div 
-                                                    className={`h-full rounded-full transition-all duration-300 ease-out relative ${clickerConfig?.config?.isCooperative ? 'bg-gradient-to-r from-indigo-500 to-emerald-400' : 'bg-[#D4C4A8] opacity-80'}`}
+                                                    className={`h-full rounded-full transition-all duration-300 ease-out relative ${clickerConfig?.config?.isCooperative ? 'bg-brand-gradient-h' : 'bg-[#D4C4A8] opacity-80'}`}
                                                     style={{ width: `${Math.min(100, (currentClicks / (clickerConfig?.config?.targetClicks || 100)) * 100)}%` }}
                                                 />
                                             </div>
                                         )}
                                         <div className="mt-4 text-xs font-light text-neutral-400 tracking-wider flex flex-col items-center gap-1">
                                             {clickerConfig?.config?.isCooperative && (
-                                                <span className="text-indigo-400 font-bold text-xs">
+                                                <span className="text-[#7F95FF] font-bold text-xs">
                                                     🤝 Cliques Coletivos Somados
                                                 </span>
                                             )}

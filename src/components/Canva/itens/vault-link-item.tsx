@@ -77,8 +77,8 @@ export default function VaultLinkItem({
       }}
       className={`group select-none rounded-xl backdrop-blur-md transition-shadow cursor-grab active:cursor-grabbing ${
         isSelected
-          ? 'ring-2 ring-violet-400 shadow-xl shadow-violet-500/20 bg-neutral-900/95 border border-violet-500/50'
-          : 'bg-neutral-900/80 border border-neutral-800/80 hover:border-violet-500/40 hover:bg-neutral-900/90 shadow-lg'
+          ? 'ring-2 ring-[#7F95FF] shadow-xl shadow-[#1831D7]/20 bg-[#17192A]/95 border border-[#1831D7]/50'
+          : 'bg-[#17192A]/80 border border-neutral-800/80 hover:border-[#1831D7]/40 hover:bg-[#17192A]/90 shadow-lg'
       }`}
     >
       {/* Floating Toolbar when selected */}
@@ -90,7 +90,7 @@ export default function VaultLinkItem({
         >
           <button
             onClick={handleOpenNote}
-            className="flex items-center gap-1 px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-xs font-medium transition-colors"
+            className="flex items-center gap-1 px-2 py-1 bg-[#1831D7] hover:bg-[#1831D7]/90 text-white rounded text-xs font-medium transition-colors cursor-pointer"
             title="Abrir nota no Vault"
           >
             <ExternalLink className="w-3 h-3" />
@@ -101,7 +101,7 @@ export default function VaultLinkItem({
               e.stopPropagation();
               onDelete(item.id);
             }}
-            className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-400 rounded transition-colors"
+            className="p-1 hover:bg-red-500/20 text-neutral-400 hover:text-red-400 rounded transition-colors cursor-pointer"
             title="Excluir do canvas"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -112,12 +112,12 @@ export default function VaultLinkItem({
       {/* Card Content */}
       <div className="p-3 flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <div className="w-7 h-7 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-300 shrink-0">
-            <SafeIcon size={16} className="text-violet-300" />
+          <div className="w-7 h-7 rounded-lg bg-[#1831D7]/20 border border-[#1831D7]/30 flex items-center justify-center text-[#7F95FF] shrink-0">
+            <SafeIcon size={16} className="text-[#7F95FF]" />
           </div>
           <button
             onClick={handleOpenNote}
-            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-violet-600/30 text-neutral-400 hover:text-violet-300 rounded transition-all"
+            className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[#1831D7]/30 text-neutral-400 hover:text-[#7F95FF] rounded transition-all cursor-pointer"
             title="Abrir nota completa"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -125,7 +125,7 @@ export default function VaultLinkItem({
         </div>
 
         <div>
-          <h4 className="text-xs font-semibold text-neutral-100 line-clamp-1 group-hover:text-violet-200 transition-colors">
+          <h4 className="text-xs font-semibold text-neutral-100 line-clamp-1 group-hover:text-[#B4D3F1] transition-colors">
             {item.title}
           </h4>
           <span className="text-[10px] text-neutral-400 flex items-center gap-1 truncate mt-0.5 font-mono">

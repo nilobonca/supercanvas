@@ -218,7 +218,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
             <div className="flex items-center gap-2">
               <button
                 onClick={onOpenCreateCanvas}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-900 hover:bg-stone-800 dark:bg-purple-600 dark:hover:bg-purple-500 text-white font-semibold text-xs transition-colors shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6] font-semibold text-xs transition-colors shadow-xs"
                 title="Criar Novo Canvas"
               >
                 <Plus size={14} className="stroke-[2.5]" />
@@ -259,8 +259,8 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                   : "text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white"
               )}
             >
-              <Layers size={13} />
-              <span>Todos os Canvas ({filteredCanvases.length})</span>
+              <Layers size={14} />
+              <span>Todos os Canvas</span>
             </button>
           </div>
 
@@ -274,7 +274,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                 placeholder="Buscar por nome, pasta ou ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-neutral-500 outline-none focus:border-purple-500 shadow-xs"
+                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-xl bg-white dark:bg-white/5 border border-black/10 dark:border-white/10 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-neutral-500 outline-none focus:border-[#7F95FF] shadow-xs"
               />
               {searchQuery && (
                 <button
@@ -304,7 +304,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                 className={clsx(
                   "px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 whitespace-nowrap",
                   typeFilter === 'board'
-                    ? "bg-purple-600 text-white shadow-xs"
+                    ? "bg-[#1831D7] text-[#F4F0E6] shadow-xs"
                     : "bg-black/5 dark:bg-white/5 text-stone-600 dark:text-neutral-300 hover:bg-black/10 dark:hover:bg-white/10"
                 )}
               >
@@ -316,12 +316,12 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                 className={clsx(
                   "px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1 whitespace-nowrap",
                   typeFilter === 'audio'
-                    ? "bg-sky-600 text-white shadow-xs"
+                    ? "bg-[#52B1FF] text-[#17192A] shadow-xs"
                     : "bg-black/5 dark:bg-white/5 text-stone-600 dark:text-neutral-300 hover:bg-black/10 dark:hover:bg-white/10"
                 )}
               >
                 <Music size={11} />
-                <span>Áudio</span>
+                <span>Áudio RPG</span>
               </button>
             </div>
           </div>
@@ -360,8 +360,8 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                           isGeneral
                             ? "bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
                             : vault?.storageType === 'fsa'
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                              : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                              ? "bg-[#52B1FF]/15 text-[#52B1FF] dark:bg-[#52B1FF]/20"
+                              : "bg-[#1831D7]/15 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF]"
                         )}>
                           {isGeneral ? <Folder size={14} /> : vault?.storageType === 'fsa' ? <HardDrive size={14} /> : <SafeIcon size={14} />}
                         </div>
@@ -372,7 +372,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                               {isGeneral ? 'Caixa Geral / Sem Vault Vinculado' : vault?.name}
                             </span>
                             {isActive && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/30">
                                 Ativo
                               </span>
                             )}
@@ -398,7 +398,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                             </p>
                             <button
                               onClick={onOpenCreateCanvas}
-                              className="mt-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline inline-flex items-center gap-1"
+                              className="mt-2 text-xs font-semibold text-[#1831D7] dark:text-[#7F95FF] hover:underline inline-flex items-center gap-1"
                             >
                               <Plus size={12} />
                               <span>Criar primeiro canvas aqui</span>
@@ -430,7 +430,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                       setTypeFilter('all');
                       setSelectedVaultFilter('all');
                     }}
-                    className="mt-2 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline"
+                    className="mt-2 text-xs font-semibold text-[#1831D7] dark:text-[#7F95FF] hover:underline"
                   >
                     Limpar filtros de busca
                   </button>
@@ -452,7 +452,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
 
           <button
             onClick={onOpenCreateCanvas}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-all shadow-md shadow-purple-500/10 cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1831D7] hover:bg-[#1831D7]/90 text-[#F4F0E6] font-semibold text-xs transition-all shadow-md shadow-[#1831D7]/20 cursor-pointer"
           >
             <Plus size={14} className="stroke-[2.5]" />
             <span>Criar Novo Canvas</span>
@@ -479,15 +479,15 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
       <div
         key={canvas.id}
         onClick={() => handleOpenCanvas(canvas)}
-        className="p-3.5 sm:p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-white dark:bg-[#181822] hover:border-purple-400/50 hover:shadow-md transition-all cursor-pointer flex flex-col gap-2.5 group"
+        className="p-3.5 sm:p-4 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-white dark:bg-[#131524] hover:border-[#7F95FF]/50 hover:shadow-md transition-all cursor-pointer flex flex-col gap-2.5 group"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <div className={clsx(
               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105",
               isBoard 
-                ? "bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
-                : "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300"
+                ? "bg-[#1831D7]/20 text-[#1831D7] dark:bg-[#7F95FF]/20 dark:text-[#7F95FF]"
+                : "bg-[#52B1FF]/20 text-[#52B1FF] dark:bg-[#52B1FF]/20 dark:text-[#52B1FF]"
             )}>
               {isBoard ? <FolderKanban size={16} /> : <Music size={16} />}
             </div>
@@ -502,7 +502,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="bg-white dark:bg-black/50 border border-purple-500 rounded px-2 py-0.5 text-xs font-semibold outline-none w-full"
+                    className="bg-white dark:bg-black/50 border border-[#7F95FF] rounded px-2 py-0.5 text-xs font-semibold outline-none w-full"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSaveEditing(e);
@@ -528,7 +528,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                   </button>
                 </div>
               ) : (
-                <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-white line-clamp-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <h4 className="font-bold text-xs sm:text-sm text-stone-900 dark:text-[#F4F0E6] line-clamp-1 group-hover:text-[#1831D7] dark:group-hover:text-[#7F95FF] transition-colors">
                   {canvas.name}
                 </h4>
               )}
@@ -540,7 +540,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                 {canvas.folderPath && (
                   <>
                     <span>•</span>
-                    <span className="flex items-center gap-0.5 text-purple-600 dark:text-purple-400">
+                    <span className="flex items-center gap-0.5 text-[#1831D7] dark:text-[#7F95FF]">
                       <Folder size={10} />
                       {canvas.folderPath}
                     </span>
@@ -590,12 +590,12 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
 
         {/* Footer info: Vault badge and Abrir link */}
         <div className="flex items-center justify-between pt-2 border-t border-black/[0.04] dark:border-white/[0.04] text-[11px]">
-          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-500 dark:text-neutral-400 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
+          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-stone-500 dark:text-[#B4D3F1]/70 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
             <Database size={9} />
             {vaultDisplay}
           </span>
 
-          <span className="font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+          <span className="font-semibold text-[#1831D7] dark:text-[#7F95FF] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
             <span>Abrir</span>
             <ArrowRight size={11} />
           </span>

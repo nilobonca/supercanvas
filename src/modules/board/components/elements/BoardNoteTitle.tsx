@@ -48,7 +48,7 @@ export const BoardNoteTitle: React.FC<BoardNoteTitleProps> = ({
       {/* Divider menor que não encosta nas paredes da nota */}
       <div
         className="w-14 h-[1.5px] rounded-full mt-1.5 opacity-40 transition-colors"
-        style={{ backgroundColor: themeBorder || '#8b5cf6' }}
+        style={{ backgroundColor: themeBorder || '#1831D7' }}
       />
     </div>
   );

@@ -26,13 +26,11 @@ const FILTER_OPTIONS: { value: SoundboardItem['filterType']; label: string }[] =
 ];
 
 export const PRESET_PAD_COLORS = [
-    { name: 'Azul Studio', value: '#3b82f6', border: 'border-blue-500', glow: 'rgba(59,130,246,0.6)', text: 'text-blue-400', bgActive: 'bg-blue-500/20' },
-    { name: 'Rosa Neon', value: '#ec4899', border: 'border-pink-500', glow: 'rgba(236,72,153,0.6)', text: 'text-pink-400', bgActive: 'bg-pink-500/20' },
-    { name: 'Verde Synth', value: '#10b981', border: 'border-emerald-500', glow: 'rgba(16,185,129,0.6)', text: 'text-emerald-400', bgActive: 'bg-emerald-500/20' },
-    { name: 'Âmbar Fogo', value: '#f59e0b', border: 'border-amber-500', glow: 'rgba(245,158,11,0.6)', text: 'text-amber-400', bgActive: 'bg-amber-500/20' },
-    { name: 'Roxo Cyber', value: '#8b5cf6', border: 'border-purple-500', glow: 'rgba(139,92,246,0.6)', text: 'text-purple-400', bgActive: 'bg-purple-500/20' },
-    { name: 'Vermelho Laser', value: '#ef4444', border: 'border-red-500', glow: 'rgba(239,68,68,0.6)', text: 'text-red-400', bgActive: 'bg-red-500/20' },
-    { name: 'Ciano Tron', value: '#06b6d4', border: 'border-cyan-500', glow: 'rgba(6,182,212,0.6)', text: 'text-cyan-400', bgActive: 'bg-cyan-500/20' },
+    { name: 'Cobalto Real', value: '#1831D7', border: 'border-[#1831D7]', glow: 'rgba(24,49,215,0.6)', text: 'text-[#7F95FF]', bgActive: 'bg-[#1831D7]/20' },
+    { name: 'Soft Periwinkle', value: '#7F95FF', border: 'border-[#7F95FF]', glow: 'rgba(127,149,255,0.6)', text: 'text-[#7F95FF]', bgActive: 'bg-[#7F95FF]/20' },
+    { name: 'Azul Celeste', value: '#52B1FF', border: 'border-[#52B1FF]', glow: 'rgba(82,177,255,0.6)', text: 'text-[#52B1FF]', bgActive: 'bg-[#52B1FF]/20' },
+    { name: 'Azul Gelo', value: '#B4D3F1', border: 'border-[#B4D3F1]', glow: 'rgba(180,211,241,0.6)', text: 'text-[#B4D3F1]', bgActive: 'bg-[#B4D3F1]/20' },
+    { name: 'Meia-Noite', value: '#17192A', border: 'border-[#7F95FF]/50', glow: 'rgba(23,25,42,0.6)', text: 'text-[#B4D3F1]', bgActive: 'bg-[#17192A]/40' },
 ];
 
 // Simple helper to pick a deterministic color if item.color is not set
@@ -232,7 +230,7 @@ export const SoundboardButton: React.FC<SoundboardButtonProps> = ({
                 className={`
                     group relative rounded-2xl flex flex-col items-center justify-between p-2 cursor-pointer transition-all duration-200 overflow-hidden
                     bg-neutral-900/90 dark:bg-neutral-950/90 backdrop-blur-md border-2
-                    ${isRenaming ? 'ring-2 ring-violet-400 ring-offset-2 ring-offset-neutral-900 shadow-2xl' : ''}
+                    ${isRenaming ? 'ring-2 ring-[#7F95FF] ring-offset-2 ring-offset-neutral-900 shadow-2xl' : ''}
                     ${isPlaying
                         ? 'scale-[0.98] shadow-2xl'
                         : audio
@@ -333,7 +331,7 @@ export const SoundboardButton: React.FC<SoundboardButtonProps> = ({
                             onBlur={handleRenameSubmit}
                             onKeyDown={handleKeyDown}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full text-center text-xs bg-neutral-800 border border-violet-400 rounded px-1 py-0.5 outline-none font-medium text-white shadow-inner"
+                            className="w-full text-center text-xs bg-neutral-800 border border-[#7F95FF] rounded px-1 py-0.5 outline-none font-medium text-white shadow-inner"
                         />
                     ) : (
                         <span className={`text-[11px] text-center font-semibold leading-tight line-clamp-2 break-words w-full ${isPlaying ? 'text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]' : audio ? 'text-neutral-200 group-hover:text-white' : 'text-neutral-500'}`}>

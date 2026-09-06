@@ -75,7 +75,7 @@ export const VaultPaneBreadcrumbs: React.FC<VaultPaneBreadcrumbsProps> = ({
           <button
             onClick={toggleIsEditing}
             className={`p-1 rounded hover:bg-stone-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer ${
-              isEditing ? 'text-purple-600 dark:text-purple-400 font-medium' : 'text-stone-400 dark:text-neutral-400'
+              isEditing ? 'text-[#1831D7] dark:text-[#7F95FF] font-medium' : 'text-stone-400 dark:text-neutral-400'
             }`}
             title={isEditing ? 'Modo de Leitura' : 'Modo de Edição'}
           >

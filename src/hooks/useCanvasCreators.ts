@@ -138,7 +138,7 @@ export const useCanvasCreators = ({
     addToHistory('Criar Botão Soundboard');
     const newItemId = uuidv4();
     const newDef: SoundboardItem = {
-      id: newItemId, name: 'Botão', audioId: null, color: '#A855F7', order: soundboardItems.length, playbackMode: 'overlap' as any
+      id: newItemId, name: 'Botão', audioId: null, color: '#1831D7', order: soundboardItems.length, playbackMode: 'overlap' as any
     };
     addSoundboardItem(newDef);
     const newInstance: ActiveSoundboardItem = {

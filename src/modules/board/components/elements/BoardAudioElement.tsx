@@ -259,8 +259,8 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
         className={clsx(
           "w-full h-full rounded-2xl bg-white dark:bg-neutral-900/90 border backdrop-blur-md shadow-xl flex flex-col p-3 transition-all duration-200 justify-between",
           isSelected
-            ? "border-purple-500 ring-2 ring-purple-500/30 shadow-purple-500/10"
-            : "border-stone-200/90 dark:border-neutral-800 hover:border-purple-300 dark:hover:border-neutral-700"
+            ? "border-[#1831D7] ring-2 ring-[#7F95FF]/30 shadow-[#1831D7]/10"
+            : "border-stone-200/90 dark:border-neutral-800 hover:border-[#7F95FF] dark:hover:border-neutral-700"
         )}
       >
         {/* Header com título e arraste */}
@@ -269,7 +269,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
           className="flex items-center justify-between cursor-grab active:cursor-grabbing border-b border-stone-200/90 dark:border-neutral-800 pb-2"
         >
           <div className="flex items-center gap-2 overflow-hidden">
-            <div className="w-7 h-7 rounded-xl bg-purple-50 dark:bg-violet-600/20 border border-purple-200 dark:border-violet-500/30 flex items-center justify-center text-purple-600 dark:text-violet-400 shrink-0 shadow-xs">
+            <div className="w-7 h-7 rounded-xl bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border border-[#7F95FF]/30 flex items-center justify-center text-[#1831D7] dark:text-[#7F95FF] shrink-0 shadow-xs">
               <Music className="w-3.5 h-3.5" />
             </div>
             <span className="text-xs font-semibold text-stone-900 dark:text-neutral-200 truncate max-w-[150px]">
@@ -278,7 +278,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <AudioVisualizer isPlaying={isPlaying} barCount={12} color="rgb(147, 51, 234)" />
+            <AudioVisualizer isPlaying={isPlaying} barCount={12} color="#7F95FF" />
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -300,7 +300,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
             className={clsx(
               "w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-md shrink-0 cursor-pointer",
               currentUrl
-                ? "bg-purple-600 hover:bg-purple-500 text-white hover:scale-105 active:scale-95 shadow-purple-600/20"
+                ? "bg-[#1831D7] hover:bg-[#1831D7]/90 text-white hover:scale-105 active:scale-95 shadow-[#1831D7]/20"
                 : "bg-stone-200 dark:bg-neutral-800 text-stone-400 dark:text-neutral-500 cursor-not-allowed"
             )}
             title={isPlaying ? "Pausar" : "Tocar"}
@@ -317,7 +317,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
               value={currentTime}
               onChange={handleSeek}
               disabled={!currentUrl}
-              className="w-full h-1.5 bg-stone-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-purple-600 dark:accent-violet-500"
+              className="w-full h-1.5 bg-stone-200 dark:bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-[#1831D7]"
             />
             <div className="flex justify-between text-[10px] text-stone-400 dark:text-neutral-400 font-mono">
               <span>{formatTime(currentTime)}</span>
@@ -331,7 +331,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
             className={clsx(
               "p-1.5 rounded-lg transition-colors shrink-0 cursor-pointer",
               isLoop 
-                ? "bg-purple-100 dark:bg-violet-600/30 text-purple-700 dark:text-violet-300 border border-purple-300 dark:border-violet-500/40" 
+                ? "bg-[#1831D7]/15 text-[#1831D7] dark:text-[#7F95FF] border border-[#7F95FF]/40" 
                 : "text-stone-400 dark:text-neutral-500 hover:text-stone-700 dark:hover:text-neutral-300"
             )}
             title={isLoop ? "Loop Ativo" : "Ativar Loop"}
@@ -349,7 +349,7 @@ export const BoardAudioElement: React.FC<BoardAudioElementProps> = ({
               step="0.05"
               value={volume}
               onChange={handleVolumeChange}
-              className="w-10 h-1 bg-stone-200 dark:bg-neutral-800 rounded appearance-none cursor-pointer accent-purple-600 dark:accent-violet-500"
+              className="w-10 h-1 bg-stone-200 dark:bg-neutral-800 rounded appearance-none cursor-pointer accent-[#1831D7]"
             />
           </div>
         </div>

@@ -25,16 +25,16 @@ export const GuestJoinModal: React.FC<GuestJoinModalProps> = ({
     return (
         <div className="flex-1 flex items-center justify-center p-4 relative z-10">
             <div className="w-full max-w-md bg-neutral-900/80 backdrop-blur-md border border-neutral-800 rounded-xl p-8 shadow-2xl relative">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-[2px] bg-gradient-to-r from-transparent via-[#1831D7] to-transparent" />
 
                 {/* Avatar Preview */}
                 <div className="flex justify-center mb-6">
                     <div className="relative">
-                        <div className="w-20 h-20 bg-indigo-500/10 border-2 border-indigo-500/30 rounded-full flex items-center justify-center text-indigo-400 overflow-hidden shadow-lg shadow-indigo-500/10">
+                        <div className="w-20 h-20 bg-[#1831D7]/10 border-2 border-[#7F95FF]/30 rounded-full flex items-center justify-center text-[#7F95FF] overflow-hidden shadow-lg shadow-[#1831D7]/10">
                             {avatarUrl ? (
                                 <img src={avatarUrl} alt={username || 'Avatar'} className="w-full h-full object-cover" />
                             ) : username.trim() ? (
-                                <span className="text-2xl font-bold uppercase tracking-wider text-indigo-300">
+                                <span className="text-2xl font-bold uppercase tracking-wider text-[#7F95FF]">
                                     {username.trim().slice(0, 2)}
                                 </span>
                             ) : (
@@ -64,14 +64,14 @@ export const GuestJoinModal: React.FC<GuestJoinModalProps> = ({
                             placeholder="Ex: Legolas, GM..."
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all text-sm"
+                            className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-4 py-3 text-white placeholder-neutral-600 focus:outline-none focus:border-[#7F95FF] focus:ring-2 focus:ring-[#7F95FF]/10 transition-all text-sm"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={isConnecting || !username.trim()}
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition-colors shadow-lg hover:shadow-indigo-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        className="w-full bg-[#1831D7] hover:bg-[#1831D7]/90 text-white font-bold py-3 rounded-lg transition-colors shadow-lg hover:shadow-[#1831D7]/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                     >
                         {isConnecting ? 'Conectando...' : buttonText}
                     </button>

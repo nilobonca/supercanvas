@@ -54,10 +54,10 @@ const ListenersMenu: React.FC<ListenersMenuProps> = ({
     const renderContent = () => (
         <div className="flex flex-col h-full overflow-hidden">
             {/* Guest Master Volume Slider */}
-            <div className="p-2.5 border-b border-gray-200 dark:border-neutral-800 bg-indigo-50/40 dark:bg-indigo-950/20 flex flex-col gap-1">
+            <div className="p-2.5 border-b border-gray-200 dark:border-neutral-800 bg-[#1831D7]/5 dark:bg-[#1831D7]/15 flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-gray-700 dark:text-neutral-300 flex items-center gap-1.5">
-                        <Volume2 size={13} className="text-indigo-500" />
+                        <Volume2 size={13} className="text-[#1831D7] dark:text-[#7F95FF]" />
                         Volume Master Convidados
                     </span>
                     <span className="text-xs font-mono text-gray-500 dark:text-neutral-400">
@@ -71,7 +71,7 @@ const ListenersMenu: React.FC<ListenersMenuProps> = ({
                     step="0.01"
                     value={guestMasterVolume}
                     onChange={(e) => setGuestMasterVolume(parseFloat(e.target.value))}
-                    className="w-full accent-indigo-500 h-1.5 cursor-pointer"
+                    className="w-full accent-[#1831D7] h-1.5 cursor-pointer"
                     title="Volume mestre para todos os ouvintes"
                 />
             </div>
@@ -194,7 +194,7 @@ const ListenersMenu: React.FC<ListenersMenuProps> = ({
                     }}
                 >
                     <span className="font-semibold text-sm text-gray-700 dark:text-neutral-200 flex items-center gap-1.5">
-                        <Users size={14} className="text-indigo-500" />
+                        <Users size={14} className="text-[#1831D7] dark:text-[#7F95FF]" />
                         Ouvintes Conectados
                     </span>
                     <div className="flex items-center gap-1.5">

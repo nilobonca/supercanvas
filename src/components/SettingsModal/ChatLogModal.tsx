@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useThemeStore } from '@/store/themeStore';
 import { X, Download, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -63,13 +63,13 @@ export const ChatLogModal: React.FC<ChatLogModalProps> = ({ isOpen, onClose, pro
       <div 
         className={clsx(
           "w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden transition-all duration-300",
-          theme === 'ethereal' 
-            ? "bg-[#0a0a0a]/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-2xl" 
-            : "bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl"
+          theme === 'light' 
+            ? "bg-[#F4F0E6] text-[#17192A] border border-[#1831D7]/20 rounded-2xl shadow-xl" 
+            : "bg-[#17192A]/95 text-[#F4F0E6] backdrop-blur-2xl border border-[#7F95FF]/20 rounded-2xl shadow-2xl shadow-blue-950/40"
         )}
       >
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <h2 className={clsx("text-xl font-medium", theme === 'ethereal' ? "text-white" : "text-neutral-200")}>
+        <div className="flex items-center justify-between p-6 border-b border-black/10 dark:border-white/10">
+          <h2 className={clsx("text-xl font-medium", theme === 'light' ? "text-[#17192A]" : "text-[#F4F0E6]")}>
             Histórico do Chat
           </h2>
           <div className="flex gap-2 items-center">
@@ -107,10 +107,10 @@ export const ChatLogModal: React.FC<ChatLogModalProps> = ({ isOpen, onClose, pro
               {messages.map(msg => (
                 <div key={msg.id} className="flex gap-3">
                   <span className="text-neutral-500 shrink-0">[{new Date(msg.timestamp).toLocaleTimeString()}]</span>
-                  <span className={clsx("font-bold shrink-0", msg.senderId === 'host' ? "text-indigo-400" : "text-emerald-400")}>
+                  <span className={clsx("font-bold shrink-0", msg.senderId === 'host' ? "text-[#7F95FF]" : "text-[#52B1FF]")}>
                     {msg.senderName}:
                   </span>
-                  <span className={clsx("text-neutral-300 break-words flex-1", msg.isRoll && "text-purple-300")}>
+                  <span className={clsx("text-neutral-300 break-words flex-1", msg.isRoll && "text-[#B4D3F1]")}>
                     {msg.isRoll ? `[ROLAGEM] ${msg.text}` : msg.text}
                   </span>
                 </div>

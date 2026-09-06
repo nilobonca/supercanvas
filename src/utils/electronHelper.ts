@@ -99,3 +99,33 @@ export const getPathForFile = (file: File): string => {
   return (file as any)?.path || '';
 };
 
+export const checkForUpdates = async (): Promise<void> => {
+  if (typeof window !== 'undefined' && window.electronAPI?.checkForUpdates) {
+    try {
+      await window.electronAPI.checkForUpdates();
+    } catch (err) {
+      console.warn('[RPGSA] checkForUpdates error:', err);
+    }
+  }
+};
+
+export const startDownloadUpdate = async (): Promise<void> => {
+  if (typeof window !== 'undefined' && window.electronAPI?.startDownloadUpdate) {
+    try {
+      await window.electronAPI.startDownloadUpdate();
+    } catch (err) {
+      console.warn('[RPGSA] startDownloadUpdate error:', err);
+    }
+  }
+};
+
+export const quitAndInstall = async (): Promise<void> => {
+  if (typeof window !== 'undefined' && window.electronAPI?.quitAndInstall) {
+    try {
+      await window.electronAPI.quitAndInstall();
+    } catch (err) {
+      console.warn('[RPGSA] quitAndInstall error:', err);
+    }
+  }
+};
+

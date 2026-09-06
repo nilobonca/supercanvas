@@ -97,8 +97,8 @@ export const VaultSplitDivider: React.FC<VaultSplitDividerProps> = ({
           isHorizontal ? 'w-0.5 h-full' : 'h-0.5 w-full'
         } ${
           isDragging
-            ? 'bg-purple-500 shadow-[0_0_8px_rgba(167,139,250,0.8)]'
-            : 'bg-stone-200 dark:bg-white/10 group-hover:bg-purple-500'
+            ? 'bg-[#1831D7] shadow-[0_0_8px_rgba(127,149,255,0.8)]'
+            : 'bg-stone-200 dark:bg-white/10 group-hover:bg-[#1831D7]'
         }`}
       />
     </div>

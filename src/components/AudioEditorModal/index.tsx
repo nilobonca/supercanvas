@@ -199,9 +199,9 @@ export const AudioEditorModal: React.FC<AudioEditorModalProps> = ({
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
       <div className={clsx(
         "w-full max-w-xl rounded-2xl shadow-2xl border p-6 flex flex-col gap-5",
-        theme === 'ethereal'
-          ? "bg-[#0c0c0e]/95 border-white/15 text-white shadow-purple-950/20"
-          : "bg-neutral-900 border-neutral-800 text-neutral-100"
+        theme === 'light'
+          ? "bg-[#F4F0E6] border-[#1831D7]/20 text-[#17192A] shadow-xl"
+          : "bg-[#17192A]/95 border-[#7F95FF]/20 text-[#F4F0E6] shadow-2xl shadow-blue-950/40"
       )}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 pb-4">

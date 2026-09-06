@@ -64,16 +64,12 @@ export interface UseAmbientGraphProps {
 
 // Curated celestial / arcane color palette for uncolored nodes
 const LORE_COLOR_PALETTE = [
-  '#c084fc', // purple / arcane
-  '#38bdf8', // sky / baróvia
-  '#34d399', // emerald / nature
-  '#f87171', // crimson / vampire / danger
-  '#fbbf24', // amber / relic
-  '#f472b6', // rose / faction
-  '#22d3ee', // cyan / mystery
-  '#a78bfa', // violet / magic
-  '#e2e8f0', // silver / neutral
-  '#facc15', // gold / sacred
+  '#7F95FF', // soft periwinkle / primary accent
+  '#52B1FF', // sky cyan
+  '#B4D3F1', // ice blue pastel
+  '#1831D7', // royal cobalt
+  '#F4F0E6', // warm ivory
+  '#17192A', // midnight navy
 ];
 
 // Helper to convert hex colors to rgba with desired opacity
@@ -507,10 +503,10 @@ export const useAmbientGraphSimulation = ({
           ctx.lineTo(nodeB.x, nodeB.y);
 
           if (isConnectedToHovered) {
-            ctx.strokeStyle = `rgba(192, 132, 252, ${baseAlpha})`;
+            ctx.strokeStyle = `rgba(127, 149, 255, ${baseAlpha})`;
             ctx.lineWidth = 1.8;
           } else {
-            ctx.strokeStyle = `rgba(148, 163, 184, ${baseAlpha})`;
+            ctx.strokeStyle = `rgba(180, 211, 241, ${baseAlpha * 0.75})`;
             ctx.lineWidth = 1.0;
           }
           ctx.stroke();

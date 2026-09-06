@@ -182,7 +182,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
       {/* Header with Cinzel Font */}
       <div className="flex items-center justify-between px-4 py-3 bg-neutral-950/90 border-b border-neutral-800">
         <h3 className="font-cinzel text-sm font-bold tracking-wider uppercase flex items-center gap-2 text-neutral-100">
-          <Dices size={18} className={`transition-transform duration-300 ${isRolling ? 'rotate-180 text-amber-400' : 'text-indigo-400'}`} />
+          <Dices size={18} className={`transition-transform duration-300 ${isRolling ? 'rotate-180 text-amber-400' : 'text-[#7F95FF]'}`} />
           Bandeja de Dados
         </h3>
         {onClose && (
@@ -218,7 +218,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
                   }
                 }
               }}
-              className="font-jetbrains w-full bg-neutral-800/90 border border-neutral-700/80 rounded-lg px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+              className="font-jetbrains w-full bg-neutral-800/90 border border-neutral-700/80 rounded-lg px-3 py-1.5 text-sm text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-[#7F95FF] focus:ring-1 focus:ring-[#7F95FF] transition-all"
             />
           </div>
 
@@ -291,8 +291,8 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
                   onClick={() => rollDice(sides)}
                   className={`font-cinzel relative py-2 rounded-lg text-xs font-extrabold tracking-wider transition-all border flex items-center justify-center gap-1 shadow-sm ${
                     isD20
-                      ? 'bg-gradient-to-br from-indigo-950/80 via-neutral-800 to-amber-950/60 border-amber-500/50 text-amber-300 hover:border-amber-400 hover:shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                      : 'bg-neutral-800/80 hover:bg-indigo-900/60 border-neutral-700/80 hover:border-indigo-500/80 text-neutral-200 hover:text-white'
+                      ? 'bg-gradient-to-br from-[#17192A] via-neutral-800 to-amber-950/60 border-amber-500/50 text-amber-300 hover:border-amber-400 hover:shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                      : 'bg-neutral-800/80 hover:bg-[#1831D7]/20 border-neutral-700/80 hover:border-[#7F95FF]/80 text-neutral-200 hover:text-white'
                   }`}
                 >
                   d{sides}
@@ -322,7 +322,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
                   }
                 }
               }}
-              className="font-jetbrains w-full bg-neutral-800/90 border border-neutral-700/80 rounded-lg pl-7 pr-3 py-1.5 text-xs text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-indigo-500 transition-all"
+              className="font-jetbrains w-full bg-neutral-800/90 border border-neutral-700/80 rounded-lg pl-7 pr-3 py-1.5 text-xs text-neutral-100 placeholder:text-neutral-500 focus:outline-none focus:border-[#7F95FF] transition-all"
             />
           </div>
           <motion.button
@@ -330,7 +330,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={!customSides}
-            className="font-cinzel bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md"
+            className="font-cinzel bg-[#1831D7] hover:bg-[#1831D7]/90 disabled:bg-neutral-800 disabled:text-neutral-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md"
           >
             Rolar
           </motion.button>
@@ -397,7 +397,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
                         ? 'text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-amber-300 to-yellow-300 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]'
                         : lastRoll.isNat1
                         ? 'text-rose-400 drop-shadow-[0_0_10px_rgba(225,29,72,0.8)]'
-                        : 'text-indigo-300'
+                        : 'text-[#7F95FF]'
                     }`}
                   >
                     {lastRoll.total}
@@ -461,7 +461,7 @@ export const DiceTray: React.FC<DiceTrayProps> = ({ onRoll, onClose }) => {
                     dangerouslySetInnerHTML={{
                       __html: roll.text.replace(
                         /\*\*(.*?)\*\*/g,
-                        '<strong class="text-indigo-300 font-bold font-mono">$1</strong>'
+                        '<strong class="text-[#7F95FF] font-bold font-mono">$1</strong>'
                       ),
                     }}
                   />

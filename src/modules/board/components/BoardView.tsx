@@ -188,7 +188,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
   if (isLoading) {
     return (
       <div className={isEmbeddedInVault ? "w-full h-full bg-neutral-950 flex flex-col items-center justify-center gap-3 text-white" : "w-screen h-screen bg-neutral-950 flex flex-col items-center justify-center gap-3 text-white"}>
-        <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-[#7F95FF] border-t-transparent animate-spin" />
         <p className="text-xs text-neutral-400 font-mono">Carregando Canvas de Conexões...</p>
       </div>
     );
@@ -391,50 +391,42 @@ export const BoardView: React.FC<BoardViewProps> = ({
               },
               subMenu: [
                 {
-                  label: 'Nota Amarela',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#fef08a] border border-black/20" />,
+                  label: 'Nota Cobalto',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#1831D7] border border-black/20" />,
                   onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#fef08a');
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#1831D7');
                     setCanvasContextMenu(null);
                   },
                 },
                 {
-                  label: 'Nota Verde',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#a7f3d0] border border-black/20" />,
+                  label: 'Nota Periwinkle',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#7F95FF] border border-black/20" />,
                   onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#a7f3d0');
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#7F95FF');
                     setCanvasContextMenu(null);
                   },
                 },
                 {
-                  label: 'Nota Azul',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#a5f3fc] border border-black/20" />,
+                  label: 'Nota Celeste',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#52B1FF] border border-black/20" />,
                   onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#a5f3fc');
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#52B1FF');
                     setCanvasContextMenu(null);
                   },
                 },
                 {
-                  label: 'Nota Roxa',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#e9d5ff] border border-black/20" />,
+                  label: 'Nota Gelo',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#B4D3F1] border border-black/20" />,
                   onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#e9d5ff');
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#B4D3F1');
                     setCanvasContextMenu(null);
                   },
                 },
                 {
-                  label: 'Nota Rosa',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#fecdd3] border border-black/20" />,
+                  label: 'Nota Meia-Noite',
+                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#17192A] border border-black/20" />,
                   onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#fecdd3');
-                    setCanvasContextMenu(null);
-                  },
-                },
-                {
-                  label: 'Nota Escura',
-                  icon: <span className="w-3.5 h-3.5 rounded-full bg-[#1e293b] border border-black/20" />,
-                  onClick: () => {
-                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#1e293b');
+                    createNote({ x: canvasContextMenu.worldPos.x - 110, y: canvasContextMenu.worldPos.y - 90 }, '#17192A');
                     setCanvasContextMenu(null);
                   },
                 },
@@ -442,7 +434,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
             },
             {
               label: 'Adicionar Texto',
-              icon: <Type size={18} className="text-purple-400" />,
+              icon: <Type size={18} className="text-[#7F95FF]" />,
               onClick: () => {
                 createText({
                   x: canvasContextMenu.worldPos.x - 100,

@@ -10,12 +10,11 @@ interface BoardDropContextMenuProps {
 }
 
 const QUICK_COLORS = [
-  { bg: '#fef08a', name: 'Amarelo' },
-  { bg: '#a7f3d0', name: 'Verde' },
-  { bg: '#a5f3fc', name: 'Azul' },
-  { bg: '#e9d5ff', name: 'Roxo' },
-  { bg: '#fecdd3', name: 'Rosa' },
-  { bg: '#1e293b', name: 'Escuro' },
+  { bg: '#1831D7', name: 'Cobalto' },
+  { bg: '#7F95FF', name: 'Periwinkle' },
+  { bg: '#52B1FF', name: 'Celeste' },
+  { bg: '#B4D3F1', name: 'Gelo' },
+  { bg: '#17192A', name: 'Meia-Noite' },
 ];
 
 export const BoardDropContextMenu: React.FC<BoardDropContextMenuProps> = ({
@@ -102,7 +101,7 @@ export const BoardDropContextMenu: React.FC<BoardDropContextMenuProps> = ({
           onClick={() => onSelectOption('text')}
           className="flex items-center gap-2.5 p-2 rounded-xl text-xs text-neutral-200 hover:text-white hover:bg-neutral-800/60 transition-colors w-full text-left"
         >
-          <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg bg-[#1831D7]/20 text-[#7F95FF] flex items-center justify-center">
             <Type className="w-3.5 h-3.5" />
           </div>
           <span className="font-medium">Adicionar Texto</span>
@@ -116,7 +115,7 @@ export const BoardDropContextMenu: React.FC<BoardDropContextMenuProps> = ({
           }}
           className="flex items-center gap-2.5 p-2 rounded-xl text-xs text-neutral-200 hover:text-white hover:bg-neutral-800/60 transition-colors w-full text-left"
         >
-          <div className="w-6 h-6 rounded-lg bg-violet-500/20 text-violet-400 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-lg bg-[#1831D7]/20 text-[#7F95FF] flex items-center justify-center">
             <Search className="w-3.5 h-3.5" />
           </div>
           <span className="font-medium">Adicionar do Vault...</span>

@@ -52,7 +52,7 @@ export const DialLockpickerHost: React.FC<{ id: string; sessionListeners?: Sessi
     }
   };
 
-  const isEthereal = theme === 'ethereal';
+  const isEthereal = false;
 
   const glassInputClass = clsx(
     'w-full px-3 py-2 rounded-xl border focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-400/50 transition-all font-sans text-sm',

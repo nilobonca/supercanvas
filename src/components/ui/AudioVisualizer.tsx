@@ -11,7 +11,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     isPlaying,
     barCount = 16,
     className = "",
-    color = "rgb(168, 85, 247)" // purple-500 default
+    color = "#1831D7"
 }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number | null>(null);
@@ -44,7 +44,7 @@ export const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 
                 const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
                 gradient.addColorStop(0, color);
-                gradient.addColorStop(1, 'rgba(236, 72, 153, 0.9)');
+                gradient.addColorStop(1, '#52B1FF');
 
                 ctx.fillStyle = gradient;
                 ctx.beginPath();

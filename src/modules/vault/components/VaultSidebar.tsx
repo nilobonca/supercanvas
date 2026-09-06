@@ -11,7 +11,7 @@ import { Layer } from '@/interfaces/utils/indexedDB';
 import { saveUserTemplate } from '../utils/templateStore';
 import { v4 as uuidv4 } from 'uuid';
 import { 
-  Folder, FolderOpen, FileText, ChevronRight, ChevronDown, 
+  Folder, FolderOpen, FileText, File, ChevronRight, ChevronDown, 
   FilePlus, FolderPlus, Trash2, Search, HardDrive, Database,
   RefreshCw, FolderSync, LayoutTemplate, Edit2, BookmarkPlus,
   Copy, FolderInput, Music, Check, FolderKanban, Box, Upload, Image as ImageIcon,
@@ -72,13 +72,13 @@ const FolderInputRow: React.FC<FolderInputRowProps> = ({
   return (
     <div
       style={{ paddingLeft: `${depth * 14 + 12}px` }}
-      className="flex items-center gap-2 py-1.5 pr-2 my-0.5 rounded-lg bg-purple-50/90 dark:bg-purple-950/40 border border-purple-400 dark:border-purple-500/70 shadow-xs animate-in fade-in duration-150"
+      className="flex items-center gap-2 py-1.5 pr-2 my-0.5 rounded-lg bg-[#1831D7]/10 border border-[#7F95FF]/50 shadow-xs animate-in fade-in duration-150"
       onClick={(e) => e.stopPropagation()}
     >
       <span className="text-stone-400 dark:text-neutral-400">
         <ChevronRight className="w-3.5 h-3.5" />
       </span>
-      <Folder className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+      <Folder className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
       <input
         ref={inputRef}
         type="text"
@@ -95,7 +95,7 @@ const FolderInputRow: React.FC<FolderInputRowProps> = ({
           }
         }}
         onBlur={handleBlur}
-        className="flex-1 bg-transparent text-xs text-stone-900 dark:text-neutral-100 outline-none font-medium selection:bg-purple-300 dark:selection:bg-purple-700"
+        className="flex-1 bg-transparent text-xs text-stone-900 dark:text-neutral-100 outline-none font-medium selection:bg-[#7F95FF]/30 dark:selection:bg-[#1831D7]/50"
         placeholder={defaultName}
       />
     </div>
@@ -168,7 +168,7 @@ const InlineRenameFolderInput: React.FC<InlineRenameFolderInputProps> = ({
         }
       }}
       onBlur={handleBlur}
-      className="flex-1 bg-white dark:bg-[#16161D] border border-purple-400 dark:border-purple-500/70 rounded px-1.5 py-0.5 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs selection:bg-purple-300 dark:selection:bg-purple-700"
+      className="flex-1 bg-white dark:bg-[#16161D] border border-[#7F95FF]/70 rounded px-1.5 py-0.5 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs selection:bg-[#7F95FF]/30 dark:selection:bg-[#1831D7]/50"
     />
   );
 };
@@ -324,10 +324,10 @@ export const VaultSidebar: React.FC = () => {
     if (!node) return;
 
     const isFolder = node.type === 'folder';
-    const isNote = node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt') || !node.name.includes('.')));
+    const isNote = node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt')));
     const displayName = isFolder
       ? node.name
-      : (isNote ? node.name.replace(/\.md$/, '') : node.name);
+      : (isNote ? node.name.replace(/\.(md|txt)$/i, '') : node.name);
 
     if (skipConfirm) {
       deleteNode(node.path, isFolder);
@@ -1105,25 +1105,25 @@ export const VaultSidebar: React.FC = () => {
         style={{ paddingLeft: `${depth * 14 + 12}px` }}
         className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all outline-none ${
           isCanvasSelected
-            ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium ring-1 ring-purple-400/50'
+            ? 'bg-[#1831D7]/10 text-[#1831D7] dark:text-[#7F95FF] font-medium ring-1 ring-[#7F95FF]/50'
             : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5 hover:text-stone-950 dark:hover:text-white'
         }`}
       >
         {isDropBefore && (
-          <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-purple-500 rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(168,85,247,0.8)] flex items-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 -ml-0.5 shadow-xs" />
+          <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-[#1831D7] rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(127,149,255,0.8)] flex items-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#1831D7] -ml-0.5 shadow-xs" />
           </div>
         )}
         {isDropAfter && (
-          <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-purple-500 rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(168,85,247,0.8)] flex items-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 -ml-0.5 shadow-xs" />
+          <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-[#1831D7] rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(127,149,255,0.8)] flex items-center">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#1831D7] -ml-0.5 shadow-xs" />
           </div>
         )}
 
         <div className="flex items-center gap-2 truncate">
           <span className="w-3.5 h-3.5" />
           {isBoard ? (
-            <FolderKanban className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
+            <FolderKanban className="w-3.5 h-3.5 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
           ) : (
             <Music className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
           )}
@@ -1208,20 +1208,20 @@ export const VaultSidebar: React.FC = () => {
           style={{ paddingLeft: `${depth * 14 + 12}px` }}
           className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all outline-none ${
             isDropInside && isFolder
-              ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-500 text-purple-900 dark:text-purple-100 shadow-sm'
+              ? 'bg-[#1831D7]/20 ring-1 ring-[#1831D7] text-[#1831D7] dark:text-[#7F95FF] shadow-sm'
               : isSelected
-                ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium ring-1 ring-purple-400/50'
+                ? 'bg-[#1831D7]/10 text-[#1831D7] dark:text-[#7F95FF] font-medium ring-1 ring-[#7F95FF]/50'
                 : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5 hover:text-stone-950 dark:hover:text-white'
           }`}
         >
           {isDropBefore && (
-            <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-purple-500 rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(168,85,247,0.8)] flex items-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 -ml-0.5 shadow-xs" />
+            <div className="absolute -top-0.5 left-2 right-2 h-0.5 bg-[#1831D7] rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(127,149,255,0.8)] flex items-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#1831D7] -ml-0.5 shadow-xs" />
             </div>
           )}
           {isDropAfter && (
-            <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-purple-500 rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(168,85,247,0.8)] flex items-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 -ml-0.5 shadow-xs" />
+            <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 bg-[#1831D7] rounded-full z-20 pointer-events-none shadow-[0_0_6px_rgba(127,149,255,0.8)] flex items-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#1831D7] -ml-0.5 shadow-xs" />
             </div>
           )}
 
@@ -1236,14 +1236,16 @@ export const VaultSidebar: React.FC = () => {
 
             {isFolder ? (
               isExpanded ? (
-                <FolderOpen className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <FolderOpen className="w-4 h-4 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
               ) : (
-                <Folder className="w-4 h-4 text-purple-600/80 dark:text-purple-400/80 shrink-0" />
+                <Folder className="w-4 h-4 text-[#1831D7]/80 dark:text-[#7F95FF]/80 shrink-0" />
               )
             ) : node.fileType === 'audio' ? (
               <Music className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
             ) : node.fileType === 'image' ? (
               <ImageIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            ) : node.fileType === 'file' ? (
+              <File className="w-3.5 h-3.5 text-amber-600/80 dark:text-amber-400/80 shrink-0" />
             ) : (
               <FileText className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 shrink-0" />
             )}
@@ -1255,7 +1257,11 @@ export const VaultSidebar: React.FC = () => {
                 onCancel={() => setRenamingFolderPath(null)}
               />
             ) : (
-              <span className="truncate text-xs">{node.fileType === 'note' || !node.fileType ? node.name.replace(/\.(md|txt)$/, '') : node.name}</span>
+              <span className="truncate text-xs">
+                {node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt')))
+                  ? node.name.replace(/\.(md|txt)$/i, '')
+                  : node.name}
+              </span>
             )}
           </div>
         </div>
@@ -1276,7 +1282,7 @@ export const VaultSidebar: React.FC = () => {
                     if (e.key === 'Escape') setNewFileInputFolder(null);
                   }}
                   onBlur={() => handleCreateFileSubmit(node.path)}
-                  className="w-full bg-white dark:bg-[#16161D] border border-purple-400 dark:border-purple-500/50 rounded-md px-2 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs"
+                  className="w-full bg-white dark:bg-[#16161D] border border-[#7F95FF]/60 rounded-md px-2 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs"
                 />
               </div>
             )}
@@ -1332,7 +1338,7 @@ export const VaultSidebar: React.FC = () => {
       return [
         {
           label: isBoard ? 'Abrir no Vault' : 'Abrir Canvas',
-          icon: isBoard ? <FolderKanban size={16} className="text-indigo-400" /> : <Music size={16} className="text-cyan-400" />,
+          icon: isBoard ? <FolderKanban size={16} className="text-[#7F95FF]" /> : <Music size={16} className="text-cyan-400" />,
           onClick: () => {
             if (isBoard) {
               openCanvasTab(c.id, c.name);
@@ -1350,7 +1356,7 @@ export const VaultSidebar: React.FC = () => {
         }] : []),
         {
           label: 'Mover para Pasta...',
-          icon: <FolderInput size={16} className="text-violet-400" />,
+          icon: <FolderInput size={16} className="text-[#7F95FF]" />,
           onClick: () => {},
           subMenu: [
             ...(c.folderPath ? [{
@@ -1402,7 +1408,7 @@ export const VaultSidebar: React.FC = () => {
       return [
         {
           label: 'Nova Nota',
-          icon: <FilePlus size={16} className="text-violet-400" />,
+          icon: <FilePlus size={16} className="text-[#7F95FF]" />,
           onClick: async () => {
             await createFile('');
           }
@@ -1416,7 +1422,7 @@ export const VaultSidebar: React.FC = () => {
         },
         {
           label: 'Novo Canvas de Conexões',
-          icon: <FolderKanban size={16} className="text-indigo-400" />,
+          icon: <FolderKanban size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             handleCreateBoardCanvas();
           }
@@ -1430,7 +1436,7 @@ export const VaultSidebar: React.FC = () => {
         },
         {
           label: 'Nova Pasta',
-          icon: <FolderPlus size={16} className="text-violet-400" />,
+          icon: <FolderPlus size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             handleStartCreateFolder('');
           }
@@ -1451,14 +1457,14 @@ export const VaultSidebar: React.FC = () => {
         },
         {
           label: 'Renomear Vault',
-          icon: <Edit2 size={16} className="text-purple-400" />,
+          icon: <Edit2 size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             setPromptModal({
               title: 'Renomear Vault',
               description: 'Digite o novo nome para o Vault:',
               defaultValue: vaultName,
               confirmText: 'Salvar',
-              icon: <Edit2 className="w-5 h-5 text-purple-400" />,
+              icon: <Edit2 className="w-5 h-5 text-[#7F95FF]" />,
               onConfirm: (newName) => {
                 if (newName && newName.trim() && newName.trim() !== vaultName) {
                   setVaultName(newName.trim());
@@ -1482,32 +1488,41 @@ export const VaultSidebar: React.FC = () => {
     if (node.type === 'file') {
       const currentParent = node.path.includes('/') ? node.path.split('/').slice(0, -1).join('/') : '';
       const isMedia = node.fileType === 'audio' || node.fileType === 'image';
-      const isNote = node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt') || !node.name.includes('.')));
+      const isNote = node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt')));
 
       if (isMedia || (!isNote && node.fileType === 'file')) {
         return [
           {
             label: node.fileType === 'audio' ? 'Abrir Áudio' : node.fileType === 'image' ? 'Visualizar Imagem' : 'Abrir Arquivo',
-            icon: node.fileType === 'audio' ? <Music size={16} className="text-cyan-400" /> : node.fileType === 'image' ? <ImageIcon size={16} className="text-emerald-400" /> : <FileText size={16} className="text-stone-400" />,
+            icon: node.fileType === 'audio' ? <Music size={16} className="text-cyan-400" /> : node.fileType === 'image' ? <ImageIcon size={16} className="text-emerald-400" /> : <File size={16} className="text-amber-500" />,
             onClick: () => {
               openDocument(node.path);
             }
           },
           {
             label: 'Renomear Arquivo',
-            icon: <Edit2 size={16} className="text-violet-400" />,
+            icon: <Edit2 size={16} className="text-[#7F95FF]" />,
             onClick: () => {
-              const currentName = node.name;
+              const oldFileName = node.path.split('/').pop() || node.name;
+              const lastDot = oldFileName.lastIndexOf('.');
+              const originalExt = lastDot > 0 ? oldFileName.slice(lastDot + 1) : '';
+
               setPromptModal({
                 title: 'Renomear Arquivo',
                 description: 'Digite o novo nome para o arquivo:',
-                defaultValue: currentName,
+                defaultValue: node.name,
                 confirmText: 'Renomear',
-                icon: <Edit2 className="w-5 h-5 text-violet-400" />,
+                icon: <Edit2 className="w-5 h-5 text-[#7F95FF]" />,
                 onConfirm: (newName) => {
-                  if (newName && newName.trim() && newName.trim() !== currentName) {
+                  const trimmed = newName?.trim();
+                  if (trimmed && trimmed !== node.name) {
+                    let finalName = trimmed;
+                    // Se o usuário não digitou extensão e o arquivo original tinha extensão, preserva a extensão original
+                    if (originalExt && !finalName.includes('.')) {
+                      finalName = `${finalName}.${originalExt}`;
+                    }
                     const parts = node.path.split('/');
-                    parts[parts.length - 1] = newName.trim();
+                    parts[parts.length - 1] = finalName;
                     renameNode(node.path, parts.join('/'), false);
                   }
                 }
@@ -1545,26 +1560,36 @@ export const VaultSidebar: React.FC = () => {
       return [
         {
           label: 'Abrir Nota',
-          icon: <FileText size={16} className="text-purple-400" />,
+          icon: <FileText size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             openDocument(node.path);
           }
         },
         {
           label: 'Renomear Nota',
-          icon: <Edit2 size={16} className="text-violet-400" />,
+          icon: <Edit2 size={16} className="text-[#7F95FF]" />,
           onClick: () => {
-            const currentName = node.name.replace(/\.md$/, '');
+            const isTxt = node.path.toLowerCase().endsWith('.txt');
+            const defaultExt = isTxt ? 'txt' : 'md';
+            const currentName = node.name.replace(/\.(md|txt)$/i, '');
+
             setPromptModal({
               title: 'Renomear Nota',
               description: 'Digite o novo nome para a nota:',
               defaultValue: currentName,
               confirmText: 'Renomear',
-              icon: <Edit2 className="w-5 h-5 text-violet-400" />,
+              icon: <Edit2 className="w-5 h-5 text-[#7F95FF]" />,
               onConfirm: (newName) => {
-                if (newName && newName.trim() && newName.trim() !== currentName) {
+                const trimmed = newName?.trim();
+                if (trimmed && trimmed !== currentName) {
+                  let finalName = trimmed;
+                  if (finalName.toLowerCase().endsWith('.md') || finalName.toLowerCase().endsWith('.txt')) {
+                    // Já possui extensão de nota válida
+                  } else {
+                    finalName = `${finalName}.${defaultExt}`;
+                  }
                   const parts = node.path.split('/');
-                  parts[parts.length - 1] = `${newName.trim()}.md`;
+                  parts[parts.length - 1] = finalName;
                   renameNode(node.path, parts.join('/'), false);
                 }
               }
@@ -1622,7 +1647,7 @@ export const VaultSidebar: React.FC = () => {
       return [
         {
           label: 'Nova Nota nesta pasta',
-          icon: <FilePlus size={16} className="text-violet-400" />,
+          icon: <FilePlus size={16} className="text-[#7F95FF]" />,
           onClick: async () => {
             toggleFolder(node.path);
             await createFile(node.path);
@@ -1638,7 +1663,7 @@ export const VaultSidebar: React.FC = () => {
         },
         {
           label: 'Novo Canvas de Conexões nesta pasta',
-          icon: <FolderKanban size={16} className="text-indigo-400" />,
+          icon: <FolderKanban size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             toggleFolder(node.path);
             handleCreateBoardCanvas(node.path);
@@ -1654,7 +1679,7 @@ export const VaultSidebar: React.FC = () => {
         },
         {
           label: 'Nova Subpasta',
-          icon: <FolderPlus size={16} className="text-violet-400" />,
+          icon: <FolderPlus size={16} className="text-[#7F95FF]" />,
           onClick: () => {
             handleStartCreateFolder(node.path);
           }
@@ -1689,44 +1714,6 @@ export const VaultSidebar: React.FC = () => {
       } as React.CSSProperties}
       className="h-full bg-[#FAF9F6] dark:bg-[#111115] border-r border-stone-200/90 dark:border-white/10 flex flex-col select-none relative shrink-0 text-stone-900 dark:text-neutral-100"
     >
-      {/* Sidebar Navigation Tabs (Arquivos vs Canvas Gerais) */}
-      <div className="flex items-center border-b border-stone-200/90 dark:border-white/10 bg-stone-100/60 dark:bg-white/[0.02] px-2 pt-1.5 gap-1 shrink-0">
-        <button
-          onClick={() => setSidebarTab('files')}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-t-lg text-xs font-semibold transition-colors border-b-2 cursor-pointer ${
-            sidebarTab === 'files'
-              ? 'border-purple-600 dark:border-purple-400 text-purple-700 dark:text-purple-300 bg-white dark:bg-[#111115]'
-              : 'border-transparent text-stone-500 dark:text-neutral-400 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-200/40 dark:hover:bg-white/5'
-          }`}
-        >
-          <FolderOpen className="w-3.5 h-3.5" />
-          <span>Arquivos</span>
-        </button>
-
-        <button
-          onClick={() => setSidebarTab('canvases')}
-          onDragOver={(e) => {
-            if (draggedCanvas || e.dataTransfer.types.includes('application/rpgsa-canvas')) {
-              e.preventDefault();
-              setSidebarTab('canvases');
-            }
-          }}
-          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-t-lg text-xs font-semibold transition-colors border-b-2 cursor-pointer ${
-            sidebarTab === 'canvases'
-              ? 'border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-300 bg-white dark:bg-[#111115]'
-              : 'border-transparent text-stone-500 dark:text-neutral-400 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-200/40 dark:hover:bg-white/5'
-          }`}
-        >
-          <Box className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-          <span>Canvas Gerais</span>
-          {generalCanvases.length > 0 && (
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/40 font-bold">
-              {generalCanvases.length}
-            </span>
-          )}
-        </button>
-      </div>
-
       {sidebarTab === 'canvases' ? (
         <VaultGeneralCanvasesTab
           allFolders={allFolders}
@@ -1737,47 +1724,20 @@ export const VaultSidebar: React.FC = () => {
         />
       ) : (
         <>
-          {/* Sidebar Header: Actions & Search */}
-          <div className="p-3 border-b border-stone-200/90 dark:border-white/10 flex flex-col gap-2 bg-white/70 dark:bg-white/[0.02]">
-        {/* Global Action Buttons (Icon only, neutral colors) */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={async () => {
-              await createFile('');
-            }}
-            className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-white border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
-            title="Nova Nota"
-          >
-            <FilePlus className="w-4 h-4 shrink-0" />
-          </button>
-          <button
-            onClick={() => triggerMediaUpload('')}
-            className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-white border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
-            title="Salvar áudio ou imagem no Vault"
-          >
-            <Upload className="w-4 h-4 shrink-0" />
-          </button>
-          <button
-            onClick={() => handleStartCreateFolder('')}
-            className="flex-1 flex items-center justify-center py-1.5 px-2 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-500 hover:text-stone-800 dark:text-neutral-400 dark:hover:text-white border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
-            title="Nova Pasta"
-          >
-            <FolderPlus className="w-4 h-4 shrink-0" />
-          </button>
-        </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 absolute left-2.5 top-2.5" />
-          <input
-            type="text"
-            placeholder="Filtrar notas e arquivos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-white/5 border border-stone-200/90 dark:border-white/10 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-stone-800 dark:text-neutral-200 placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-purple-400 dark:focus:border-purple-500/50 shadow-xs"
-          />
-        </div>
-      </div>
+          {/* Sidebar Header: Search */}
+          <div className="p-2.5 border-b border-stone-200/90 dark:border-white/10 bg-white/70 dark:bg-white/[0.02]">
+            {/* Search */}
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 absolute left-2.5 top-2.5" />
+              <input
+                type="text"
+                placeholder="Filtrar notas e arquivos..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white dark:bg-white/5 border border-stone-200/90 dark:border-white/10 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-stone-800 dark:text-neutral-200 placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-[#7F95FF] shadow-xs"
+              />
+            </div>
+          </div>
 
       {/* Hidden file input for saving media files into Vault */}
       <input
@@ -1818,7 +1778,7 @@ export const VaultSidebar: React.FC = () => {
                 if (e.key === 'Escape') setNewFileInputFolder(null);
               }}
               onBlur={() => handleCreateFileSubmit('')}
-              className="w-full bg-white dark:bg-[#16161D] border border-purple-400 dark:border-purple-500/50 rounded-md px-2 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs"
+              className="w-full bg-white dark:bg-[#16161D] border border-[#7F95FF]/60 rounded-md px-2 py-1 text-xs text-stone-900 dark:text-neutral-100 outline-none shadow-xs"
             />
           </div>
         )}
@@ -1902,8 +1862,8 @@ export const VaultSidebar: React.FC = () => {
         onDoubleClick={handleResetSidebarWidth}
         className={`absolute top-0 right-0 w-1.5 h-full cursor-col-resize z-30 transition-colors ${
           isResizingSidebar
-            ? 'bg-violet-500 shadow-[0_0_8px_rgba(167,139,250,0.8)]'
-            : 'hover:bg-violet-500/50'
+            ? 'bg-[#1831D7] shadow-[0_0_8px_rgba(127,149,255,0.8)]'
+            : 'hover:bg-[#1831D7]/50'
         }`}
         title="Arraste para redimensionar o menu lateral (Duplo clique para redefinir)"
       />
