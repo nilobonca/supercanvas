@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Players, ActiveImage, ActiveArea, ActivePin, ActiveSoundboardItem, ActiveNote, ActiveWall } from '@/interfaces/utils/indexedDB';
 import { useShortcutStore } from '@/store/shortcutStore';
 import { useCanvasGlobalStore } from '@/store/canvasStore';
@@ -33,6 +33,10 @@ interface UseCanvasShortcutsProps {
   isTheaterMode?: boolean;
   setIsTheaterMode?: (val: boolean) => void;
   stopAllAudio?: () => void;
+  updateNotePersisted?: (note: ActiveNote) => void;
+  updateImagePersisted?: (image: ActiveImage) => void;
+  updatePinPersisted?: (pin: ActivePin) => void;
+  updateSoundboardItemPersisted?: (item: ActiveSoundboardItem) => void;
 }
 
 const isMatch = (event: KeyboardEvent, combo: string) => {
@@ -84,7 +88,11 @@ export const useCanvasShortcuts = ({
   discardPreview,
   isTheaterMode,
   setIsTheaterMode,
-  stopAllAudio
+  stopAllAudio,
+  updateNotePersisted,
+  updateImagePersisted,
+  updatePinPersisted,
+  updateSoundboardItemPersisted,
 }: UseCanvasShortcutsProps) => {
 
   const bindings = useShortcutStore(state => state.bindings);
@@ -93,16 +101,37 @@ export const useCanvasShortcuts = ({
     historyOpen, setHistoryOpen,
     soundboardOpen, setSoundboardOpen,
     globalTracksOpen, setGlobalTracksOpen,
-    masterVolume, setMasterVolume
+    masterVolume, setMasterVolume,
+    editingNoteId,
   } = useCanvasGlobalStore();
   
   const { isSettingsOpen, setIsSettingsOpen } = useThemeStore();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Avoid triggering shortcuts when typing in inputs
+      // Bloqueia qualquer atalho quando alguma nota ou elemento estiver em modo de edição
+      if (editingNoteId) {
+        return;
+      }
+
+      // Avoid triggering shortcuts when actively typing in editable inputs/textareas
       const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+      const activeEl = document.activeElement as HTMLElement;
+      const isTyping = (
+        (target && (
+          (target.tagName === 'INPUT' && !(target as HTMLInputElement).readOnly) ||
+          (target.tagName === 'TEXTAREA' && !(target as HTMLTextAreaElement).readOnly) ||
+          target.isContentEditable ||
+          Boolean(target.closest('input, textarea, [contenteditable="true"]'))
+        )) ||
+        (activeEl && (
+          (activeEl.tagName === 'INPUT' && !(activeEl as HTMLInputElement).readOnly) ||
+          (activeEl.tagName === 'TEXTAREA' && !(activeEl as HTMLTextAreaElement).readOnly) ||
+          activeEl.isContentEditable ||
+          Boolean(activeEl.closest('input, textarea, [contenteditable="true"]'))
+        ))
+      );
+      if (isTyping) {
         return;
       }
 
@@ -170,6 +199,62 @@ export const useCanvasShortcuts = ({
         e.preventDefault();
         handleRedo();
       }
+
+      // Movimentação por setas direcionais (Nudge): move itens selecionados apenas quando NÃO estiver editando
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (editingNoteId) {
+          return;
+        }
+        if (selectedItemIds.size > 0) {
+          e.preventDefault();
+          const step = e.shiftKey ? 50 : 10;
+          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+
+          selectedItemIds.forEach(id => {
+            const note = activeNotes.find(n => n.id === id);
+            if (note && updateNotePersisted) {
+              updateNotePersisted({
+                ...note,
+                position: {
+                  x: Math.max(0, note.position.x + dx),
+                  y: Math.max(0, note.position.y + dy),
+                }
+              });
+            }
+            const img = activeImages.find(i => i.id === id);
+            if (img && updateImagePersisted) {
+              updateImagePersisted({
+                ...img,
+                position: {
+                  x: Math.max(0, img.position.x + dx),
+                  y: Math.max(0, img.position.y + dy),
+                }
+              });
+            }
+            const pin = activePins.find(p => p.id === id);
+            if (pin && updatePinPersisted) {
+              updatePinPersisted({
+                ...pin,
+                position: {
+                  x: Math.max(0, pin.position.x + dx),
+                  y: Math.max(0, pin.position.y + dy),
+                }
+              });
+            }
+            const soundboardItem = activeSoundboardItems.find(s => s.id === id);
+            if (soundboardItem && updateSoundboardItemPersisted) {
+              updateSoundboardItemPersisted({
+                ...soundboardItem,
+                position: {
+                  x: Math.max(0, soundboardItem.position.x + dx),
+                  y: Math.max(0, soundboardItem.position.y + dy),
+                }
+              });
+            }
+          });
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -181,6 +266,7 @@ export const useCanvasShortcuts = ({
     deleteWallPersisted, addToHistory, handleUndo, handleRedo, toggleDiceTray, toggleChat, 
     setTool, isPreviewMode, startPreview, discardPreview, isTheaterMode, setIsTheaterMode,
     layerManagerOpen, historyOpen, soundboardOpen, globalTracksOpen, isSettingsOpen, masterVolume,
-    stopAllAudio, setLayerManagerOpen, setHistoryOpen, setSoundboardOpen, setGlobalTracksOpen, setIsSettingsOpen, setMasterVolume
+    stopAllAudio, setLayerManagerOpen, setHistoryOpen, setSoundboardOpen, setGlobalTracksOpen, setIsSettingsOpen, setMasterVolume,
+    updateNotePersisted, updateImagePersisted, updatePinPersisted, updateSoundboardItemPersisted
   ]);
 };

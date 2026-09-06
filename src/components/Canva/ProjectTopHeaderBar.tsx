@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { WindowControls } from '@/components/common/WindowControls';
 import { isElectron } from '@/utils/electronHelper';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import clsx from 'clsx';
 
@@ -107,12 +108,12 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
           className="flex items-center gap-2 app-region-no-drag shrink-0 pointer-events-auto"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          {/* Botão Voltar */}
+          {/* Botão Voltar para o Vault */}
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/vault')}
             className="p-1.5 rounded-md text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
-            title="Voltar para Dashboard"
+            title="Voltar para o Vault"
           >
             <ArrowLeft size={16} />
           </button>
@@ -124,7 +125,7 @@ export const ProjectTopHeaderBar: React.FC<ProjectTopHeaderBarProps> = ({
             className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/25 transition-all cursor-pointer"
             title="Abrir Vault de Notas"
           >
-            <BookOpen size={13} />
+            <SafeIcon size={14} />
             <span>Vault</span>
           </button>
 

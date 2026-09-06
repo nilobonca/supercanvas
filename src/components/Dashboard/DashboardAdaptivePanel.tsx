@@ -84,8 +84,8 @@ export const DashboardAdaptivePanel: React.FC<DashboardAdaptivePanelProps> = ({
           className="flex items-center gap-2 app-region-no-drag pointer-events-auto"
           onMouseDown={(e) => e.stopPropagation()}
         >
-          <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" />
-          <span className="text-xs font-bold text-stone-600 dark:text-neutral-400 tracking-wide">Supercanvas</span>
+          <img src="/favicon.png" alt="Concha" className="w-3.5 h-3.5 object-contain" />
+          <span className="text-xs font-bold text-stone-600 dark:text-neutral-400 tracking-wide">Concha</span>
         </div>
         <div 
           className="flex-1 h-full app-region-drag cursor-default"

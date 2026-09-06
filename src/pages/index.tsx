@@ -16,6 +16,7 @@ import { AmbientGraphBackdrop } from '@/components/Dashboard/AmbientGraphBackdro
 import { CreateVaultModal } from '@/components/Dashboard/CreateVaultModal';
 import { CanvasCreateModal } from '@/components/Dashboard/CanvasCreateModal';
 import { VaultSettingsModal } from '@/modules/vault/components/VaultSettingsModal';
+import { DeleteConfirmModal } from '@/modules/vault/components/DeleteConfirmModal';
 import { ExportModal } from '@/components/ExportModal';
 import { ImportConflictModal } from '@/components/ImportConflictModal';
 import { parseBackupFile, ParsedImportData } from '@/utils/exportSystem/importUtils';
@@ -228,8 +229,12 @@ export default function Dashboard() {
     if (!canvas) return;
 
     deleteLayer(canvas.id);
+    useVaultStore.getState().closeTab(`canvas:${canvas.id}`);
     const pages = activeLayers.filter(l => l.projectId === canvas.id || (l.projectId === undefined && l.id === canvas.id));
-    pages.forEach(p => deleteLayer(p.id));
+    pages.forEach(p => {
+      deleteLayer(p.id);
+      useVaultStore.getState().closeTab(`canvas:${p.id}`);
+    });
     setDeleteModal({ isOpen: false, canvas: null });
   };
 
@@ -261,8 +266,8 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>RPGSA — Central de Vaults & Canvas</title>
-        <meta name="description" content="Editor Markdown, base de conhecimento integrada e quadros de conexões do RPGSA." />
+        <title>Concha — Central de Vaults & Canvas</title>
+        <meta name="description" content="Editor Markdown, base de conhecimento integrada e quadros de conexões do Concha." />
       </Head>
 
       <div className={clsx(
@@ -365,44 +370,14 @@ export default function Dashboard() {
       />
 
       {/* Modal de Exclusão de Canvas */}
-      {deleteModal.isOpen && deleteModal.canvas && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
-          onClick={() => setDeleteModal({ isOpen: false, canvas: null })}
-        >
-          <div
-            className="w-full max-w-sm bg-white dark:bg-[#16161D] border border-black/10 dark:border-white/10 rounded-3xl shadow-2xl p-6 flex flex-col gap-4 text-stone-900 dark:text-white animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 flex items-center justify-center mx-auto">
-              <Trash2 size={24} />
-            </div>
-
-            <div className="text-center">
-              <h4 className="text-base font-bold">Excluir Canvas?</h4>
-              <p className="text-xs text-stone-500 dark:text-neutral-400 mt-1.5 leading-relaxed">
-                Você está prestes a excluir <span className="font-bold text-stone-800 dark:text-stone-200">&ldquo;{deleteModal.canvas.name}&rdquo;</span>.
-                Esta ação não pode ser desfeita.
-              </p>
-            </div>
-
-            <div className="flex gap-2.5 mt-2">
-              <button
-                onClick={() => setDeleteModal({ isOpen: false, canvas: null })}
-                className="flex-1 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-white/10 dark:hover:bg-white/15 text-xs font-semibold text-stone-700 dark:text-neutral-200 transition-colors cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteConfirm}
-                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white transition-colors shadow-sm cursor-pointer"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteModal.isOpen && deleteModal.canvas)}
+        itemName={deleteModal.canvas?.name || ''}
+        itemPath={deleteModal.canvas ? `canvas:${deleteModal.canvas.id}` : undefined}
+        itemType="canvas"
+        onClose={() => setDeleteModal({ isOpen: false, canvas: null })}
+        onConfirm={handleDeleteConfirm}
+      />
 
       {/* Modal de Configurações do Vault */}
       <VaultSettingsModal />

@@ -184,12 +184,12 @@ export const FORMATTING_COMMANDS: FormattingCommand[] = [
   },
   {
     id: 'wikilink',
-    title: 'Link para Nota (Wikilink)',
-    description: 'Criar conexão bidirecional com outra nota do Vault',
+    title: 'Link para Nota ou Canvas (Wikilink)',
+    description: 'Criar conexão bidirecional com uma nota ou canvas do Vault',
     category: 'blocks',
     icon: Link2,
-    keywords: ['link', 'nota', 'wikilink', 'conexao', '[['],
-    shortcut: '[[',
+    keywords: ['link', 'nota', 'canvas', 'quadro', 'audio', 'board', 'wikilink', 'conexao', '[['],
+    shortcut: '[[ ou Ctrl+K',
     execute: (editor) => editor.chain().focus().insertContent('[[').run(),
   },
 

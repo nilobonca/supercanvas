@@ -1,12 +1,23 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
   platform: process.platform,
 
-  // Native Windows dialogs
+  // Native Windows dialogs & File System
   selectDirectory: () => ipcRenderer.invoke('select-directory'),
   openFolderInExplorer: (folderPath) => ipcRenderer.invoke('open-folder-in-explorer', folderPath),
+  trashItem: (filePath) => ipcRenderer.invoke('trash-item', filePath),
+  getPathForFile: (file) => {
+    try {
+      if (webUtils && typeof webUtils.getPathForFile === 'function') {
+        return webUtils.getPathForFile(file);
+      }
+    } catch (e) {
+      // Fallback to legacy file.path
+    }
+    return file ? file.path || '' : '';
+  },
 
   // Window Controls
   minimize: () => ipcRenderer.invoke('window-minimize'),

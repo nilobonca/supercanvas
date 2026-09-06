@@ -4,6 +4,7 @@ import { ActiveVaultLink } from '@/interfaces/utils/indexedDB';
 import { useCanvas } from '../canva-teste';
 import { useRouter } from 'next/router';
 import { BookOpen, ExternalLink, Trash2, FileText } from 'lucide-react';
+import { SafeIcon } from '@/components/common/SafeIcon';
 
 interface VaultLinkItemProps {
   item: ActiveVaultLink;
@@ -112,7 +113,7 @@ export default function VaultLinkItem({
       <div className="p-3 flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <div className="w-7 h-7 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center text-violet-300 shrink-0">
-            <BookOpen className="w-4 h-4" />
+            <SafeIcon size={16} className="text-violet-300" />
           </div>
           <button
             onClick={handleOpenNote}

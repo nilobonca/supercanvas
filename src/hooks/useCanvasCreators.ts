@@ -8,6 +8,7 @@ import {
   SoundboardItem,
   Audios,
 } from '@/interfaces/utils/indexedDB';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 
 export interface UseCanvasCreatorsProps {
   activeProjectId?: string | string[] | number | null;
@@ -27,6 +28,7 @@ export interface UseCanvasCreatorsProps {
   setSelectedItemIds: (ids: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
   activePins?: ActivePin[];
   setEditingSoundboardItemId?: (id: string | null) => void;
+  vaultCreateFile?: (folderPath?: string, name?: string, initialContent?: string, shouldOpen?: boolean) => Promise<string>;
 }
 
 export const useCanvasCreators = ({
@@ -47,6 +49,7 @@ export const useCanvasCreators = ({
   setSelectedItemIds,
   activePins = [],
   setEditingSoundboardItemId,
+  vaultCreateFile,
 }: UseCanvasCreatorsProps) => {
   const effectiveProjectId = Array.isArray(activeProjectId) ? activeProjectId[0] : (activeProjectId ? String(activeProjectId) : null);
 
@@ -92,10 +95,25 @@ export const useCanvasCreators = ({
     setContextMenu(null);
   }, [addToHistory, activePins, addPinPersisted, effectiveProjectId, setContextMenu]);
 
-  const createNote = useCallback((position?: { x: number; y: number }) => {
+  const createNote = useCallback(async (position?: { x: number; y: number }) => {
     addToHistory('Criar Texto');
     const baseX = position?.x || 100;
     const baseY = position?.y || 100;
+
+    let vaultPath: string | undefined;
+    try {
+      if (vaultCreateFile) {
+        vaultPath = await vaultCreateFile('', '', '', false);
+      } else {
+        const vaultStore = useVaultStore.getState();
+        if (!vaultStore.provider) {
+          await vaultStore.initializeStorage();
+        }
+        vaultPath = await useVaultStore.getState().createFile('', '', '', false);
+      }
+    } catch (err) {
+      console.warn('Falha ao criar nota no Vault automaticamente:', err);
+    }
 
     const newNote: ActiveNote = {
       id: uuidv4(),
@@ -108,12 +126,13 @@ export const useCanvasCreators = ({
       fontSize: 14,
       fontColor: '#000000',
       transparentBg: true,
-      textAlign: 'left'
+      textAlign: 'left',
+      vaultPath,
     };
     addNotePersisted(newNote, effectiveProjectId);
     setSelectedItemIds(new Set([newNote.id]));
     setContextMenu(null);
-  }, [addToHistory, addNotePersisted, effectiveProjectId, setSelectedItemIds, setContextMenu]);
+  }, [addToHistory, addNotePersisted, effectiveProjectId, setSelectedItemIds, setContextMenu, vaultCreateFile]);
 
   const createSoundboardButton = useCallback((position: { x: number; y: number }) => {
     addToHistory('Criar Botão Soundboard');

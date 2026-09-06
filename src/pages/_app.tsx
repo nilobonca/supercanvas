@@ -4,6 +4,7 @@ import { IDBProvider } from "@/utils/indexedDB";
 import { LogSystemProvider } from "@/utils/logSystem";
 import { ThemeProvider } from "@/components/theme-provider";
 import type { AppProps } from "next/app";
+import Head from "next/head";
 
 import { useEffect, useState } from "react";
 import { FeedbackWidget } from "@/components/Feedback/FeedbackWidget";
@@ -67,7 +68,13 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [activeTheme, mounted]);
 
   return (
-    <LogSystemProvider>
+    <>
+      <Head>
+        <title>Concha</title>
+        <meta name="application-name" content="Concha" />
+        <meta name="apple-mobile-web-app-title" content="Concha" />
+      </Head>
+      <LogSystemProvider>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <PollsProvider>
             <IDBProvider>
@@ -95,6 +102,7 @@ export default function App({ Component, pageProps }: AppProps) {
             </IDBProvider>
         </PollsProvider>
       </ThemeProvider>
-    </LogSystemProvider>
+      </LogSystemProvider>
+    </>
   );
 }

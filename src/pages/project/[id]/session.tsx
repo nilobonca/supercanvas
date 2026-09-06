@@ -103,7 +103,7 @@ export default function ListenerSession() {
     return (
         <div className="h-screen max-h-screen overflow-y-auto overflow-x-hidden bg-neutral-950 text-neutral-100 flex flex-col font-sans relative">
             <Head>
-                <title>Sessão de Áudio Compartilhada</title>
+                <title>Sessão de Áudio Compartilhada | Concha</title>
                 <meta name="description" content="Conecte-se para ouvir áudios espaciais 3D em tempo real do Narrador." />
             </Head>
 

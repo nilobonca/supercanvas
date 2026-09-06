@@ -75,3 +75,27 @@ export const subscribeToMaximizedChange = (callback: (isMaximized: boolean) => v
   }
   return () => {};
 };
+
+export const trashItem = async (filePath: string): Promise<{ success: boolean; error?: string }> => {
+  if (typeof window !== 'undefined' && window.electronAPI?.trashItem) {
+    try {
+      return await window.electronAPI.trashItem(filePath);
+    } catch (err: any) {
+      console.warn('[RPGSA] trashItem error:', err);
+      return { success: false, error: err?.message || 'Falha ao mover para a lixeira' };
+    }
+  }
+  return { success: false, error: 'Electron não disponível' };
+};
+
+export const getPathForFile = (file: File): string => {
+  if (typeof window !== 'undefined' && window.electronAPI?.getPathForFile) {
+    try {
+      return window.electronAPI.getPathForFile(file) || '';
+    } catch {
+      return (file as any)?.path || '';
+    }
+  }
+  return (file as any)?.path || '';
+};
+

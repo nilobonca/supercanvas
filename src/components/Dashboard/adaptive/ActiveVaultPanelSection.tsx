@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 import { isElectron, setWindowMode } from '@/utils/electronHelper';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 export interface ActiveVaultPanelSectionProps {
@@ -282,7 +283,7 @@ export const ActiveVaultPanelSection: React.FC<ActiveVaultPanelSectionProps> = (
         className="w-full group relative overflow-hidden rounded-xl p-3 bg-stone-900 text-white hover:bg-stone-800 dark:bg-purple-600 dark:hover:bg-purple-500 font-bold text-xs flex items-center justify-between transition-all duration-200 active:scale-[0.98] shadow-md shadow-purple-600/15 cursor-pointer"
       >
         <div className="flex items-center gap-2">
-          <BookOpen size={16} className="text-purple-300 dark:text-purple-200" />
+          <SafeIcon size={16} className="text-purple-300 dark:text-purple-200" />
           <span>Abrir Vault no Editor</span>
         </div>
 

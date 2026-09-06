@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useVaultStore } from '../hooks/useVaultStore';
 import { 
   Settings, X, HardDrive, Database, FolderSync, Check, 
-  Edit2, Folder, RefreshCw, Info, ArrowRight, ShieldCheck, Laptop
+  Edit2, Folder, RefreshCw, Info, ArrowRight, ShieldCheck, Laptop, Trash2
 } from 'lucide-react';
+import { SafeIcon } from '@/components/common/SafeIcon';
 
 export const VaultSettingsModal: React.FC = () => {
   const { 
@@ -21,10 +22,29 @@ export const VaultSettingsModal: React.FC = () => {
   const [nameInput, setNameInput] = useState(vaultName);
   const [nameSaved, setNameSaved] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(true);
 
   useEffect(() => {
     setNameInput(vaultName);
   }, [vaultName]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const skip = localStorage.getItem('vault_skip_delete_confirm') === 'true';
+      setConfirmDelete(!skip);
+    }
+  }, [settingsOpen]);
+
+  const handleToggleConfirmDelete = (enabled: boolean) => {
+    setConfirmDelete(enabled);
+    if (typeof window !== 'undefined') {
+      if (enabled) {
+        localStorage.removeItem('vault_skip_delete_confirm');
+      } else {
+        localStorage.setItem('vault_skip_delete_confirm', 'true');
+      }
+    }
+  };
 
   // Handle ESC key to close
   useEffect(() => {
@@ -84,7 +104,7 @@ export const VaultSettingsModal: React.FC = () => {
         <div className="px-5 py-4 border-b border-stone-200/90 dark:border-white/10 flex items-center justify-between bg-stone-50/70 dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-800/40 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
-              <Settings className="w-5 h-5" />
+              <SafeIcon size={20} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <h2 className="text-base font-bold text-stone-900 dark:text-neutral-100">
@@ -226,7 +246,38 @@ export const VaultSettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* Section 3: Informações e Estatísticas */}
+          {/* Section 3: Lixeira & Confirmação de Exclusão */}
+          <div className="space-y-3 pt-2 border-t border-stone-200/80 dark:border-white/5">
+            <div className="flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
+                Lixeira & Confirmação de Exclusão
+              </h3>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-stone-50 dark:bg-white/[0.02] border border-stone-200/70 dark:border-white/5">
+              <div className="pr-3">
+                <span className="font-semibold text-xs text-stone-900 dark:text-neutral-100 block">
+                  Confirmar antes de excluir arquivos
+                </span>
+                <p className="text-[11px] text-stone-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
+                  Exibe o modal de confirmação com aviso de envio para a lixeira do Windows e alerta de links antes de apagar notas ou pastas.
+                </p>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={confirmDelete}
+                  onChange={(e) => handleToggleConfirmDelete(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-stone-300 peer-focus:outline-none rounded-full peer dark:bg-neutral-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+              </label>
+            </div>
+          </div>
+
+          {/* Section 4: Informações e Estatísticas */}
           <div className="space-y-2 pt-2 border-t border-stone-200/80 dark:border-white/5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-neutral-400">
               Informações do Sistema

@@ -14,8 +14,11 @@ import {
   Database,
   LayoutTemplate,
   Edit2,
-  Check
+  Check,
+  Box,
+  Files
 } from 'lucide-react';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import { useVaultStore } from '../../hooks/useVaultStore';
 
 interface VaultRibbonProps {
@@ -30,6 +33,9 @@ export const VaultRibbon: React.FC<VaultRibbonProps> = ({
   const { 
     sidebarOpen, 
     toggleSidebar, 
+    sidebarTab,
+    setSidebarTab,
+    canvases,
     storageType, 
     vaultName, 
     setVaultName,
@@ -72,6 +78,30 @@ export const VaultRibbon: React.FC<VaultRibbonProps> = ({
     setIsEditingName(false);
   };
 
+  const generalCanvasesCount = (canvases || []).filter(c => !c.folderPath).length;
+
+  const handleToggleFilesTab = () => {
+    if (!sidebarOpen) {
+      toggleSidebar();
+      setSidebarTab('files');
+    } else if (sidebarTab === 'files') {
+      toggleSidebar();
+    } else {
+      setSidebarTab('files');
+    }
+  };
+
+  const handleToggleCanvasesTab = () => {
+    if (!sidebarOpen) {
+      toggleSidebar();
+      setSidebarTab('canvases');
+    } else if (sidebarTab === 'canvases') {
+      toggleSidebar();
+    } else {
+      setSidebarTab('canvases');
+    }
+  };
+
   return (
     <div 
       style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
@@ -103,7 +133,7 @@ export const VaultRibbon: React.FC<VaultRibbonProps> = ({
             }`}
             title={`Vault: ${vaultName} (Clique para opções e renomear)`}
           >
-            {vaultName.trim().charAt(0).toUpperCase() || 'V'}
+            <SafeIcon size={14} />
             <span 
               className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white dark:border-[#111116] ${
                 storageType === 'fsa' ? 'bg-emerald-500' : 'bg-purple-500'
@@ -115,7 +145,8 @@ export const VaultRibbon: React.FC<VaultRibbonProps> = ({
           {vaultMenuOpen && (
             <div className="absolute left-10 top-0 w-64 bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-2.5 text-stone-900 dark:text-neutral-100">
               <div className="flex items-center justify-between pb-2 border-b border-stone-100 dark:border-white/5">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-neutral-500">
+                <span className="flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-wider text-stone-400 dark:text-neutral-500">
+                  <SafeIcon size={11} className="text-purple-600 dark:text-purple-400" />
                   Vault Ativo
                 </span>
                 <span className="flex items-center gap-1 text-[10px] text-stone-500 dark:text-neutral-400 font-mono">
@@ -192,17 +223,35 @@ export const VaultRibbon: React.FC<VaultRibbonProps> = ({
 
         <div className="w-5 h-px bg-stone-200 dark:bg-white/10 my-0.5" />
 
-        {/* Alternar Menu Lateral */}
+        {/* Explorador de Arquivos & Notas */}
         <button
-          onClick={() => toggleSidebar()}
+          onClick={handleToggleFilesTab}
           className={`p-2 rounded-xl transition-colors cursor-pointer ${
-            sidebarOpen
-              ? 'text-purple-600 dark:text-purple-400 bg-purple-100/80 dark:bg-purple-950/40'
+            sidebarOpen && sidebarTab === 'files'
+              ? 'text-purple-600 dark:text-purple-400 bg-purple-100/80 dark:bg-purple-950/40 ring-1 ring-purple-400/40'
               : 'text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white hover:bg-stone-200/70 dark:hover:bg-white/10'
           }`}
-          title={sidebarOpen ? "Ocultar Explorador Lateral (Ctrl+B)" : "Mostrar Explorador Lateral (Ctrl+B)"}
+          title="Explorador de Arquivos e Notas (Ctrl+B)"
         >
-          {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeft className="w-4 h-4" />}
+          <Files className="w-4 h-4" />
+        </button>
+
+        {/* Caixa de Canvas Gerais */}
+        <button
+          onClick={handleToggleCanvasesTab}
+          className={`p-2 rounded-xl transition-colors cursor-pointer relative ${
+            sidebarOpen && sidebarTab === 'canvases'
+              ? 'text-amber-600 dark:text-amber-400 bg-amber-100/80 dark:bg-amber-950/40 ring-1 ring-amber-400/40'
+              : 'text-stone-500 hover:text-amber-600 dark:text-neutral-400 dark:hover:text-amber-400 hover:bg-amber-100/60 dark:hover:bg-amber-950/20'
+          }`}
+          title="Caixa de Canvas Gerais"
+        >
+          <Box className="w-4 h-4" />
+          {generalCanvasesCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center leading-none shadow-xs">
+              {generalCanvasesCount > 9 ? '9+' : generalCanvasesCount}
+            </span>
+          )}
         </button>
 
         <div className="w-5 h-px bg-stone-200 dark:bg-white/10 my-0.5" />

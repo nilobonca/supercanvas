@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { useBoardStorage } from './useBoardStorage';
 import { useBoardConnections, getFacingHandle, getOppositeHandle } from './useBoardConnections';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 
 const DEFAULT_NOTE_WIDTH = 220;
 const DEFAULT_NOTE_HEIGHT = 180;
@@ -31,6 +32,7 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
   const { boardData, setBoardData, persistBoard, isLoading } = useBoardStorage(boardId, initialName);
 
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [editingElementId, setEditingElementId] = useState<string | null>(null);
   const [viewport, setViewport] = useState<ViewportTransform>({ x: -100, y: -100, k: 1 });
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
@@ -56,7 +58,7 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
   }, [persistBoard, setBoardData]);
 
   // Criar elemento do mesmo tipo de origem e conectar ao soltar seta no espaço vazio
-  const handleAutoSpawnAndConnect = useCallback((
+  const handleAutoSpawnAndConnect = useCallback(async (
     sourceId: string,
     sourceHandle: HandlePosition,
     dropPos: { x: number; y: number }
@@ -94,10 +96,28 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
     let newData: NoteData | TextData | AudioData | ImageData | CanvasPreviewData | Record<string, unknown>;
     if (sourceEl.type === 'note') {
       const srcNote = (sourceEl.data || {}) as NoteData;
+      let targetFilePath: string | undefined;
+      let title = 'Nova Nota';
+
+      try {
+        const vaultStore = useVaultStore.getState();
+        if (!vaultStore.provider) {
+          await vaultStore.initializeStorage();
+        }
+        targetFilePath = await useVaultStore.getState().createFile('', '', '', false);
+        if (targetFilePath) {
+          const fileName = targetFilePath.split('/').pop()?.replace(/\.md$/, '');
+          if (fileName) title = fileName;
+        }
+      } catch (err) {
+        console.warn('Falha ao criar nota no Vault a partir da conexão de seta:', err);
+      }
+
       newData = {
-        title: 'Nova Nota',
+        title,
         content: '',
         color: srcNote.color || '#8b5cf6',
+        filePath: targetFilePath,
       } as NoteData;
     } else if (sourceEl.type === 'text') {
       const srcText = (sourceEl.data || {}) as TextData;
@@ -236,8 +256,8 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
     return newEl;
   }, [boardData.elements, boardId, persistBoard, setBoardData]);
 
-  // Criar Nota
-  const createNote = useCallback((
+  // Criar Nota (com criação automática e vinculação no Vault)
+  const createNote = useCallback(async (
     pos?: { x: number; y: number },
     color: string = '#fef08a',
     initialTitle?: string,
@@ -246,6 +266,26 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
   ) => {
     const x = pos ? pos.x : (-viewportRef.current.x + 300) / viewportRef.current.k;
     const y = pos ? pos.y : (-viewportRef.current.y + 200) / viewportRef.current.k;
+
+    let targetFilePath = filePath;
+    let title = initialTitle || 'Nova Nota';
+
+    // Se não tiver filePath, cria automaticamente no Vault
+    if (!targetFilePath) {
+      try {
+        const vaultStore = useVaultStore.getState();
+        if (!vaultStore.provider) {
+          await vaultStore.initializeStorage();
+        }
+        targetFilePath = await useVaultStore.getState().createFile('', initialTitle || '', initialContent || '', false);
+        if (targetFilePath) {
+          const fileName = targetFilePath.split('/').pop()?.replace(/\.md$/, '');
+          if (fileName) title = fileName;
+        }
+      } catch (err) {
+        console.warn('Falha ao criar nota no Vault a partir do Board:', err);
+      }
+    }
 
     return addElement({
       id: uuidv4(),
@@ -256,10 +296,10 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
       height: DEFAULT_NOTE_HEIGHT,
       zIndex: 1,
       data: {
-        title: initialTitle || 'Nova Nota',
+        title,
         content: initialContent || '',
         color,
-        filePath,
+        filePath: targetFilePath,
       } as NoteData,
     });
   }, [addElement]);
@@ -339,7 +379,7 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
   }, [addElement]);
 
   // Criação contextual conectada a partir de soltura de seta no vazio!
-  const createConnectedElement = useCallback((
+  const createConnectedElement = useCallback(async (
     type: BoardElementType,
     payload?: BoardElementPayload
   ) => {
@@ -355,7 +395,13 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
     switch (type) {
       case 'note': {
         const notePayload = payload as Partial<NoteData> | undefined;
-        newEl = createNote({ x: spawnX, y: spawnY }, notePayload?.color || '#fef08a');
+        newEl = await createNote(
+          { x: spawnX, y: spawnY },
+          notePayload?.color || '#fef08a',
+          notePayload?.title,
+          notePayload?.content,
+          notePayload?.filePath
+        );
         break;
       }
       case 'text':
@@ -410,11 +456,24 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
     setConnections,
   ]);
 
-  // Teclado: Excluir item ou conexão selecionada com Delete/Backspace
+  // Teclado: Excluir item ou conexão com Delete/Backspace ou Mover com Setas
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
-      if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.getAttribute('contenteditable') === 'true') {
+      // Bloqueia se algum elemento estiver em modo de edição
+      if (editingElementId) {
+        return;
+      }
+
+      const activeEl = document.activeElement as HTMLElement;
+      const target = e.target as HTMLElement;
+      const isTyping = (
+        (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable)) ||
+        (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) ||
+        Boolean(activeEl?.closest('input, textarea, [contenteditable="true"]')) ||
+        Boolean(target?.closest('input, textarea, [contenteditable="true"]'))
+      );
+
+      if (isTyping) {
         return;
       }
 
@@ -427,17 +486,35 @@ export function useBoardCanvas(boardId: string, initialName?: string) {
           connectionsHook.deleteConnection(connectionsHook.selectedConnectionId);
         }
       }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        if (selectedElementId) {
+          e.preventDefault();
+          const step = e.shiftKey ? 50 : 10;
+          const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+          const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+          const current = boardData.elements.find(el => el.id === selectedElementId);
+          if (current) {
+            updateElement(selectedElementId, {
+              x: Math.max(0, current.x + dx),
+              y: Math.max(0, current.y + dy),
+            });
+          }
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [connectionsHook, deleteElement, selectedElementId]);
+  }, [connectionsHook, deleteElement, selectedElementId, boardData.elements, updateElement, editingElementId]);
 
   return {
     boardData,
     isLoading,
     selectedElementId,
     setSelectedElementId,
+    editingElementId,
+    setEditingElementId,
     viewport,
     setViewport,
     viewportRef,

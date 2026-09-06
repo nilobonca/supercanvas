@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useVaultStore, getCustomOrder, setCustomOrder } from '../hooks/useVaultStore';
 import { VaultNode } from '../interfaces/vault';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { PromptInputModal } from './PromptInputModal';
 import ContextMenu from '@/components/ContextMenu';
+import { VaultGeneralCanvasesTab } from './sidebar/VaultGeneralCanvasesTab';
 import { useIDB } from '@/utils/indexedDB';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import { saveUserTemplate } from '../utils/templateStore';
@@ -175,6 +176,7 @@ const InlineRenameFolderInput: React.FC<InlineRenameFolderInputProps> = ({
 export const VaultSidebar: React.FC = () => {
   const router = useRouter();
   const { 
+    vaultId,
     vaultName, 
     setVaultName,
     storageType, 
@@ -187,6 +189,7 @@ export const VaultSidebar: React.FC = () => {
     toggleFolder, 
     openDocument, 
     openCanvasTab,
+    closeTab,
     createFile, 
     saveMediaFile,
     createFolder, 
@@ -197,13 +200,19 @@ export const VaultSidebar: React.FC = () => {
     refreshNodes,
     connectFSA,
     provider,
-    sidebarWidth,
+    sidebarWidth, 
     setSidebarWidth,
+    sidebarTab,
+    setSidebarTab,
     setSettingsOpen,
     setTemplateModalOpen
   } = useVaultStore();
 
   const { activeLayers, addLayer, updateLayer, deleteLayer } = useIDB();
+
+  // Canvases from IndexedDB
+  const allCanvases = useMemo(() => activeLayers.filter(l => l.isProjectMetadata), [activeLayers]);
+  const generalCanvases = useMemo(() => allCanvases.filter(l => !l.folderPath), [allCanvases]);
 
   // New file / folder creation states
   const [newFileInputFolder, setNewFileInputFolder] = useState<string | null>(null);
@@ -211,9 +220,6 @@ export const VaultSidebar: React.FC = () => {
   const [newFolderInputParent, setNewFolderInputParent] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [renamingFolderPath, setRenamingFolderPath] = useState<string | null>(null);
-
-  // Modals and UI states
-  const [isGeneralCanvasOpen, setIsGeneralCanvasOpen] = useState(true);
 
   // Drag and drop states
   const [draggedNode, setDraggedNode] = useState<VaultNode | null>(null);
@@ -223,7 +229,6 @@ export const VaultSidebar: React.FC = () => {
     position: 'before' | 'after' | 'inside';
     parentPath: string;
   } | null>(null);
-  const [isDragOverGeneralBox, setIsDragOverGeneralBox] = useState(false);
   const dropTargetRef = useRef<{
     id: string;
     position: 'before' | 'after' | 'inside';
@@ -246,11 +251,23 @@ export const VaultSidebar: React.FC = () => {
     canvas?: Layer;
   } | null>(null);
 
+  // Selected item in the file explorer
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+
+  // Synchronize selectedPath with activePath whenever activePath changes
+  React.useEffect(() => {
+    if (activePath) {
+      setSelectedPath(activePath);
+    }
+  }, [activePath]);
+
   // In-app Delete Confirmation Modal state
   const [deleteTarget, setDeleteTarget] = useState<{
     path: string;
     name: string;
     isFolder: boolean;
+    itemType?: 'file' | 'folder' | 'canvas';
+    canvasId?: string;
   } | null>(null);
 
   // In-app Prompt Input Modal state (substitui prompt nativo do navegador)
@@ -263,6 +280,138 @@ export const VaultSidebar: React.FC = () => {
     icon?: React.ReactNode;
     onConfirm: (value: string) => void | Promise<void>;
   } | null>(null);
+
+  // Recursive helper to find a node by its path
+  const findNodeByPath = (nodeList: VaultNode[], path: string): VaultNode | null => {
+    for (const item of nodeList) {
+      if (item.path === path) return item;
+      if (item.children) {
+        const found = findNodeByPath(item.children, path);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Helper to trigger deletion modal for currently selected item
+  const triggerDeleteSelected = (customPath?: string) => {
+    const targetPath = customPath || selectedPath || activePath;
+    if (!targetPath) return;
+
+    const skipConfirm = typeof window !== 'undefined' && localStorage.getItem('vault_skip_delete_confirm') === 'true';
+
+    if (targetPath.startsWith('canvas:')) {
+      const canvasId = targetPath.replace('canvas:', '');
+      const c = allCanvases.find(item => item.id === canvasId);
+      if (c) {
+        if (skipConfirm) {
+          deleteLayer(c.id);
+          closeTab(`canvas:${c.id}`);
+          return;
+        }
+        setDeleteTarget({
+          path: targetPath,
+          name: c.name,
+          isFolder: false,
+          itemType: 'canvas',
+          canvasId: c.id
+        });
+      }
+      return;
+    }
+
+    const node = findNodeByPath(nodes, targetPath);
+    if (!node) return;
+
+    const isFolder = node.type === 'folder';
+    const isNote = node.fileType === 'note' || (!node.fileType && (node.name.endsWith('.md') || node.name.endsWith('.txt') || !node.name.includes('.')));
+    const displayName = isFolder
+      ? node.name
+      : (isNote ? node.name.replace(/\.md$/, '') : node.name);
+
+    if (skipConfirm) {
+      deleteNode(node.path, isFolder);
+      if (selectedPath === node.path) {
+        setSelectedPath(null);
+      }
+      return;
+    }
+
+    setDeleteTarget({
+      path: node.path,
+      name: displayName,
+      isFolder,
+      itemType: isFolder ? 'folder' : 'file'
+    });
+  };
+
+  // Delete key handler for selected file/folder/canvas in explorer
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete') return;
+
+      const target = e.target as HTMLElement | null;
+      const activeEl = document.activeElement as HTMLElement | null;
+
+      const isEditable = (el: HTMLElement | null) => {
+        if (!el) return false;
+        return (
+          el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.isContentEditable ||
+          !!el.closest('input') ||
+          !!el.closest('textarea') ||
+          !!el.closest('[contenteditable="true"]') ||
+          !!el.closest('.tiptap') ||
+          !!el.closest('.ProseMirror') ||
+          !!el.closest('.monaco-editor') ||
+          !!el.closest('[data-editor-container]')
+        );
+      };
+
+      if (isEditable(target) || isEditable(activeEl)) {
+        return;
+      }
+
+      // Block if any modal or input row is currently open
+      if (
+        deleteTarget !== null ||
+        promptModal !== null ||
+        renamingFolderPath !== null ||
+        newFileInputFolder !== null ||
+        newFolderInputParent !== null
+      ) {
+        return;
+      }
+
+      // Block if modifiers like Ctrl or Alt are held
+      if (e.ctrlKey || e.altKey || e.metaKey) {
+        return;
+      }
+
+      const targetPath = selectedPath || activePath;
+      if (!targetPath) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      triggerDeleteSelected(targetPath);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    selectedPath,
+    activePath,
+    deleteTarget,
+    promptModal,
+    renamingFolderPath,
+    newFileInputFolder,
+    newFolderInputParent,
+    nodes,
+    allCanvases
+  ]);
+
 
   // Sidebar resize states & handlers
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
@@ -327,9 +476,6 @@ export const VaultSidebar: React.FC = () => {
     });
   };
 
-  // Canvases from IndexedDB
-  const allCanvases = activeLayers.filter(l => l.isProjectMetadata);
-  const generalCanvases = allCanvases.filter(l => !l.folderPath);
 
   const handleCreateBoardCanvas = (targetFolderPath: string | null = null) => {
     let newName = 'Quadro de Conexões 1';
@@ -340,36 +486,26 @@ export const VaultSidebar: React.FC = () => {
     }
     newName = `Quadro de Conexões ${counter}`;
 
-    setPromptModal({
-      title: 'Novo Quadro de Conexões',
-      description: 'Digite o nome para o novo Quadro de Conexões:',
-      defaultValue: newName,
-      placeholder: 'Ex: Quadro de Conexões 1',
-      confirmText: 'Criar Quadro',
-      icon: <FolderKanban className="w-5 h-5 text-indigo-400" />,
-      onConfirm: (customName) => {
-        if (!customName || !customName.trim()) return;
-
-        const newProjectId = uuidv4();
-        const projectMeta: Layer = {
-          id: newProjectId,
-          type: 'group',
-          name: customName.trim(),
-          visible: true,
-          locked: false,
-          parentId: null,
-          depth: 0,
-          isProject: false,
-          isProjectMetadata: true,
-          projectId: newProjectId,
-          order: 0,
-          canvasType: 'board',
-          folderPath: targetFolderPath,
-        };
-        addLayer(projectMeta);
-        openCanvasTab(newProjectId, customName.trim());
-      }
-    });
+    const newProjectId = uuidv4();
+    const projectMeta: Layer = {
+      id: newProjectId,
+      type: 'group',
+      name: newName,
+      visible: true,
+      locked: false,
+      parentId: null,
+      depth: 0,
+      isProject: false,
+      isProjectMetadata: true,
+      projectId: newProjectId,
+      order: 0,
+      canvasType: 'board',
+      folderPath: targetFolderPath,
+      vaultId: vaultId || 'default-vault',
+      vaultName: vaultName || 'Meu Vault',
+    };
+    addLayer(projectMeta);
+    openCanvasTab(newProjectId, newName);
   };
 
   const handleCreateFileSubmit = async (folderPath: string) => {
@@ -461,51 +597,41 @@ export const VaultSidebar: React.FC = () => {
     }
     newName = `Canvas de Áudio ${counter}`;
 
-    setPromptModal({
-      title: 'Novo Canvas de Áudio',
-      description: 'Digite o nome para o novo Canvas de Áudio:',
-      defaultValue: newName,
-      placeholder: 'Ex: Canvas de Áudio 1',
-      confirmText: 'Criar Canvas',
-      icon: <Music className="w-5 h-5 text-cyan-400" />,
-      onConfirm: (customName) => {
-        if (!customName || !customName.trim()) return;
+    const newProjectId = uuidv4();
+    const projectMeta: Layer = {
+      id: newProjectId,
+      type: 'group',
+      name: newName,
+      visible: true,
+      locked: false,
+      parentId: null,
+      depth: 0,
+      isProject: false,
+      isProjectMetadata: true,
+      projectId: newProjectId,
+      order: 0,
+      canvasType: 'audio',
+      folderPath: targetFolderPath,
+      vaultId: vaultId || 'default-vault',
+      vaultName: vaultName || 'Meu Vault',
+    };
+    addLayer(projectMeta);
 
-        const newProjectId = uuidv4();
-        const projectMeta: Layer = {
-          id: newProjectId,
-          type: 'group',
-          name: customName.trim(),
-          visible: true,
-          locked: false,
-          parentId: null,
-          depth: 0,
-          isProject: false,
-          isProjectMetadata: true,
-          projectId: newProjectId,
-          order: 0,
-          canvasType: 'audio',
-          folderPath: targetFolderPath,
-        };
-        addLayer(projectMeta);
+    const newPage: Layer = {
+      id: uuidv4(),
+      type: 'group',
+      name: 'Página 1',
+      visible: true,
+      locked: false,
+      parentId: null,
+      depth: 0,
+      isProject: true,
+      projectId: newProjectId,
+      order: 0
+    };
+    addLayer(newPage);
 
-        const newPage: Layer = {
-          id: uuidv4(),
-          type: 'group',
-          name: 'Página 1',
-          visible: true,
-          locked: false,
-          parentId: null,
-          depth: 0,
-          isProject: true,
-          projectId: newProjectId,
-          order: 0
-        };
-        addLayer(newPage);
-
-        router.push(`/project/${newProjectId}`);
-      }
-    });
+    router.push(`/project/${newProjectId}`);
   };
 
   // Helper to extract all folder paths for "Mover para..." submenu
@@ -927,13 +1053,18 @@ export const VaultSidebar: React.FC = () => {
     const isBoard = canvas.canvasType === 'board';
     const isCanvasActive = activePath === `canvas:${canvas.id}`;
     const canvasItemId = `canvas:${canvas.id}`;
+    const isCanvasSelected = selectedPath === canvasItemId || (!selectedPath && isCanvasActive);
     const isDropBefore = dropTarget?.id === canvasItemId && dropTarget.position === 'before';
     const isDropAfter = dropTarget?.id === canvasItemId && dropTarget.position === 'after';
 
     return (
       <div
         key={`canvas-${canvas.id}`}
+        tabIndex={0}
         draggable={true}
+        onFocus={() => {
+          setSelectedPath(canvasItemId);
+        }}
         onDragStart={(e) => {
           e.dataTransfer.setData('application/rpgsa-canvas', JSON.stringify({ id: canvas.id, name: canvas.name, canvasType: canvas.canvasType }));
           setDraggedCanvas(canvas);
@@ -943,7 +1074,6 @@ export const VaultSidebar: React.FC = () => {
           setDraggedCanvas(null);
           setDropTarget(null);
           clearHoverTimer();
-          setIsDragOverGeneralBox(false);
         }}
         onDragOver={(e) => {
           handleItemDragOver(e, { kind: 'canvas', id: canvasItemId, canvas }, parentPath);
@@ -957,6 +1087,7 @@ export const VaultSidebar: React.FC = () => {
         onContextMenu={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          setSelectedPath(canvasItemId);
           setContextMenu({
             x: e.clientX,
             y: e.clientY,
@@ -964,6 +1095,7 @@ export const VaultSidebar: React.FC = () => {
           });
         }}
         onClick={() => {
+          setSelectedPath(canvasItemId);
           if (isBoard) {
             openCanvasTab(canvas.id, canvas.name);
           } else {
@@ -971,9 +1103,9 @@ export const VaultSidebar: React.FC = () => {
           }
         }}
         style={{ paddingLeft: `${depth * 14 + 12}px` }}
-        className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all ${
-          isCanvasActive
-            ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium'
+        className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all outline-none ${
+          isCanvasSelected
+            ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium ring-1 ring-purple-400/50'
             : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5 hover:text-stone-950 dark:hover:text-white'
         }`}
       >
@@ -1008,6 +1140,7 @@ export const VaultSidebar: React.FC = () => {
     const isFolder = node.type === 'folder';
     const isExpanded = expandedFolders.has(node.path);
     const isActive = activePath === node.path;
+    const isSelected = selectedPath === node.path || (!selectedPath && isActive);
     const isDropBefore = dropTarget?.id === node.path && dropTarget.position === 'before';
     const isDropAfter = dropTarget?.id === node.path && dropTarget.position === 'after';
     const isDropInside = dropTarget?.id === node.path && dropTarget.position === 'inside';
@@ -1018,6 +1151,10 @@ export const VaultSidebar: React.FC = () => {
         className="select-none text-xs"
       >
         <div
+          tabIndex={0}
+          onFocus={() => {
+            setSelectedPath(node.path);
+          }}
           draggable={true}
           onDragStart={(e) => {
             e.dataTransfer.setData('text/plain', node.path);
@@ -1056,8 +1193,12 @@ export const VaultSidebar: React.FC = () => {
           onDrop={(e) => {
             handleItemDrop(e, { kind: 'node', id: node.path, node }, parentPath);
           }}
-          onContextMenu={(e) => handleContextMenu(e, node)}
+          onContextMenu={(e) => {
+            setSelectedPath(node.path);
+            handleContextMenu(e, node);
+          }}
           onClick={() => {
+            setSelectedPath(node.path);
             if (isFolder) {
               toggleFolder(node.path);
             } else {
@@ -1065,11 +1206,11 @@ export const VaultSidebar: React.FC = () => {
             }
           }}
           style={{ paddingLeft: `${depth * 14 + 12}px` }}
-          className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all ${
+          className={`group relative flex items-center justify-between py-1.5 pr-2 rounded-lg cursor-pointer transition-all outline-none ${
             isDropInside && isFolder
               ? 'bg-purple-100 dark:bg-purple-900/40 ring-1 ring-purple-500 text-purple-900 dark:text-purple-100 shadow-sm'
-              : isActive
-                ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium'
+              : isSelected
+                ? 'bg-purple-100/80 dark:bg-purple-500/15 text-purple-900 dark:text-purple-200 font-medium ring-1 ring-purple-400/50'
                 : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5 hover:text-stone-950 dark:hover:text-white'
           }`}
         >
@@ -1250,9 +1391,7 @@ export const VaultSidebar: React.FC = () => {
           label: 'Excluir Canvas',
           icon: <Trash2 size={16} className="text-red-400" />,
           onClick: () => {
-            if (confirm(`Excluir o canvas "${c.name}" permanentemente?`)) {
-              deleteLayer(c.id);
-            }
+            triggerDeleteSelected(`canvas:${c.id}`);
           }
         }
       ];
@@ -1396,11 +1535,8 @@ export const VaultSidebar: React.FC = () => {
             label: 'Excluir Arquivo',
             icon: <Trash2 size={16} className="text-red-400" />,
             onClick: () => {
-              setDeleteTarget({
-                path: node.path,
-                name: node.name,
-                isFolder: false
-              });
+              setSelectedPath(node.path);
+              triggerDeleteSelected(node.path);
             }
           }
         ];
@@ -1477,11 +1613,8 @@ export const VaultSidebar: React.FC = () => {
           label: 'Excluir Nota',
           icon: <Trash2 size={16} className="text-red-400" />,
           onClick: () => {
-            setDeleteTarget({
-              path: node.path,
-              name: node.name.replace(/\.md$/, ''),
-              isFolder: false
-            });
+            setSelectedPath(node.path);
+            triggerDeleteSelected(node.path);
           }
         }
       ];
@@ -1537,11 +1670,8 @@ export const VaultSidebar: React.FC = () => {
           label: 'Excluir Pasta',
           icon: <Trash2 size={16} className="text-red-400" />,
           onClick: () => {
-            setDeleteTarget({
-              path: node.path,
-              name: node.name,
-              isFolder: true
-            });
+            setSelectedPath(node.path);
+            triggerDeleteSelected(node.path);
           }
         }
       ];
@@ -1559,8 +1689,56 @@ export const VaultSidebar: React.FC = () => {
       } as React.CSSProperties}
       className="h-full bg-[#FAF9F6] dark:bg-[#111115] border-r border-stone-200/90 dark:border-white/10 flex flex-col select-none relative shrink-0 text-stone-900 dark:text-neutral-100"
     >
-      {/* Sidebar Header: Actions & Search */}
-      <div className="p-3 border-b border-stone-200/90 dark:border-white/10 flex flex-col gap-2 bg-white/70 dark:bg-white/[0.02]">
+      {/* Sidebar Navigation Tabs (Arquivos vs Canvas Gerais) */}
+      <div className="flex items-center border-b border-stone-200/90 dark:border-white/10 bg-stone-100/60 dark:bg-white/[0.02] px-2 pt-1.5 gap-1 shrink-0">
+        <button
+          onClick={() => setSidebarTab('files')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-t-lg text-xs font-semibold transition-colors border-b-2 cursor-pointer ${
+            sidebarTab === 'files'
+              ? 'border-purple-600 dark:border-purple-400 text-purple-700 dark:text-purple-300 bg-white dark:bg-[#111115]'
+              : 'border-transparent text-stone-500 dark:text-neutral-400 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-200/40 dark:hover:bg-white/5'
+          }`}
+        >
+          <FolderOpen className="w-3.5 h-3.5" />
+          <span>Arquivos</span>
+        </button>
+
+        <button
+          onClick={() => setSidebarTab('canvases')}
+          onDragOver={(e) => {
+            if (draggedCanvas || e.dataTransfer.types.includes('application/rpgsa-canvas')) {
+              e.preventDefault();
+              setSidebarTab('canvases');
+            }
+          }}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-t-lg text-xs font-semibold transition-colors border-b-2 cursor-pointer ${
+            sidebarTab === 'canvases'
+              ? 'border-amber-500 dark:border-amber-400 text-amber-700 dark:text-amber-300 bg-white dark:bg-[#111115]'
+              : 'border-transparent text-stone-500 dark:text-neutral-400 hover:text-stone-800 dark:hover:text-stone-200 hover:bg-stone-200/40 dark:hover:bg-white/5'
+          }`}
+        >
+          <Box className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+          <span>Canvas Gerais</span>
+          {generalCanvases.length > 0 && (
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/40 font-bold">
+              {generalCanvases.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {sidebarTab === 'canvases' ? (
+        <VaultGeneralCanvasesTab
+          allFolders={allFolders}
+          onCreateBoardCanvas={handleCreateBoardCanvas}
+          onCreateAudioCanvas={handleCreateAudioCanvas}
+          selectedPath={selectedPath}
+          onSelectPath={setSelectedPath}
+        />
+      ) : (
+        <>
+          {/* Sidebar Header: Actions & Search */}
+          <div className="p-3 border-b border-stone-200/90 dark:border-white/10 flex flex-col gap-2 bg-white/70 dark:bg-white/[0.02]">
         {/* Global Action Buttons (Icon only, neutral colors) */}
         <div className="flex items-center gap-1.5">
           <button
@@ -1614,6 +1792,11 @@ export const VaultSidebar: React.FC = () => {
       {/* Files Tree */}
       <div 
         className="flex-1 overflow-y-auto p-2 custom-scrollbar flex flex-col"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setSelectedPath(null);
+          }
+        }}
         onDragOver={(e) => {
           if (draggedNode || draggedCanvas || e.dataTransfer.types.includes('Files')) {
             e.preventDefault();
@@ -1659,104 +1842,28 @@ export const VaultSidebar: React.FC = () => {
         )}
       </div>
 
-      {/* Caixa de Canvas Gerais */}
-      <div 
-        className={`border-t border-stone-200/90 dark:border-white/10 bg-white/70 dark:bg-white/[0.02] p-2 transition-all ${
-          isDragOverGeneralBox ? 'bg-amber-50 dark:bg-amber-950/20 border-amber-400 border-2 border-dashed' : ''
-        }`}
-        onDragOver={(e) => {
-          if (draggedCanvas) {
-            e.preventDefault();
-            setIsDragOverGeneralBox(true);
-          }
-        }}
-        onDragLeave={() => {
-          setIsDragOverGeneralBox(false);
-        }}
-        onDrop={(e) => {
-          if (draggedCanvas) {
-            e.preventDefault();
-            setIsDragOverGeneralBox(false);
-            updateLayer({ ...draggedCanvas, folderPath: null });
-            setDraggedCanvas(null);
-          }
-        }}
-      >
-        <div 
-          onClick={() => setIsGeneralCanvasOpen(!isGeneralCanvasOpen)}
-          className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-stone-100 dark:hover:bg-white/5 cursor-pointer text-xs font-semibold text-stone-700 dark:text-neutral-200 transition-colors"
-        >
-          <div className="flex items-center gap-1.5">
-            <span className="text-stone-400 dark:text-neutral-400">
-              {isGeneralCanvasOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-            </span>
-            <Box className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-            <span>Caixa de Canvas Gerais</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-neutral-400 font-mono border border-stone-200 dark:border-white/10">
-              {generalCanvases.length}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCreateBoardCanvas(null);
-              }}
-              className="p-1 hover:bg-stone-200 dark:hover:bg-white/10 text-stone-400 hover:text-purple-600 dark:hover:text-purple-300 rounded transition-colors"
-              title="Novo Quadro de Conexões Geral"
-            >
-              <FolderKanban className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCreateAudioCanvas(null);
-              }}
-              className="p-1 hover:bg-stone-200 dark:hover:bg-white/10 text-stone-400 hover:text-sky-600 dark:hover:text-cyan-300 rounded transition-colors"
-              title="Novo Canvas de Áudio Geral"
-            >
-              <Music className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-
-        {isDragOverGeneralBox && (
-          <div className="py-2 px-3 my-1 rounded-lg border border-dashed border-amber-400 bg-amber-500/10 text-amber-300 text-xs text-center font-medium animate-pulse">
-            Solte aqui para mover para a Caixa Geral
-          </div>
-        )}
-
-        {isGeneralCanvasOpen && (
-          <div className="mt-1 space-y-0.5 max-h-48 overflow-y-auto custom-scrollbar">
-            {generalCanvases.length === 0 ? (
-              <div className="py-2 text-center text-[11px] text-neutral-500">
-                Nenhum canvas geral. Arraste um canvas até aqui para colocá-lo na Caixa Geral!
-              </div>
-            ) : (
-              [...generalCanvases].sort((a, b) => {
-                const order = getCustomOrder()['__GENERAL_CANVASES__'] || [];
-                const idxA = order.indexOf(`canvas:${a.id}`);
-                const idxB = order.indexOf(`canvas:${b.id}`);
-                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                if (idxA !== -1) return -1;
-                if (idxB !== -1) return 1;
-                return a.name.localeCompare(b.name);
-              }).map((canvas) => renderCanvasItem(canvas, 0, '__GENERAL_CANVASES__'))
-            )}
-          </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* In-app Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteTarget !== null}
         itemName={deleteTarget?.name || ''}
+        itemPath={deleteTarget?.path}
         isFolder={deleteTarget?.isFolder}
+        itemType={deleteTarget?.itemType}
         onClose={() => setDeleteTarget(null)}
         onConfirm={async () => {
           if (deleteTarget) {
-            await deleteNode(deleteTarget.path, deleteTarget.isFolder);
+            if (deleteTarget.itemType === 'canvas' && deleteTarget.canvasId) {
+              deleteLayer(deleteTarget.canvasId);
+              closeTab(`canvas:${deleteTarget.canvasId}`);
+            } else {
+              await deleteNode(deleteTarget.path, deleteTarget.isFolder);
+            }
+            if (selectedPath === deleteTarget.path) {
+              setSelectedPath(null);
+            }
             setDeleteTarget(null);
           }
         }}

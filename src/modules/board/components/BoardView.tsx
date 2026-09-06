@@ -58,6 +58,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
     setImageModalOpen,
     canvasModalOpen,
     setCanvasModalOpen,
+    editingElementId,
+    setEditingElementId,
   } = useBoardCanvas(boardId);
 
   const { provider, getFileUrl } = useVaultStore();
@@ -269,7 +271,12 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
           switch (element.type) {
             case 'note':
-              return <BoardNoteElement {...commonProps} />;
+              return (
+                <BoardNoteElement
+                  {...commonProps}
+                  onSetEditing={(isEd) => setEditingElementId(isEd ? element.id : null)}
+                />
+              );
             case 'text':
               return <BoardTextElement {...commonProps} />;
             case 'audio':

@@ -178,6 +178,7 @@ export interface ActiveNote {
     borderColor?: string;
     borderWidth?: number;
     fillMode?: 'filled' | 'transparent' | 'outlined';
+    vaultPath?: string; // Caminho do arquivo vinculado no Vault (ex: "Nova nota.md")
 }
 
 export interface PollQuestion {

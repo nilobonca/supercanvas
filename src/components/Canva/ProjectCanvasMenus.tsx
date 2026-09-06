@@ -4,6 +4,7 @@ import {
   Layers, Edit2, ArrowLeft, MapPin, History, Music, LayoutGrid, PenTool, MousePointer2, Globe, Headphones, Settings, Gamepad2, Coins, KeyRound, BookOpen
 } from 'lucide-react';
 import { useMinigamesStore } from '@/store/minigamesStore';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import { ClickerMinigameHost } from './ClickerMinigameHost';
 import { CoinFlipMinigameHost } from './CoinFlipMinigameHost';
 import { CardsMinigameHost } from './CardsMinigameHost';
@@ -432,7 +433,7 @@ export const ProjectCanvasMenus: React.FC<ProjectCanvasMenusProps> = ({
           className={clsx(buttonClass, "border-violet-500/30 hover:border-violet-500/60")}
           title="Abrir Vault de Anotações"
         >
-          <BookOpen size={20} className="text-violet-400" />
+          <SafeIcon size={20} className="text-violet-400" />
         </button>
 
         {/* Minimized Minigames */}

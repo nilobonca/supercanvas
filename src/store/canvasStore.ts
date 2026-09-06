@@ -49,6 +49,7 @@ interface CanvasSelectionState {
   renamingAreaId: string | null;
   highlightedAudioId: number | null;
   activeAudioIds: Set<number>;
+  editingNoteId: string | null;
   
   setActiveAreaIds: (ids: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
   setProximityVolumes: (volumes: Map<number, number> | ((prev: Map<number, number>) => Map<number, number>)) => void;
@@ -64,6 +65,7 @@ interface CanvasSelectionState {
   setRenamingAreaId: (id: string | null) => void;
   setHighlightedAudioId: (id: number | null) => void;
   setActiveAudioIds: (ids: Set<number> | ((prev: Set<number>) => Set<number>)) => void;
+  setEditingNoteId: (id: string | null) => void;
   clearSelection: () => void;
 }
 
@@ -237,6 +239,7 @@ export const useCanvasGlobalStore = create<CanvasGlobalStore>()(
       renamingAreaId: null,
       highlightedAudioId: null,
       activeAudioIds: new Set(),
+      editingNoteId: null,
 
       setActiveAreaIds: (ids) => set((state) => ({
         activeAreaIds: typeof ids === 'function' ? ids(state.activeAreaIds) : ids
@@ -266,13 +269,15 @@ export const useCanvasGlobalStore = create<CanvasGlobalStore>()(
       setActiveAudioIds: (ids) => set((state) => ({
         activeAudioIds: typeof ids === 'function' ? ids(state.activeAudioIds) : ids
       })),
+      setEditingNoteId: (id) => set({ editingNoteId: id }),
 
       clearSelection: () => set({
         selectedItemIds: new Set(),
         editingImageId: null,
         croppingImageId: null,
         editingSoundboardItemId: null,
-        renamingAreaId: null
+        renamingAreaId: null,
+        editingNoteId: null
       })
     }),
     {

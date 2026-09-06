@@ -19,6 +19,7 @@ import { useBatchAudioUpload } from '@/hooks/useBatchAudioUpload';
 import { useCanvasGlobalStore } from '@/store/canvasStore';
 import { useMinigamesStore } from '@/store/minigamesStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 import { ActiveImage } from '@/interfaces/utils/indexedDB';
 
 export const useProjectCanvasCore = () => {
@@ -148,8 +149,19 @@ export const useProjectCanvasCore = () => {
       idb.activeGlobalTracks.forEach(track => {
         if (track.isPlaying) idb.updateGlobalTrackPersisted({ ...track, isPlaying: false });
       });
-    }
+    },
+    updateNotePersisted: idb.updateNotePersisted,
+    updateImagePersisted: idb.updateImagePersisted,
+    updatePinPersisted: idb.updatePinPersisted,
+    updateSoundboardItemPersisted: idb.updateSoundboardItemPersisted,
   });
+
+  useEffect(() => {
+    const vaultStore = useVaultStore.getState();
+    if (!vaultStore.provider) {
+      vaultStore.initializeStorage();
+    }
+  }, []);
 
   const moderation = useCanvasModeration({ activePins: idb.activePins, connectionsRef, canvasRef });
   const handleEditImage = (id: string) => selection.setEditingImageId(id);

@@ -10,6 +10,7 @@ export class FSAStorageProvider implements IVaultStorageProvider {
   readonly type = 'fsa' as const;
   private rootHandle: FileSystemDirectoryHandle | null = null;
   private _vaultName: string = 'Local Windows Vault';
+  private rootPhysicalPath: string | null = null;
 
   get isConnected(): boolean {
     return this.rootHandle !== null;
@@ -128,6 +129,10 @@ export class FSAStorageProvider implements IVaultStorageProvider {
    */
   async disconnect(): Promise<void> {
     this.rootHandle = null;
+    this.rootPhysicalPath = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('vault_root_physical_path');
+    }
     await this.removeSavedHandleFromIDB();
   }
 
@@ -307,19 +312,127 @@ export class FSAStorageProvider implements IVaultStorageProvider {
   }
 
   /**
-   * Deletes a file or directory
+   * Discovers and caches the physical OS path on Windows when running in Electron
+   */
+  async getRootPhysicalPath(): Promise<string | null> {
+    if (this.rootPhysicalPath) return this.rootPhysicalPath;
+
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vault_root_physical_path');
+      if (saved) {
+        this.rootPhysicalPath = saved;
+        return saved;
+      }
+    }
+
+    if (typeof window === 'undefined' || !window.electronAPI?.getPathForFile || !this.rootHandle) {
+      return null;
+    }
+
+    try {
+      let probeFileHandle: FileSystemFileHandle | null = null;
+      let relativeSubpath = '';
+
+      // Try finding an existing file in root
+      for await (const [name, handle] of (this.rootHandle as any).entries()) {
+        if (handle.kind === 'file' && !name.startsWith('.')) {
+          probeFileHandle = handle;
+          relativeSubpath = name;
+          break;
+        }
+      }
+
+      let isTempProbe = false;
+      if (!probeFileHandle) {
+        try {
+          probeFileHandle = await this.rootHandle.getFileHandle('.trash_probe', { create: true });
+          relativeSubpath = '.trash_probe';
+          isTempProbe = true;
+        } catch (err) {
+          console.warn('[FSAStorageProvider] Failed to create trash probe file:', err);
+        }
+      }
+
+      if (probeFileHandle) {
+        const file = await probeFileHandle.getFile();
+        const detectedPath = window.electronAPI.getPathForFile(file);
+
+        if (isTempProbe) {
+          try {
+            await (this.rootHandle as any).removeEntry('.trash_probe');
+          } catch {}
+        }
+
+        if (detectedPath) {
+          const normalizedDetected = detectedPath.replace(/\\/g, '/');
+          const rootPathNormalized = normalizedDetected.endsWith('/' + relativeSubpath)
+            ? normalizedDetected.slice(0, -(relativeSubpath.length + 1))
+            : normalizedDetected.substring(0, normalizedDetected.lastIndexOf('/'));
+
+          const osRootPath = detectedPath.includes('\\')
+            ? rootPathNormalized.replace(/\//g, '\\')
+            : rootPathNormalized;
+
+          this.rootPhysicalPath = osRootPath;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('vault_root_physical_path', osRootPath);
+          }
+          return osRootPath;
+        }
+      }
+    } catch (err) {
+      console.warn('[FSAStorageProvider] Failed to resolve physical path:', err);
+    }
+
+    return null;
+  }
+
+  /**
+   * Deletes a file or directory, moving to the Windows Recycle Bin if in Electron
    */
   async deleteNode(nodePath: string, isFolder: boolean): Promise<void> {
     if (!this.rootHandle) throw new Error('Nenhuma pasta conectada.');
 
-    const parts = nodePath.split('/');
-    const targetName = parts.pop()!;
-    const parentPath = parts.join('/');
+    let movedToTrash = false;
 
-    const parentHandle = parentPath ? await this.resolveDirectory(parentPath) : this.rootHandle;
-    if (!parentHandle) throw new Error(`Diretório pai não encontrado: ${parentPath}`);
+    // 1. Try to move to Windows Recycle Bin via Electron shell.trashItem
+    if (typeof window !== 'undefined' && window.electronAPI?.trashItem) {
+      try {
+        const rootPath = await this.getRootPhysicalPath();
+        if (rootPath) {
+          const separator = rootPath.includes('\\') ? '\\' : '/';
+          const cleanNodePath = nodePath.replace(/[\/\\]+/g, separator);
+          const fullPhysicalPath = `${rootPath.replace(/[\\\/]+$/, '')}${separator}${cleanNodePath}`;
 
-    await (parentHandle as any).removeEntry(targetName, { recursive: isFolder });
+          const res = await window.electronAPI.trashItem(fullPhysicalPath);
+          if (res?.success) {
+            movedToTrash = true;
+            console.log(`[FSAStorageProvider] Item movido para a Lixeira do Windows: ${fullPhysicalPath}`);
+          }
+        }
+      } catch (trashErr) {
+        console.warn('[FSAStorageProvider] Falha ao enviar para lixeira do Windows, usando fallback permanente:', trashErr);
+      }
+    }
+
+    // 2. Fallback to native File System Access API removeEntry if not moved to trash
+    if (!movedToTrash) {
+      const parts = nodePath.split('/');
+      const targetName = parts.pop()!;
+      const parentPath = parts.join('/');
+
+      const parentHandle = parentPath ? await this.resolveDirectory(parentPath) : this.rootHandle;
+      if (!parentHandle) throw new Error(`Diretório pai não encontrado: ${parentPath}`);
+
+      try {
+        await (parentHandle as any).removeEntry(targetName, { recursive: isFolder });
+      } catch (removeErr: any) {
+        // If the item was already deleted/moved, ignore NotFoundError
+        if (removeErr?.name !== 'NotFoundError') {
+          throw removeErr;
+        }
+      }
+    }
 
     if (this.urlCache.has(nodePath)) {
       URL.revokeObjectURL(this.urlCache.get(nodePath)!);

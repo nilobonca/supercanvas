@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderKanban, Music, Database } from 'lucide-react';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 
 interface CanvasCreateModalProps {
@@ -71,7 +72,7 @@ export const CanvasCreateModal: React.FC<CanvasCreateModalProps> = ({
         {/* Vault Destination Selector */}
         <div className="p-3.5 rounded-2xl bg-stone-50 dark:bg-black/25 border border-black/5 dark:border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
-            <Database size={15} className="text-purple-600 dark:text-purple-400 shrink-0" />
+            <SafeIcon size={16} className="text-purple-600 dark:text-purple-400 shrink-0" />
             <div>
               <span className="text-xs font-semibold block text-stone-800 dark:text-neutral-200">
                 Salvar no Vault:

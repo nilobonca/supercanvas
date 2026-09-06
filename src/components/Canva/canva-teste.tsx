@@ -25,7 +25,7 @@ export const useCanvas = () => useContext(CanvasContext);
 interface CanvasContainerProps {
   children: ReactNode;
   items?: Array<{ id: string; type?: string; position?: { x: number; y: number }; points?: Array<{ x: number; y: number }>; width?: number; height?: number; color?: string }>;
-  onDropItem?: (item: { id: string | number }, type: string, x: number, y: number) => void;
+  onDropItem?: (item: { id: string | number; path?: string; name?: string; [key: string]: any }, type: string, x: number, y: number) => void;
   onDropFile?: (files: FileList, x: number, y: number) => void;
   onCanvasRightClick?: (e: React.MouseEvent, worldX: number, worldY: number) => void;
   onSelectionChange?: (rect: { x: number; y: number; width: number; height: number } | null) => void;
@@ -34,7 +34,13 @@ interface CanvasContainerProps {
   isSelectionEnabled?: boolean;
 }
 
-const CanvasContainer = React.forwardRef<{ centerOn: (x: number, y: number) => void }, CanvasContainerProps>(
+export interface CanvasContainerHandle {
+  centerOn: (x: number, y: number) => void;
+  getTransform: () => { x: number; y: number; k: number };
+  screenToWorld: (screenX: number, screenY: number) => { x: number; y: number };
+}
+
+const CanvasContainer = React.forwardRef<CanvasContainerHandle, CanvasContainerProps>(
   ({ children, items = [], onDropItem, onDropFile, onCanvasRightClick, onSelectionChange, onCanvasClick, onCanvasMouseMove, isSelectionEnabled = true }, ref) => {
   
   const { theme } = useThemeStore();
@@ -185,8 +191,19 @@ const CanvasContainer = React.forwardRef<{ centerOn: (x: number, y: number) => v
   }, [transform.k, constrainBounds]);
 
   React.useImperativeHandle(ref, () => ({
-    centerOn
-  }), [centerOn]);
+    centerOn,
+    getTransform: () => transform,
+    screenToWorld: (screenX: number, screenY: number) => {
+      if (!containerRef.current) return { x: screenX, y: screenY };
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = screenX - rect.left;
+      const mouseY = screenY - rect.top;
+      return {
+        x: (mouseX - transform.x) / transform.k,
+        y: (mouseY - transform.y) / transform.k,
+      };
+    }
+  }), [centerOn, transform]);
 
   // Handle Context Menu (Right Click)
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -319,6 +336,48 @@ const CanvasContainer = React.forwardRef<{ centerOn: (x: number, y: number) => v
         return;
       }
 
+      // Handle Vault Note Drop from sidebar / file list
+      const rawVaultNote = e.dataTransfer.getData('application/rpgsa-vault-note');
+      if (rawVaultNote) {
+        try {
+          const noteData = JSON.parse(rawVaultNote);
+          if (onDropItem) {
+            onDropItem({ id: noteData.path, path: noteData.path, name: noteData.name }, 'vault-note', worldX, worldY);
+          }
+          return;
+        } catch (err) {
+          console.error('Failed to parse vault note:', err);
+        }
+      }
+
+      // Handle Vault Audio Drop
+      const rawVaultAudio = e.dataTransfer.getData('application/rpgsa-vault-audio');
+      if (rawVaultAudio) {
+        try {
+          const audioData = JSON.parse(rawVaultAudio);
+          if (onDropItem) {
+            onDropItem({ id: audioData.path, path: audioData.path, name: audioData.name }, 'vault-audio', worldX, worldY);
+          }
+          return;
+        } catch (err) {
+          console.error('Failed to parse vault audio:', err);
+        }
+      }
+
+      // Handle Vault Image Drop
+      const rawVaultImage = e.dataTransfer.getData('application/rpgsa-vault-image');
+      if (rawVaultImage) {
+        try {
+          const imageData = JSON.parse(rawVaultImage);
+          if (onDropItem) {
+            onDropItem({ id: imageData.path, path: imageData.path, name: imageData.name }, 'vault-image', worldX, worldY);
+          }
+          return;
+        } catch (err) {
+          console.error('Failed to parse vault image:', err);
+        }
+      }
+
       // Handle Internal Item Drop
       if (!onDropItem) return;
 
@@ -331,6 +390,7 @@ const CanvasContainer = React.forwardRef<{ centerOn: (x: number, y: number) => v
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
   };
 
   // Efeito global de movimento

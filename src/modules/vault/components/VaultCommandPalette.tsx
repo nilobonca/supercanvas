@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useVaultStore, FlatNoteItem } from '../hooks/useVaultStore';
-import { Search, FileText, Plus, Folder, ArrowRight, CornerDownLeft, Music, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { useVaultStore } from '../hooks/useVaultStore';
+import { Search, FileText, Plus, CornerDownLeft, Music, Image as ImageIcon, FolderKanban } from 'lucide-react';
+
+export type CommandPaletteItem = 
+  | { kind: 'note'; path: string; name: string; folder?: string; fileType?: string }
+  | { kind: 'canvas'; id: string; name: string; canvasType: 'board' | 'audio'; folderPath?: string | null };
 
 export const VaultCommandPalette: React.FC = () => {
+  const router = useRouter();
   const { 
     commandPaletteOpen, 
     setCommandPaletteOpen, 
     searchNotesFuzzy, 
     openDocument, 
+    openCanvasTab,
+    canvases,
     createFile,
     getAllFiles
   } = useVaultStore();
@@ -16,7 +24,42 @@ export const VaultCommandPalette: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const results: FlatNoteItem[] = query.trim() ? searchNotesFuzzy(query) : getAllFiles().slice(0, 8);
+  const results = useMemo<CommandPaletteItem[]>(() => {
+    const q = query.trim().toLowerCase();
+
+    // Canvases
+    const canvasItems: CommandPaletteItem[] = (canvases || [])
+      .filter(c => {
+        if (!q) return true;
+        const nameMatch = c.name.toLowerCase().includes(q);
+        const folderMatch = c.folderPath?.toLowerCase().includes(q);
+        const typeMatch = (c.canvasType === 'board' ? 'quadro conexoes canvas board' : 'audio musica canvas').includes(q);
+        return nameMatch || folderMatch || typeMatch;
+      })
+      .map(c => ({
+        kind: 'canvas' as const,
+        id: c.id,
+        name: c.name,
+        canvasType: c.canvasType === 'audio' ? ('audio' as const) : ('board' as const),
+        folderPath: c.folderPath,
+      }));
+
+    // Notes
+    const noteItems: CommandPaletteItem[] = (
+      q ? searchNotesFuzzy(q) : getAllFiles()
+    ).map(f => ({
+      kind: 'note' as const,
+      path: f.path,
+      name: f.name,
+      folder: f.folder,
+      fileType: f.fileType,
+    }));
+
+    if (q) {
+      return [...canvasItems.slice(0, 4), ...noteItems.slice(0, 8)].slice(0, 10);
+    }
+    return [...canvasItems.slice(0, 3), ...noteItems.slice(0, 6)];
+  }, [query, canvases, searchNotesFuzzy, getAllFiles]);
 
   const exactMatch = results.some(
     r => r.name.toLowerCase() === query.trim().toLowerCase()
@@ -53,9 +96,17 @@ export const VaultCommandPalette: React.FC = () => {
 
   if (!commandPaletteOpen) return null;
 
-  const handleSelect = async (item?: FlatNoteItem) => {
+  const handleSelect = async (item?: CommandPaletteItem) => {
     if (item) {
-      await openDocument(item.path);
+      if (item.kind === 'canvas') {
+        if (item.canvasType === 'board') {
+          openCanvasTab(item.id, item.name);
+        } else {
+          router.push(`/project/${item.id}`);
+        }
+      } else {
+        await openDocument(item.path);
+      }
       setCommandPaletteOpen(false);
     } else if (query.trim()) {
       // Create new note
@@ -114,9 +165,10 @@ export const VaultCommandPalette: React.FC = () => {
         <div className="max-h-80 overflow-y-auto p-2.5 space-y-1 custom-scrollbar">
           {results.map((item, idx) => {
             const isSelected = idx === selectedIndex;
+            const itemKey = item.kind === 'canvas' ? `canvas-${item.id}` : `note-${item.path}`;
             return (
               <div
-                key={item.path}
+                key={itemKey}
                 onClick={() => handleSelect(item)}
                 onMouseEnter={() => setSelectedIndex(idx)}
                 className={`flex items-center justify-between px-3.5 py-2 rounded-xl cursor-pointer transition-colors text-sm ${
@@ -126,7 +178,13 @@ export const VaultCommandPalette: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  {item.fileType === 'audio' ? (
+                  {item.kind === 'canvas' ? (
+                    item.canvasType === 'board' ? (
+                      <FolderKanban className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
+                    ) : (
+                      <Music className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-cyan-600 dark:text-cyan-400'}`} />
+                    )
+                  ) : item.fileType === 'audio' ? (
                     <Music className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-sky-600 dark:text-sky-400'}`} />
                   ) : item.fileType === 'image' ? (
                     <ImageIcon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`} />
@@ -134,9 +192,20 @@ export const VaultCommandPalette: React.FC = () => {
                     <FileText className={`w-4 h-4 shrink-0 ${isSelected ? 'text-white' : 'text-purple-600 dark:text-purple-400'}`} />
                   )}
                   <span className="truncate">{item.name}</span>
-                  {item.folder && (
+                  {item.kind === 'note' && item.folder && (
                     <span className={`text-xs truncate ${isSelected ? 'text-purple-200' : 'text-stone-400 dark:text-neutral-500'}`}>
                       em {item.folder}
+                    </span>
+                  )}
+                  {item.kind === 'canvas' && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                      isSelected 
+                        ? 'bg-white/20 text-white' 
+                        : item.canvasType === 'board'
+                          ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300'
+                          : 'bg-cyan-100 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300'
+                    }`}>
+                      {item.canvasType === 'board' ? 'Quadro de Conexões' : 'Canvas de Áudio'}
                     </span>
                   )}
                 </div>
@@ -158,7 +227,7 @@ export const VaultCommandPalette: React.FC = () => {
             >
               <div className="flex items-center gap-2.5 truncate">
                 <Plus className="w-4 h-4 shrink-0" />
-                <span>Criar nova nota: <strong className="underline">"{query.trim()}"</strong></span>
+                <span>Criar nova nota: <strong className="underline">&quot;{query.trim()}&quot;</strong></span>
               </div>
               <CornerDownLeft className="w-4 h-4 shrink-0" />
             </div>

@@ -11,6 +11,7 @@ import {
   ActiveNote,
   SoundboardItem,
 } from '@/interfaces/utils/indexedDB';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 
 export interface UseCanvasDragAndDropProps {
   activeProjectId?: string | null;
@@ -145,7 +146,7 @@ export const useCanvasDragAndDrop = ({
   );
 
   const handleDropOnCanvas = useCallback(
-    (itemData: { id: string | number }, type: string, x: number, y: number) => {
+    async (itemData: { id: string | number }, type: string, x: number, y: number) => {
       if (!activeProjectId) return;
       addToHistory('Adicionar Item');
       if (tool === 'area' && currentAreaPoints && currentAreaPoints.length >= 3) {
@@ -193,6 +194,17 @@ export const useCanvasDragAndDrop = ({
           addSoundboardItemPersisted(newItem, activeProjectId);
         }
       } else if (type === 'note') {
+        let vaultPath: string | undefined;
+        try {
+          const vaultStore = useVaultStore.getState();
+          if (!vaultStore.provider) {
+            await vaultStore.initializeStorage();
+          }
+          vaultPath = await useVaultStore.getState().createFile('', '', '', false);
+        } catch (err) {
+          console.warn('Falha ao criar nota no Vault automaticamente:', err);
+        }
+
         const newNote: ActiveNote = {
           id: uuidv4(),
           type: 'note',
@@ -205,36 +217,127 @@ export const useCanvasDragAndDrop = ({
           fontColor: '#000000',
           transparentBg: true,
           textAlign: 'left',
+          vaultPath,
         };
         addNotePersisted(newNote, activeProjectId);
         if (setSelectedItemIds) {
           setSelectedItemIds(new Set([newNote.id]));
         }
-      } else if (type === 'vault-link') {
-        let docName = 'Nova Nota';
+      } else if (type === 'vault-note') {
+        const notePath = (itemData as any).path || String(itemData.id);
+        const noteName = (itemData as any).name || notePath.split('/').pop()?.replace(/\.(md|txt)$/, '') || 'Nota';
+        let content = '';
         try {
-          if (typeof window !== 'undefined' && typeof window.prompt === 'function') {
-            docName = window.prompt('Nome da nota do Vault para vincular no mapa (ex: NPCs/Strahd):') || 'Nova Nota';
+          const vaultStore = useVaultStore.getState();
+          if (!vaultStore.provider) {
+            await vaultStore.initializeStorage();
           }
-        } catch {
-          docName = 'Nova Nota';
+          if (vaultStore.provider) {
+            content = await vaultStore.provider.readDocument(notePath);
+          }
+        } catch (err) {
+          console.warn('Erro ao ler conteúdo da nota do vault:', err);
         }
-        const cleanDocName = docName.replace(/\.md$/, '');
+
         const newNote: ActiveNote = {
           id: uuidv4(),
           type: 'note',
-          content: `[[${cleanDocName}]]`,
+          content: content || `# ${noteName}\n\nNota vinculada: ${notePath}`,
           position: { x, y },
-          width: 200,
-          height: 80,
-          color: '#8b5cf6',
-          fontSize: 15,
-          fontColor: '#ffffff',
+          width: 260,
+          height: 140,
+          color: '#fef08a',
+          fontSize: 14,
+          fontColor: '#000000',
           transparentBg: false,
-          fillMode: 'outlined',
-          borderColor: '#8b5cf6',
-          borderWidth: 2,
-          textAlign: 'center',
+          textAlign: 'left',
+          vaultPath: notePath,
+        };
+        addNotePersisted(newNote, activeProjectId);
+        if (setSelectedItemIds) {
+          setSelectedItemIds(new Set([newNote.id]));
+        }
+      } else if (type === 'vault-audio') {
+        const audioPath = (itemData as any).path || String(itemData.id);
+        const audioName = (itemData as any).name || audioPath.split('/').pop() || 'Áudio';
+
+        const newArea: ActiveArea = {
+          id: uuidv4(),
+          type: 'area',
+          points: [
+            { x, y },
+            { x: x + 200, y },
+            { x: x + 200, y: y + 200 },
+            { x, y: y + 200 },
+          ],
+          linkedPlayerId: null,
+          linkedAudioId: null,
+          name: audioName,
+          volumeMode: 'standard',
+        };
+        addAreaPersisted(newArea, activeProjectId);
+      } else if (type === 'vault-image') {
+        const imagePath = (itemData as any).path || String(itemData.id);
+        const imageName = (itemData as any).name || imagePath.split('/').pop() || 'Imagem';
+        let imageUrl = '';
+        try {
+          const vaultStore = useVaultStore.getState();
+          if (vaultStore.getFileUrl) {
+            imageUrl = await vaultStore.getFileUrl(imagePath);
+          }
+        } catch (err) {
+          console.warn('Erro ao obter URL da imagem do vault:', err);
+        }
+
+        if (imageUrl) {
+          const newImage: ActiveImage = {
+            id: uuidv4(),
+            type: 'image',
+            image: {
+              id: Date.now(),
+              name: imageName,
+              file: new File([], imageName),
+              url: imageUrl,
+              createdAt: new Date(),
+            },
+            position: { x, y },
+          };
+          addImagePersisted(newImage, activeProjectId);
+        }
+      } else if (type === 'vault-link') {
+        let vaultPath: string | undefined;
+        let content = '';
+        try {
+          const vaultStore = useVaultStore.getState();
+          if (!vaultStore.provider) {
+            await vaultStore.initializeStorage();
+          }
+          const allNotes = vaultStore.getAllFiles().filter(f => !f.fileType || f.fileType === 'note');
+          if (allNotes.length > 0) {
+            vaultPath = allNotes[0].path;
+            if (vaultStore.provider) {
+              content = await vaultStore.provider.readDocument(vaultPath);
+            }
+          } else {
+            vaultPath = await useVaultStore.getState().createFile('', 'Nova Nota', '', false);
+          }
+        } catch (err) {
+          console.warn('Falha ao obter nota do Vault para vault-link:', err);
+        }
+        const noteName = vaultPath ? vaultPath.split('/').pop()?.replace(/\.(md|txt)$/, '') : 'Nota do Vault';
+        const newNote: ActiveNote = {
+          id: uuidv4(),
+          type: 'note',
+          content: content || `# ${noteName}\n\nNota vinculada: ${vaultPath || ''}`,
+          position: { x, y },
+          width: 260,
+          height: 140,
+          color: '#fef08a',
+          fontSize: 14,
+          fontColor: '#000000',
+          transparentBg: false,
+          textAlign: 'left',
+          vaultPath: vaultPath,
         };
         addNotePersisted(newNote, activeProjectId);
         if (setSelectedItemIds) {

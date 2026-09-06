@@ -15,6 +15,7 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 interface VaultActiveHeroProps {
@@ -92,7 +93,8 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
               )}
             </div>
 
-            <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-stone-500 dark:text-neutral-400 border border-black/5 dark:border-white/5">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/5 text-stone-500 dark:text-neutral-400 border border-black/5 dark:border-white/5">
+              <SafeIcon size={12} className="text-purple-600 dark:text-purple-400" />
               Vault Ativo
             </span>
           </div>
@@ -185,7 +187,7 @@ export const VaultActiveHero: React.FC<VaultActiveHeroProps> = ({
             onClick={() => router.push('/vault')}
             className="w-full btn-island bg-stone-900 text-white hover:bg-stone-800 dark:bg-purple-600 dark:text-white dark:hover:bg-purple-500 shadow-lg shadow-purple-500/10 font-bold px-6 py-3.5 rounded-2xl flex items-center justify-center gap-2.5 transition-all group"
           >
-            <BookOpen size={18} className="group-hover:scale-105 transition-transform" />
+            <SafeIcon size={18} className="group-hover:scale-105 transition-transform" />
             <span>Abrir Vault no Editor</span>
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
           </button>

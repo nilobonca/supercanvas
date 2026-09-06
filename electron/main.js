@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, globalShortcut, dialog, shell, Menu } = req
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const http = require('http');
+const fs = require('fs');
 
 const isDev = !app.isPackaged && process.env.NODE_ENV !== 'production';
 let mainWindow = null;
@@ -42,14 +43,16 @@ async function createWindow() {
     ...(process.platform === 'darwin' ? { titleBarStyle: 'hidden' } : {}),
     autoHideMenuBar: true,
     backgroundColor: '#0a0a0a',
-    title: 'RPGSA — Sound & Vault Canvas',
+    title: 'Concha',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       webSecurity: true,
     },
-    icon: path.join(__dirname, '../public/favicon.ico')
+    icon: fs.existsSync(path.join(__dirname, '../public/favicon.ico'))
+      ? path.join(__dirname, '../public/favicon.ico')
+      : path.join(__dirname, '../public/favicon.png')
   });
 
   Menu.setApplicationMenu(null);
@@ -135,6 +138,24 @@ ipcMain.handle('open-folder-in-explorer', async (event, folderPath) => {
     return true;
   }
   return false;
+});
+
+ipcMain.handle('trash-item', async (event, targetPath) => {
+  if (!targetPath) {
+    return { success: false, error: 'Caminho não fornecido' };
+  }
+  try {
+    if (!fs.existsSync(targetPath)) {
+      console.warn(`[RPGSA Electron] File not found to move to trash: ${targetPath}`);
+      return { success: false, error: 'Arquivo não encontrado' };
+    }
+    await shell.trashItem(targetPath);
+    console.log(`[RPGSA Electron] Successfully moved to Windows Recycle Bin: ${targetPath}`);
+    return { success: true };
+  } catch (err) {
+    console.error('[RPGSA Electron] Error moving item to trash:', err);
+    return { success: false, error: err ? err.message : 'Falha ao mover para a lixeira' };
+  }
 });
 
 ipcMain.handle('window-minimize', () => {

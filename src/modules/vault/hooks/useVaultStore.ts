@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import Router from 'next/router';
+import { Layer } from '@/interfaces/utils/indexedDB';
 import { IVaultStorageProvider } from '../storage/VaultStorageAdapter';
 import { FSAStorageProvider } from '../storage/FSAStorageProvider';
 import { IDBStorageProvider } from '../storage/IDBStorageProvider';
@@ -26,7 +28,8 @@ import {
   resizeSplitInTree, 
   saveLayoutToStorage, 
   loadLayoutFromStorage,
-  updatePaneInTree
+  updatePaneInTree,
+  isTabPathMatch
 } from '../utils/layoutUtils';
 
 export type { VaultTab };
@@ -72,12 +75,17 @@ interface VaultState {
   // UI state
   sidebarOpen: boolean;
   sidebarWidth: number;
+  sidebarTab: 'files' | 'canvases';
   searchQuery: string;
   commandPaletteOpen: boolean;
   backlinksPanelOpen: boolean;
   detailsSidebarTab: 'properties' | 'backlinks';
   settingsOpen: boolean;
   templateModalOpen: boolean;
+
+  // Canvases for linking & references
+  canvases: Layer[];
+  setCanvases: (canvases: Layer[]) => void;
 
   // Actions
   initializeStorage: () => Promise<void>;
@@ -118,8 +126,9 @@ interface VaultState {
   saveDocumentContent: (path: string) => Promise<void>;
   updateContent: (content: string) => void;
   saveCurrentDocument: () => Promise<void>;
+  syncCanvasNote: (path: string, markdown: string) => void;
 
-  createFile: (folderPath?: string, name?: string) => Promise<string>;
+  createFile: (folderPath?: string, name?: string, initialContent?: string, shouldOpen?: boolean) => Promise<string>;
   saveMediaFile: (file: File, folderPath?: string) => Promise<string>;
   getFileUrl: (filePath: string) => Promise<string>;
   createFolder: (parentPath?: string, name?: string) => Promise<void>;
@@ -129,6 +138,7 @@ interface VaultState {
   deleteNode: (path: string, isFolder: boolean) => Promise<void>;
 
   toggleSidebar: () => void;
+  setSidebarTab: (tab: 'files' | 'canvases') => void;
   setSearchQuery: (query: string) => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setBacklinksPanelOpen: (open: boolean) => void;
@@ -220,6 +230,9 @@ function flattenTree(nodes: VaultNode[], folder: string = ''): FlatNoteItem[] {
   return result;
 }
 
+// Helper para correspondência flexível e segura de caminho de abas ao excluir arquivos ou pastas
+export { isTabPathMatch };
+
 const initialDefaultLeaf = createPaneLeaf([], null);
 
 export const useVaultStore = create<VaultState>((set, get) => ({
@@ -253,12 +266,16 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   sidebarWidth: typeof window !== 'undefined' 
     ? Number(localStorage.getItem('vault_sidebar_width')) || 260 
     : 260,
+  sidebarTab: 'files',
   searchQuery: '',
   commandPaletteOpen: false,
   backlinksPanelOpen: false,
   detailsSidebarTab: 'properties',
   settingsOpen: false,
   templateModalOpen: false,
+
+  canvases: [],
+  setCanvases: (canvases: Layer[]) => set({ canvases }),
 
   setVaultName: async (name: string) => {
     const trimmed = name.trim() || 'Meu Vault';
@@ -538,13 +555,25 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       }
     }
 
+    const nextActivePath = nextPane?.activePath || null;
+    const nextTabs = nextPane?.tabs || [];
+
     set({
       layout: newLayout,
       activePaneId: nextActivePaneId,
-      activePath: nextPane?.activePath || null,
-      tabs: nextPane?.tabs || [],
-      activeContent: nextPane?.activePath ? (get().documentCache[nextPane.activePath]?.content || '') : '',
+      activePath: nextActivePath,
+      tabs: nextTabs,
+      activeContent: nextActivePath ? (get().documentCache[nextActivePath]?.content || '') : '',
+      isEditing: Boolean(nextActivePath && !nextActivePath.startsWith('canvas:')),
     });
+
+    if (nextActivePath && !nextActivePath.startsWith('canvas:')) {
+      const ext = nextActivePath.split('.').pop()?.toLowerCase() || '';
+      const isMedia = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+      if (!isMedia) {
+        get().loadDocumentContent(nextActivePath);
+      }
+    }
   },
 
   setActiveTabInPane: (paneId: string, path: string) => {
@@ -678,9 +707,32 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   openOrCreateDocumentByTitle: async (title: string, targetPaneId?: string) => {
     const [docTitle, sectionHeader] = title.split('#');
     const normalized = normalizeNoteTitle(docTitle);
-    const allFiles = get().getAllFiles();
+    const { canvases, getAllFiles } = get();
 
-    // 1. Check if note already exists
+    // 1. Check if it matches a Canvas
+    const matchingCanvas = canvases.find(c =>
+      (c.isProjectMetadata || !c.parentId) &&
+      normalizeNoteTitle(c.name) === normalized
+    );
+
+    if (matchingCanvas) {
+      if (matchingCanvas.canvasType === 'board') {
+        get().openCanvasTab(matchingCanvas.id, matchingCanvas.name, targetPaneId);
+        return;
+      } else {
+        // Audio project canvas: navigate to /project/[id]
+        if (Router && Router.push) {
+          Router.push(`/project/${matchingCanvas.id}`);
+        } else if (typeof window !== 'undefined') {
+          window.location.href = `/project/${matchingCanvas.id}`;
+        }
+        return;
+      }
+    }
+
+    const allFiles = getAllFiles();
+
+    // 2. Check if note already exists
     const match = allFiles.find(f => normalizeNoteTitle(f.name) === normalized || normalizeNoteTitle(f.path) === normalized);
     if (match) {
       await get().openDocument(match.path, targetPaneId);
@@ -698,7 +750,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       return;
     }
 
-    // 2. Doesn't exist, create it!
+    // 3. Doesn't exist, create it!
     const cleanTitle = docTitle.trim();
     const newPath = await get().createFile('', cleanTitle);
     await get().openDocument(newPath, targetPaneId);
@@ -726,8 +778,23 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   },
 
   closeTab: (path: string) => {
-    const { activePaneId } = get();
-    get().closeTabInPane(activePaneId, path);
+    let hasMatchingTab = true;
+    while (hasMatchingTab) {
+      const currentLayout = get().layout;
+      const currentPanes = getAllPanes(currentLayout);
+      let found = false;
+      for (const pane of currentPanes) {
+        const matchingTab = pane.tabs.find(t => isTabPathMatch(t.path, path, false, t.canvasId));
+        if (matchingTab) {
+          get().closeTabInPane(pane.id, matchingTab.path);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        hasMatchingTab = false;
+      }
+    }
   },
 
   setActiveTab: (path: string) => {
@@ -859,13 +926,64 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
   },
 
-  createFile: async (folderPath: string = '', rawName?: string) => {
-    const { provider, getAllFiles } = get();
+  syncCanvasNote: (path: string, markdown: string) => {
+    if (!path || path.startsWith('canvas:')) return;
+    const htmlContent = markdownToHtml(markdown);
+    set(state => ({
+      documentCache: {
+        ...state.documentCache,
+        [path]: { content: htmlContent, isDirty: true, lastSavedAt: Date.now() }
+      },
+      activeContent: state.activePath === path ? htmlContent : state.activeContent
+    }));
+
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      try {
+        const channel = new BroadcastChannel('supercanvas_vault_sync');
+        channel.postMessage({ type: 'sync_doc_cache', path, markdown });
+        channel.close();
+      } catch {}
+    }
+
+    if (docSaveTimeouts.has(path)) {
+      clearTimeout(docSaveTimeouts.get(path)!);
+    }
+
+    const timer = setTimeout(async () => {
+      let { provider } = get();
+      if (!provider) {
+        await get().initializeStorage();
+        provider = get().provider;
+      }
+      if (provider) {
+        try {
+          await provider.saveDocument(path, markdown);
+          set(state => ({
+            documentCache: {
+              ...state.documentCache,
+              [path]: { ...state.documentCache[path], isDirty: false, lastSavedAt: Date.now() }
+            }
+          }));
+        } catch (err) {
+          console.error(`Falha ao sincronizar nota do canvas no Vault (${path}):`, err);
+        }
+      }
+    }, 300);
+
+    docSaveTimeouts.set(path, timer);
+  },
+
+  createFile: async (folderPath: string = '', rawName?: string, initialContent?: string, shouldOpen: boolean = true) => {
+    let { provider } = get();
+    if (!provider) {
+      await get().initializeStorage();
+      provider = get().provider;
+    }
     if (!provider) throw new Error('Storage não inicializado');
 
     let finalName = rawName?.trim() || '';
     if (!finalName) {
-      const allFiles = getAllFiles();
+      const allFiles = get().getAllFiles();
       const prefix = folderPath ? `${folderPath}/` : '';
       const existingPaths = new Set(allFiles.map(f => f.path.toLowerCase()));
 
@@ -885,9 +1003,37 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     const fileName = finalName.endsWith('.md') ? finalName : `${finalName}.md`;
     const fullPath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
-    await provider.createDocument(fullPath, `# ${finalName}\n\n`);
+    const contentToSave = (initialContent !== undefined)
+      ? initialContent
+      : `# ${finalName.replace(/\.md$/, '')}\n\n`;
+
+    await provider.createDocument(fullPath, contentToSave);
+
+    const htmlContent = markdownToHtml(contentToSave);
+    set(state => ({
+      documentCache: {
+        ...state.documentCache,
+        [fullPath]: { content: htmlContent, isDirty: false, lastSavedAt: Date.now() }
+      }
+    }));
+
     await get().refreshNodes();
-    await get().openDocument(fullPath);
+
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      try {
+        const channel = new BroadcastChannel('supercanvas_vault_sync');
+        channel.postMessage({ type: 'refresh_nodes', path: fullPath });
+        channel.close();
+      } catch {}
+    }
+
+    if (shouldOpen) {
+      try {
+        await get().openDocument(fullPath);
+      } catch (err) {
+        console.warn('Erro ao abrir documento:', err);
+      }
+    }
     return fullPath;
   },
 
@@ -1059,20 +1205,84 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   },
 
   deleteNode: async (path: string, isFolder: boolean) => {
-    const { provider, layout } = get();
-    if (!provider) return;
+    let { provider } = get();
+    if (!provider) {
+      await get().initializeStorage();
+      provider = get().provider;
+    }
 
-    await provider.deleteNode(path, isFolder);
-
-    const allPanes = getAllPanes(layout);
-    for (const pane of allPanes) {
-      const match = pane.tabs.find(t => t.path === path || (isFolder && t.path.startsWith(`${path}/`)));
-      if (match) {
-        get().closeTabInPane(pane.id, match.path);
+    // 1. Cancela qualquer timeout pendente de auto-save para este arquivo ou subarquivos
+    for (const [timerPath, timer] of docSaveTimeouts.entries()) {
+      if (isTabPathMatch(timerPath, path, isFolder)) {
+        clearTimeout(timer);
+        docSaveTimeouts.delete(timerPath);
       }
     }
 
-    // Limpa do orderMap persistente
+    // 2. Tenta deletar fisicamente/IDB
+    if (provider) {
+      try {
+        await provider.deleteNode(path, isFolder);
+      } catch (err) {
+        console.warn('Erro ao deletar nó no provider (prosseguindo com fechamento de abas):', err);
+      }
+    }
+
+    // 3. Se for pasta, fecha abas de qualquer canvas pertencente a ela
+    if (isFolder) {
+      const { canvases } = get();
+      const normFolderPath = path.trim().replace(/\\/g, '/').toLowerCase().replace(/^(\.\/|\/)+/, '').replace(/\/+$/, '');
+      for (const c of canvases) {
+        if (c.folderPath) {
+          const normCFolder = c.folderPath.trim().replace(/\\/g, '/').toLowerCase().replace(/^(\.\/|\/)+/, '').replace(/\/+$/, '');
+          if (normCFolder === normFolderPath || normCFolder.startsWith(`${normFolderPath}/`)) {
+            get().closeTab(`canvas:${c.id}`);
+          }
+        }
+      }
+    }
+
+    // 4. Fechar todas as abas abertas correspondentes ao arquivo ou pasta excluída em todos os painéis
+    let hasMatchingTab = true;
+    while (hasMatchingTab) {
+      const currentLayout = get().layout;
+      const currentPanes = getAllPanes(currentLayout);
+      let found = false;
+      for (const pane of currentPanes) {
+        const matchingTab = pane.tabs.find(t => isTabPathMatch(t.path, path, isFolder, t.canvasId));
+        if (matchingTab) {
+          get().closeTabInPane(pane.id, matchingTab.path);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        hasMatchingTab = false;
+      }
+    }
+
+    // 5. Se o activePath atual ainda corresponder ao item excluído, seleciona fallback ou limpa
+    const finalState = get();
+    if (isTabPathMatch(finalState.activePath, path, isFolder)) {
+      const activePane = findPaneLeaf(finalState.layout, finalState.activePaneId);
+      const fallbackTab = activePane?.tabs[0];
+      const nextActivePath = fallbackTab?.path || null;
+      set({
+        activePath: nextActivePath,
+        tabs: activePane?.tabs || [],
+        activeContent: nextActivePath ? (finalState.documentCache[nextActivePath]?.content || '') : '',
+        isEditing: Boolean(nextActivePath && !nextActivePath.startsWith('canvas:')),
+      });
+      if (nextActivePath && !nextActivePath.startsWith('canvas:')) {
+        const ext = nextActivePath.split('.').pop()?.toLowerCase() || '';
+        const isMedia = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+        if (!isMedia) {
+          get().loadDocumentContent(nextActivePath);
+        }
+      }
+    }
+
+    // 6. Limpa do orderMap persistente
     const orderMap = getCustomOrder();
     let orderChanged = false;
     const newOrderMap: Record<string, string[]> = {};
@@ -1096,10 +1306,33 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       setCustomOrder(newOrderMap);
     }
 
+    // 7. Limpa do cache de documentos
+    const currentCache = { ...get().documentCache };
+    let cacheChanged = false;
+    for (const cachedPath of Object.keys(currentCache)) {
+      if (isTabPathMatch(cachedPath, path, isFolder)) {
+        delete currentCache[cachedPath];
+        cacheChanged = true;
+      }
+    }
+    if (cacheChanged) {
+      set({ documentCache: currentCache });
+    }
+
+    // 8. Notifica outros contextos/janelas via BroadcastChannel
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      try {
+        const channel = new BroadcastChannel('supercanvas_vault_sync');
+        channel.postMessage({ type: 'node_deleted', path, isFolder });
+        channel.close();
+      } catch {}
+    }
+
     await get().refreshNodes();
   },
 
   toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
+  setSidebarTab: (sidebarTab: 'files' | 'canvases') => set({ sidebarTab }),
   setSearchQuery: (searchQuery: string) => set({ searchQuery }),
   setCommandPaletteOpen: (commandPaletteOpen: boolean) => set({ commandPaletteOpen }),
   setBacklinksPanelOpen: (backlinksPanelOpen: boolean) => set({ backlinksPanelOpen }),
@@ -1124,3 +1357,79 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     return fuse.search(query).map(r => r.item);
   }
 }));
+
+// Sincronização multi-abas em tempo real para nós e cache do Vault
+if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+  try {
+    const globalSyncChannel = new BroadcastChannel('supercanvas_vault_sync');
+    globalSyncChannel.onmessage = (event) => {
+      if (event.data?.type === 'refresh_nodes') {
+        useVaultStore.getState().refreshNodes();
+      } else if (event.data?.type === 'node_deleted' && event.data.path) {
+        const delPath = event.data.path;
+        const isFolder = Boolean(event.data.isFolder);
+
+        let hasMatchingTab = true;
+        while (hasMatchingTab) {
+          const currentLayout = useVaultStore.getState().layout;
+          const currentPanes = getAllPanes(currentLayout);
+          let found = false;
+          for (const pane of currentPanes) {
+            const matchingTab = pane.tabs.find(t => isTabPathMatch(t.path, delPath, isFolder, t.canvasId));
+            if (matchingTab) {
+              useVaultStore.getState().closeTabInPane(pane.id, matchingTab.path);
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            hasMatchingTab = false;
+          }
+        }
+
+        const state = useVaultStore.getState();
+        if (isTabPathMatch(state.activePath, delPath, isFolder)) {
+          const activePane = findPaneLeaf(state.layout, state.activePaneId);
+          const fallbackTab = activePane?.tabs[0];
+          const nextActivePath = fallbackTab?.path || null;
+          useVaultStore.setState({
+            activePath: nextActivePath,
+            tabs: activePane?.tabs || [],
+            activeContent: nextActivePath ? (state.documentCache[nextActivePath]?.content || '') : '',
+            isEditing: Boolean(nextActivePath && !nextActivePath.startsWith('canvas:')),
+          });
+          if (nextActivePath && !nextActivePath.startsWith('canvas:')) {
+            const ext = nextActivePath.split('.').pop()?.toLowerCase() || '';
+            const isMedia = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm', 'opus', 'png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'bmp', 'avif'].includes(ext);
+            if (!isMedia) {
+              useVaultStore.getState().loadDocumentContent(nextActivePath);
+            }
+          }
+        }
+
+        const cache = { ...useVaultStore.getState().documentCache };
+        let changed = false;
+        for (const k of Object.keys(cache)) {
+          if (isTabPathMatch(k, delPath, isFolder)) {
+            delete cache[k];
+            changed = true;
+          }
+        }
+        if (changed) {
+          useVaultStore.setState({ documentCache: cache });
+        }
+
+        useVaultStore.getState().refreshNodes();
+      } else if (event.data?.type === 'sync_doc_cache' && event.data.path) {
+        const htmlContent = markdownToHtml(event.data.markdown || '');
+        useVaultStore.setState(state => ({
+          documentCache: {
+            ...state.documentCache,
+            [event.data.path]: { content: htmlContent, isDirty: false, lastSavedAt: Date.now() }
+          },
+          activeContent: state.activePath === event.data.path ? htmlContent : state.activeContent
+        }));
+      }
+    };
+  } catch {}
+}

@@ -5,6 +5,7 @@ import { ElementHandles } from './ElementHandles';
 import { BoardNoteTitle } from './BoardNoteTitle';
 import { BoardNoteActions } from './BoardNoteActions';
 import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
+import { htmlToMarkdown } from '@/modules/vault/utils/markdownConverter';
 import { marked } from 'marked';
 import clsx from 'clsx';
 import { cleanLegacyPlaceholder } from '@/utils/cleanLegacyPlaceholder';
@@ -19,6 +20,7 @@ interface BoardNoteElementProps {
   onDelete: () => void;
   onStartArrow: (handle: HandlePosition, e: React.PointerEvent) => void;
   onCenterElement?: () => void;
+  onSetEditing?: (isEditing: boolean) => void;
 }
 
 export const NOTE_THEMES: Record<string, { border: string; bg: string; name: string }> = {
@@ -78,6 +80,7 @@ export const BoardNoteElement: React.FC<BoardNoteElementProps> = ({
   onDelete,
   onStartArrow,
   onCenterElement,
+  onSetEditing,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { provider } = useVaultStore();
@@ -86,6 +89,26 @@ export const BoardNoteElement: React.FC<BoardNoteElementProps> = ({
   const data = useMemo(() => (element.data || {}) as NoteData, [element.data]);
   const wasSelectedRef = useRef(isSelected);
   const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Notifica o hook do Board que este elemento está em modo de edição
+  useEffect(() => {
+    onSetEditing?.(isEditing);
+    return () => {
+      onSetEditing?.(false);
+    };
+  }, [isEditing, onSetEditing]);
+
+  // Sincronização bidirecional do Vault para o Board em tempo real
+  const cachedVaultDoc = useVaultStore(state => data.filePath ? state.documentCache[data.filePath] : undefined);
+  useEffect(() => {
+    if (!data.filePath || isEditing || !cachedVaultDoc?.content) return;
+    const md = htmlToMarkdown(cachedVaultDoc.content);
+    const cleaned = cleanLegacyPlaceholder(md);
+    if (cleaned !== data.content) {
+      setDraftContent(cleaned);
+      onUpdate({ data: { ...data, content: cleaned } });
+    }
+  }, [cachedVaultDoc?.content, data.filePath, isEditing, data, onUpdate]);
 
   const handleUpdateTitle = useCallback((newTitle: string) => {
     onUpdate({
@@ -160,12 +183,10 @@ export const BoardNoteElement: React.FC<BoardNoteElementProps> = ({
     });
 
     // Se for uma nota vinculada do Vault, sincroniza no storage do Vault também
-    if (data.filePath && provider) {
-      provider.saveDocument(data.filePath, draftContent).catch((err) => {
-        console.warn('Erro ao sincronizar nota no Vault:', err);
-      });
+    if (data.filePath) {
+      useVaultStore.getState().syncCanvasNote(data.filePath, draftContent);
     }
-  }, [data, draftContent, onUpdate, provider]);
+  }, [data, draftContent, onUpdate]);
 
   // Click outside listener: ao clicar fora da nota enquanto edita, salva e volta ao modo renderizado
   useEffect(() => {
@@ -316,6 +337,18 @@ export const BoardNoteElement: React.FC<BoardNoteElementProps> = ({
         handleClick(e);
       }}
       onDoubleClick={handleDoubleClick}
+      onKeyDownCapture={(e) => {
+        if (isEditing) {
+          e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
+        }
+      }}
+      onKeyDown={(e) => {
+        if (isEditing) {
+          e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
+        }
+      }}
     >
       {/* Alças de Conexão no meio das 4 bordas */}
       <ElementHandles
@@ -397,9 +430,19 @@ export const BoardNoteElement: React.FC<BoardNoteElementProps> = ({
               autoFocus
               value={draftContent}
               onChange={(e) => {
-                setDraftContent(e.target.value);
+                const val = e.target.value;
+                setDraftContent(val);
+                if (data.filePath) {
+                  useVaultStore.getState().syncCanvasNote(data.filePath, val);
+                }
+              }}
+              onKeyDownCapture={(e) => {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
               }}
               onKeyDown={(e) => {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
                 if (e.key === 'Escape') {
                   saveAndExitEdit();
                 }

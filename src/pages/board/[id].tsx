@@ -18,7 +18,7 @@ export default function BoardPage() {
   return (
     <>
       <Head>
-        <title>Canvas de Conexões | Supercanvas</title>
+        <title>Canvas de Conexões | Concha</title>
       </Head>
       <BoardView boardId={id} />
     </>

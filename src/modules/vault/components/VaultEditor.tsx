@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
+import type { EditorView } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -20,8 +21,11 @@ import { Callout } from '../extensions/CalloutExtension';
 import { 
   Code, CheckCircle2, CloudUpload, FileText, Search, 
   Check, Sparkles, Edit2, ChevronUp, 
-  ChevronDown, Replace, X, Eye, PanelRight
+  ChevronDown, Replace, X, Eye, PanelRight,
+  FolderKanban, Music
 } from 'lucide-react';
+import { useRouter } from 'next/router';
+import { useIDB } from '@/utils/indexedDB';
 
 const lowlight = createLowlight(common);
 import { DeleteConfirmModal } from './DeleteConfirmModal';
@@ -29,6 +33,17 @@ import { PromptInputModal } from './PromptInputModal';
 import { VaultSlashMenu } from './VaultSlashMenu';
 import { VaultFormattingMenu } from './VaultFormattingMenu';
 import { FORMATTING_COMMANDS, FormattingCommand } from '../utils/formattingCommands';
+
+export interface VaultLinkSuggestion {
+  kind: 'note' | 'canvas';
+  id: string;
+  name: string;
+  folder?: string;
+  fileType?: string;
+  canvasType?: 'board' | 'audio';
+  folderPath?: string | null;
+  vaultName?: string | null;
+}
 
 interface VaultEditorProps {
   paneId?: string;
@@ -49,6 +64,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     lastSavedAt,
     storageType,
     openOrCreateDocumentByTitle,
+    openCanvasTab,
     backlinksPanelOpen,
     setBacklinksPanelOpen,
     setCommandPaletteOpen,
@@ -57,6 +73,9 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     renameNode,
     deleteNode
   } = useVaultStore();
+
+  const router = useRouter();
+  const { activeLayers } = useIDB();
 
   // Use documentPath prop if provided (multi-pane mode), otherwise fall back to global
   const activePath = documentPath || globalActivePath;
@@ -124,10 +143,53 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [suggestionQuery, setSuggestionQuery] = useState('');
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [suggestionPosition, setSuggestionPosition] = useState<{ top: number; left: number } | null>(null);
 
-  const suggestions = suggestionQuery.trim()
-    ? searchNotesFuzzy(suggestionQuery).slice(0, 8)
-    : getAllFiles().slice(0, 8);
+  // Available canvases in the Vault/database
+  const allCanvases = useMemo(() => {
+    return (activeLayers || []).filter(l => l.isProjectMetadata || (!l.parentId && l.canvasType));
+  }, [activeLayers]);
+
+  // Unified suggestions combining notes and canvases
+  const suggestions = useMemo<VaultLinkSuggestion[]>(() => {
+    const q = suggestionQuery.trim().toLowerCase();
+
+    // 1. Canvases from IDB
+    const canvasItems: VaultLinkSuggestion[] = allCanvases
+      .filter(c => {
+        if (!q) return true;
+        const nameMatch = c.name.toLowerCase().includes(q);
+        const folderMatch = c.folderPath?.toLowerCase().includes(q);
+        const typeMatch = (c.canvasType === 'board' ? 'quadro conexoes canvas board' : 'audio som musica canvas').includes(q);
+        return nameMatch || folderMatch || typeMatch;
+      })
+      .map(c => ({
+        kind: 'canvas' as const,
+        id: c.id,
+        name: c.name,
+        canvasType: c.canvasType === 'audio' ? ('audio' as const) : ('board' as const),
+        folderPath: c.folderPath,
+        vaultName: c.vaultName,
+      }));
+
+    // 2. Notes from Vault
+    const rawNotes = q ? searchNotesFuzzy(q) : getAllFiles();
+    const noteItems: VaultLinkSuggestion[] = rawNotes.map(f => ({
+      kind: 'note' as const,
+      id: f.path,
+      name: f.name.replace(/\.(md|txt)$/, ''),
+      folder: f.folder,
+      fileType: f.fileType,
+    }));
+
+    if (q) {
+      // Prioritize canvases that match query alongside matched notes
+      return [...canvasItems.slice(0, 5), ...noteItems.slice(0, 8)].slice(0, 10);
+    }
+
+    // Default when opening [[ without query: show canvases and top notes
+    return [...canvasItems.slice(0, 4), ...noteItems.slice(0, 6)];
+  }, [suggestionQuery, searchNotesFuzzy, getAllFiles, allCanvases]);
 
   const canCreateOption = Boolean(
     suggestionQuery.trim() &&
@@ -166,7 +228,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     }
   }, [totalSuggestionItems, selectedSuggestionIndex]);
 
-  const doInsertWikilink = (view: { state: any; dispatch: (tr: any) => void }, targetTitle: string) => {
+  const doInsertWikilink = (view: EditorView, targetTitle: string) => {
     const { state, dispatch } = view;
     const { selection } = state;
     const { $from } = selection;
@@ -334,6 +396,26 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
         const mouseEvent = event as MouseEvent;
         // Follow link only when Ctrl or Cmd is held (standard Obsidian / Live Preview behavior)
         if (mouseEvent.ctrlKey || mouseEvent.metaKey) {
+          const aTag = (event.target as HTMLElement).closest('a');
+          if (aTag) {
+            const href = aTag.getAttribute('href');
+            if (href) {
+              if (href.startsWith('canvas:')) {
+                event.preventDefault();
+                openCanvasTab(href.replace('canvas:', ''));
+                return true;
+              } else if (href.startsWith('/board/')) {
+                event.preventDefault();
+                openCanvasTab(href.replace('/board/', ''));
+                return true;
+              } else if (href.startsWith('/project/')) {
+                event.preventDefault();
+                router.push(href);
+                return true;
+              }
+            }
+          }
+
           const target = (event.target as HTMLElement).closest('[data-wikilink-title]');
           let wikilinkTitle = target?.getAttribute('data-wikilink-title');
 
@@ -354,6 +436,17 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
           if (wikilinkTitle) {
             event.preventDefault();
+            const normTitle = wikilinkTitle.trim().toLowerCase().replace(/\.(md|txt)$/, '');
+            const matchCanvas = allCanvases.find(c => c.name.trim().toLowerCase() === normTitle);
+            if (matchCanvas) {
+              if (matchCanvas.canvasType === 'board') {
+                openCanvasTab(matchCanvas.id, matchCanvas.name);
+              } else {
+                router.push(`/project/${matchCanvas.id}`);
+              }
+              return true;
+            }
+
             openOrCreateDocumentByTitle(wikilinkTitle);
             return true;
           }
@@ -406,6 +499,18 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
         setSuggestionOpen(true);
         setSelectedSuggestionIndex(0);
         setSlashOpen(false);
+
+        try {
+          const coords = editor.view.coordsAtPos($from.pos);
+          const container = scrollContainerRef.current?.getBoundingClientRect();
+          if (container && coords) {
+            const top = coords.bottom - container.top + (scrollContainerRef.current?.scrollTop || 0) + 6;
+            const left = Math.max(16, Math.min(coords.left - container.left, (container.width || 500) - 330));
+            setSuggestionPosition({ top, left });
+          }
+        } catch {
+          setSuggestionPosition(null);
+        }
       } else {
         setSuggestionOpen(false);
 
@@ -579,6 +684,21 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
         }, 50);
         return;
       }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        if (editor && editor.isFocused) {
+          e.preventDefault();
+          const { state, dispatch } = editor.view;
+          const { selection } = state;
+          if (!selection.empty) {
+            const selectedText = state.doc.textBetween(selection.from, selection.to);
+            const tr = state.tr.replaceWith(selection.from, selection.to, state.schema.text(`[[${selectedText}]]`));
+            dispatch(tr);
+          } else {
+            editor.chain().focus().insertContent('[[').run();
+          }
+          return;
+        }
+      }
       if (e.key === 'Escape') {
         if (searchOpen) {
           setSearchOpen(false);
@@ -614,6 +734,16 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
     setTemplateSuccess(true);
     setTimeout(() => setTemplateSuccess(false), 3000);
+  };
+
+  const handleDeleteNote = async () => {
+    if (!activePath) return;
+    const skipConfirm = typeof window !== 'undefined' && localStorage.getItem('vault_skip_delete_confirm') === 'true';
+    if (skipConfirm) {
+      await deleteNode(activePath, false);
+      return;
+    }
+    setDeleteConfirmOpen(true);
   };
 
   if (!activePath) {
@@ -725,7 +855,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
               onViewModeChange={setViewMode}
               onMakeTemplate={handleMakeTemplate}
               templateSuccess={templateSuccess}
-              onDeleteNote={() => setDeleteConfirmOpen(true)}
+              onDeleteNote={handleDeleteNote}
             />
 
             {/* Note Details (Properties & Backlinks) Sidebar Toggle */}
@@ -930,34 +1060,74 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
           {/* Autocomplete Popup when user types [[ */}
           {suggestionOpen && (
-            <div className="absolute left-0 top-12 z-30 w-72 bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+            <div 
+              style={suggestionPosition ? { top: `${suggestionPosition.top}px`, left: `${suggestionPosition.left}px` } : undefined}
+              className={`absolute z-30 w-84 bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 ${!suggestionPosition ? 'left-0 top-12' : ''}`}
+            >
               <div className="px-3 py-1.5 bg-stone-50 dark:bg-black/40 border-b border-stone-200 dark:border-white/10 text-[11px] text-stone-500 dark:text-neutral-400 flex items-center justify-between">
-                <span>Linkar com nota:</span>
-                <span className="font-mono text-purple-600 dark:text-purple-400">[[{suggestionQuery}</span>
+                <span>Linkar com nota ou canvas:</span>
+                <span className="font-mono text-purple-600 dark:text-purple-400 font-semibold truncate max-w-[120px]">[[{suggestionQuery}</span>
               </div>
-              <div className="max-h-48 overflow-y-auto p-1 space-y-0.5 custom-scrollbar">
-                {suggestions.map((item, idx) => (
-                  <div
-                    key={item.path}
-                    ref={el => {
-                      if (idx === selectedSuggestionIndex) {
-                        el?.scrollIntoView({ block: 'nearest' });
-                      }
-                    }}
-                    onClick={() => insertWikilink(item.name)}
-                    onMouseEnter={() => setSelectedSuggestionIndex(idx)}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
-                      idx === selectedSuggestionIndex
-                        ? 'bg-purple-600 text-white font-medium'
-                        : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5'
-                    }`}
-                  >
-                    <FileText className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">{item.name}</span>
-                  </div>
-                ))}
+              <div className="max-h-56 overflow-y-auto p-1 space-y-0.5 custom-scrollbar">
+                {suggestions.map((item, idx) => {
+                  const isSelected = idx === selectedSuggestionIndex;
+                  const isCanvas = item.kind === 'canvas';
+                  const isBoard = isCanvas && item.canvasType === 'board';
 
-                {suggestionQuery.trim() && !suggestions.some(s => s.name.toLowerCase() === suggestionQuery.toLowerCase()) && (
+                  return (
+                    <div
+                      key={`${item.kind}-${item.id}`}
+                      ref={el => {
+                        if (isSelected) {
+                          el?.scrollIntoView({ block: 'nearest' });
+                        }
+                      }}
+                      onClick={() => insertWikilink(item.name)}
+                      onMouseEnter={() => setSelectedSuggestionIndex(idx)}
+                      className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                        isSelected
+                          ? isCanvas
+                            ? isBoard
+                              ? 'bg-indigo-600 text-white font-medium shadow-xs'
+                              : 'bg-cyan-600 text-white font-medium shadow-xs'
+                            : 'bg-purple-600 text-white font-medium shadow-xs'
+                          : 'text-stone-700 dark:text-neutral-300 hover:bg-stone-100 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 truncate">
+                        {isCanvas ? (
+                          isBoard ? (
+                            <FolderKanban className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-indigo-500 dark:text-indigo-400'}`} />
+                          ) : (
+                            <Music className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-cyan-500 dark:text-cyan-400'}`} />
+                          )
+                        ) : (
+                          <FileText className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-white' : 'text-purple-500 dark:text-purple-400'}`} />
+                        )}
+                        <span className="truncate font-medium">{item.name}</span>
+                        {item.folder && (
+                          <span className={`text-[10px] truncate ${isSelected ? 'text-white/80' : 'text-stone-400 dark:text-neutral-500'}`}>
+                            em {item.folder}
+                          </span>
+                        )}
+                      </div>
+
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 font-medium ${
+                        isSelected
+                          ? 'bg-white/20 text-white'
+                          : isCanvas
+                            ? isBoard
+                              ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/40'
+                              : 'bg-cyan-50 dark:bg-cyan-950/60 text-cyan-700 dark:text-cyan-300 border border-cyan-200/60 dark:border-cyan-800/40'
+                            : 'bg-stone-100 dark:bg-white/10 text-stone-600 dark:text-neutral-400'
+                      }`}>
+                        {isCanvas ? (isBoard ? 'Quadro' : 'Áudio') : 'Nota'}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {canCreateOption && (
                   <div
                     ref={el => {
                       if (selectedSuggestionIndex === suggestions.length) {
@@ -972,7 +1142,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
                         : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
                     }`}
                   >
-                    <span className="truncate">Criar nota: <strong>"{suggestionQuery.trim()}"</strong></span>
+                    <span className="truncate">Criar nota: <strong>&quot;{suggestionQuery.trim()}&quot;</strong></span>
                   </div>
                 )}
               </div>
@@ -996,6 +1166,7 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
       <DeleteConfirmModal
         isOpen={deleteConfirmOpen}
         itemName={title || 'Sem título'}
+        itemPath={activePath || undefined}
         isFolder={false}
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={async () => {

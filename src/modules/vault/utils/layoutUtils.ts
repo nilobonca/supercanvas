@@ -126,6 +126,53 @@ export function pruneLayoutTree(node: VaultLayoutNode): VaultLayoutNode | null {
 }
 
 /**
+ * Helper para correspondência flexível e segura de caminho de abas ao fechar ou excluir arquivos/pastas
+ */
+export function isTabPathMatch(
+  tabPath?: string | null,
+  targetPath?: string | null,
+  isFolder?: boolean,
+  tabCanvasId?: string
+): boolean {
+  if (!tabPath || !targetPath) return false;
+
+  let normTab = tabPath.trim().replace(/\\/g, '/');
+  let normTarget = targetPath.trim().replace(/\\/g, '/');
+
+  try { normTab = decodeURIComponent(normTab); } catch {}
+  try { normTarget = decodeURIComponent(normTarget); } catch {}
+
+  normTab = normTab.toLowerCase();
+  normTarget = normTarget.toLowerCase();
+
+  // Remove barras e prefixos relativos no início e fim
+  normTab = normTab.replace(/^(\.\/|\/)+/, '').replace(/\/+$/, '');
+  normTarget = normTarget.replace(/^(\.\/|\/)+/, '').replace(/\/+$/, '');
+
+  // Verificação de tabs de canvas
+  const tabIsCanvas = normTab.startsWith('canvas:');
+  const targetIsCanvas = normTarget.startsWith('canvas:');
+  const cleanTabCanvasId = tabIsCanvas ? normTab.replace('canvas:', '') : normTab;
+  const cleanTargetCanvasId = targetIsCanvas ? normTarget.replace('canvas:', '') : normTarget;
+
+  if (tabIsCanvas || targetIsCanvas || tabCanvasId) {
+    if (tabCanvasId && tabCanvasId.toLowerCase() === cleanTargetCanvasId) return true;
+    if (cleanTabCanvasId === cleanTargetCanvasId) return true;
+  }
+
+  if (isFolder) {
+    return normTab === normTarget || normTab.startsWith(`${normTarget}/`);
+  }
+
+  if (normTab === normTarget) return true;
+
+  // Comparação ignorando extensão de arquivo (.md, .txt, etc.)
+  const tabNoExt = normTab.replace(/\.[^/.]+$/, '');
+  const targetNoExt = normTarget.replace(/\.[^/.]+$/, '');
+  return tabNoExt === targetNoExt;
+}
+
+/**
  * Remove uma aba de um painel específico
  */
 export function removeTabFromPane(
@@ -136,10 +183,11 @@ export function removeTabFromPane(
   let closedPane = false;
 
   const updated = updatePaneInTree(root, paneId, (pane) => {
-    const nextTabs = pane.tabs.filter(t => t.path !== tabPath);
+    const isMatch = (t: VaultTab) => t.path === tabPath || isTabPathMatch(t.path, tabPath, false, t.canvasId);
+    const nextTabs = pane.tabs.filter(t => !isMatch(t));
     let nextActivePath = pane.activePath;
 
-    if (pane.activePath === tabPath) {
+    if (pane.activePath && (pane.activePath === tabPath || isTabPathMatch(pane.activePath, tabPath))) {
       nextActivePath = nextTabs.length > 0 ? nextTabs[nextTabs.length - 1].path : null;
     }
 

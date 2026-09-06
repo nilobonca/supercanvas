@@ -9,6 +9,7 @@ import {
   Sparkles,
   Sparkle
 } from 'lucide-react';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 export type DashboardTab = 'active-vault' | 'vaults-library' | 'canvases';
@@ -35,7 +36,7 @@ const NAVIGATION_ITEMS: RibbonItem[] = [
     id: 'active-vault',
     label: 'Vault Ativo',
     subtitle: 'Configurações e Detalhes',
-    icon: Shield,
+    icon: SafeIcon,
     showActiveIndicator: true,
   },
   {
@@ -93,22 +94,24 @@ export const DashboardSidebarRibbon: React.FC<DashboardSidebarRibbonProps> = ({
       )}
     >
       {/* ============================================================
-          TOP: LOGO / MARCA RPGSA
+          TOP: LOGO / MARCA CONCHA
           ============================================================ */}
       <div className="flex flex-col items-center gap-6">
-        <div className="relative group cursor-pointer" title="RPGSA Knowledge & Canvas Studio">
+        <div className="relative group cursor-pointer" title="Concha">
           {/* Outer glow ring on hover */}
           <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 opacity-0 group-hover:opacity-60 blur-xs transition-opacity duration-300" />
           
-          <div className="relative w-10 h-10 rounded-xl flex items-center justify-center bg-black/5 dark:bg-white/[0.06] border border-black/10 dark:border-white/10 group-hover:border-purple-500/50 transition-all duration-300 active:scale-95">
-            <span className="text-xs font-black tracking-tighter text-stone-900 dark:text-white font-mono flex items-center gap-0.5">
-              <span className="text-purple-600 dark:text-purple-400">R</span>SA
-            </span>
+          <div className="relative w-10 h-10 rounded-xl flex items-center justify-center bg-black/5 dark:bg-white/[0.06] border border-black/10 dark:border-white/10 group-hover:border-purple-500/50 transition-all duration-300 active:scale-95 p-1.5 overflow-hidden">
+            <img 
+              src="/favicon.png" 
+              alt="Concha" 
+              className="w-full h-full object-contain select-none transition-transform duration-300 group-hover:scale-110" 
+            />
           </div>
 
           {/* Floating Tooltip */}
           <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg text-[11px] font-semibold tracking-wide whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-200 z-50 bg-stone-900 text-stone-100 dark:bg-white dark:text-stone-900 shadow-xl border border-white/10 dark:border-black/10 backdrop-blur-md">
-            RPGSA Studio
+            Concha
           </div>
         </div>
 

@@ -8,7 +8,7 @@ interface BottomToolbarProps {
     onDragStart: (e: React.DragEvent, type: string, data?: string) => void;
     tool?: string;
     setTool?: (tool: "area" | "wall" | "pin" | "cursor" | "eraser") => void;
-    onOpenVaultSearch?: () => void;
+    onOpenVaultSearch?: (category?: 'all' | 'notes' | 'audio' | 'image' | 'canvas') => void;
 }
 
 export default function BottomToolbar({ onDragStart, tool, setTool, onOpenVaultSearch }: BottomToolbarProps) {
@@ -293,12 +293,13 @@ export default function BottomToolbar({ onDragStart, tool, setTool, onOpenVaultS
                             </div>
                         </div>
 
-                        {/* Vault Document Link */}
+                        {/* Vault Document Link / Notes Picker */}
                         <div
                             draggable
                             onDragStart={(e) => onDragStart(e, 'vault-link')}
-                            className="group flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
-                            title="Arrastar Documento do Vault para o Mapa"
+                            onClick={() => onOpenVaultSearch?.('notes')}
+                            className="group flex flex-col items-center gap-1 cursor-pointer active:cursor-grabbing hover:scale-110 transition-transform"
+                            title="Inserir Nota do Vault (Clique para escolher ou arraste para o canvas)"
                         >
                             <div className="p-1.5 bg-violet-100 dark:bg-violet-900/30 rounded-full group-hover:bg-violet-200 dark:group-hover:bg-violet-800/50 transition-colors">
                                 <BookOpen size={20} className="text-violet-600 dark:text-violet-400" />
@@ -308,7 +309,7 @@ export default function BottomToolbar({ onDragStart, tool, setTool, onOpenVaultS
                         {/* Unified Vault Search (Ctrl+K) */}
                         {onOpenVaultSearch && (
                             <button
-                                onClick={onOpenVaultSearch}
+                                onClick={() => onOpenVaultSearch('all')}
                                 className="group flex flex-col items-center gap-1 hover:scale-110 transition-transform cursor-pointer"
                                 title="Buscar e Adicionar do Vault (Áudios, Imagens, Notas) - Ctrl+K"
                             >

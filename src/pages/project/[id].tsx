@@ -11,7 +11,7 @@ import { ProjectModalsContainer } from '@/components/Canva/ProjectModalsContaine
 import { ProjectCanvasLayers } from '@/components/Canva/ProjectCanvasLayers';
 import { useProjectCanvasCore } from '@/hooks/useProjectCanvasCore';
 import { ActiveArea, ActiveWall, ActiveImage, ActiveNote, Images } from '@/interfaces/utils/indexedDB';
-import { BoardVaultSearchModal } from '@/modules/board/components/modals/BoardVaultSearchModal';
+import { BoardVaultSearchModal, VaultSearchCategory } from '@/modules/board/components/modals/BoardVaultSearchModal';
 import { AudioData, ImageData } from '@/modules/board/types';
 import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,7 +21,30 @@ export default function ProjectCanvas() {
   const core = useProjectCanvasCore();
   const { provider } = useVaultStore();
   const [vaultSearchModalOpen, setVaultSearchModalOpen] = useState(false);
+  const [vaultSearchCategory, setVaultSearchCategory] = useState<VaultSearchCategory>('all');
+  const [insertNotePosition, setInsertNotePosition] = useState<{ x: number; y: number } | null>(null);
   const currentProjectId = typeof core.projectId === 'string' ? core.projectId : Array.isArray(core.projectId) ? core.projectId[0] : '';
+
+  // Ensure storage provider is initialized and connected to this canvas's Vault
+  useEffect(() => {
+    const initCanvasVault = async () => {
+      const currentCanvas = core.idb.activeLayers.find(
+        (l) => (l.id === currentProjectId || l.projectId === currentProjectId) && l.isProjectMetadata
+      );
+      const targetVaultId = currentCanvas?.vaultId;
+      const vaultStore = useVaultStore.getState();
+
+      if (!vaultStore.provider) {
+        await vaultStore.initializeStorage();
+      }
+
+      // If the canvas specifies a vaultId different from the current one (and not using FSA directory)
+      if (targetVaultId && vaultStore.vaultId !== targetVaultId && vaultStore.storageType !== 'fsa') {
+        await vaultStore.connectIDB(targetVaultId, currentCanvas?.vaultName || undefined);
+      }
+    };
+    initCanvasVault();
+  }, [currentProjectId, core.idb.activeLayers]);
 
   // Shortcut Ctrl+K to open Vault Search
   useEffect(() => {
@@ -30,6 +53,7 @@ export default function ProjectCanvas() {
         const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
         if (tag === 'input' || tag === 'textarea') return;
         e.preventDefault();
+        setVaultSearchCategory('all');
         setVaultSearchModalOpen((prev) => !prev);
       }
     };
@@ -40,24 +64,46 @@ export default function ProjectCanvas() {
   const handleSelectNoteFromVault = async (note: { path: string; name: string }) => {
     let content = '';
     try {
-      if (provider) content = await provider.readDocument(note.path);
+      const currentProvider = useVaultStore.getState().provider;
+      if (currentProvider) {
+        content = await currentProvider.readDocument(note.path);
+      }
     } catch (err) {
       console.warn('Erro ao ler nota do vault:', err);
     }
+
+    let targetX = 300;
+    let targetY = 300;
+
+    if (insertNotePosition) {
+      targetX = insertNotePosition.x;
+      targetY = insertNotePosition.y;
+      setInsertNotePosition(null);
+    } else if (core.canvasRef?.current && (core.canvasRef.current as any).screenToWorld) {
+      const center = (core.canvasRef.current as any).screenToWorld(window.innerWidth / 2, window.innerHeight / 2);
+      targetX = center.x - 130;
+      targetY = center.y - 70;
+    } else {
+      targetX = window.innerWidth / 2 - 130;
+      targetY = window.innerHeight / 2 - 70;
+    }
+
     const newNote: ActiveNote = {
       id: uuidv4(),
       type: 'note',
       content: content || `# ${note.name}\n\nNota vinculada: ${note.path}`,
-      position: { x: window.innerWidth / 2 - 100, y: window.innerHeight / 2 - 50 },
+      position: { x: targetX, y: targetY },
       width: 260,
       height: 140,
       color: '#fef08a',
       fontSize: 14,
       fontColor: '#000000',
       transparentBg: false,
-      textAlign: 'left'
+      textAlign: 'left',
+      vaultPath: note.path,
     };
     core.idb.addNotePersisted(newNote, currentProjectId);
+    core.selection.setSelectedItemIds(new Set([newNote.id]));
   };
 
   const handleSelectImageFromVault = (imageData: ImageData) => {
@@ -207,6 +253,9 @@ export default function ProjectCanvas() {
                   core.drawingTools.setCurrentAreaPoints(prev => [...prev, { x: worldX, y: worldY }]);
                 } else if (core.drawingTools.tool === 'wall') {
                   core.drawingTools.setCurrentWallPoints(prev => [...prev, { x: worldX, y: worldY }]);
+                } else if ((core.drawingTools.tool as string) === 'note') {
+                  core.creators.createNote({ x: worldX, y: worldY });
+                  core.drawingTools.setTool('cursor');
                 }
               }}
               onCanvasMouseMove={(e: any, worldX: number, worldY: number) => {
@@ -330,6 +379,11 @@ export default function ProjectCanvas() {
               createPin={core.creators.createPin}
               createNote={core.creators.createNote}
               createSoundboardButton={core.creators.createSoundboardButton}
+              onInsertVaultNote={(pos) => {
+                setInsertNotePosition(pos);
+                setVaultSearchCategory('notes');
+                setVaultSearchModalOpen(true);
+              }}
               setRenamingAreaId={core.selection.setRenamingAreaId}
               linkAreaToAudio={core.creators.linkAreaToAudio}
               setEditingSoundboardItemId={core.selection.setEditingSoundboardItemId}
@@ -413,15 +467,22 @@ export default function ProjectCanvas() {
             onDragStart={core.dragAndDrop.handleDragStart}
             tool={core.drawingTools.tool}
             setTool={core.drawingTools.setTool}
-            onOpenVaultSearch={() => setVaultSearchModalOpen(true)}
+            onOpenVaultSearch={(category) => {
+              setVaultSearchCategory(category || 'all');
+              setVaultSearchModalOpen(true);
+            }}
           />
         </div>
 
         {/* Modal Unificado de Busca do Vault (Ctrl+K) */}
         <BoardVaultSearchModal
           isOpen={vaultSearchModalOpen}
+          initialCategory={vaultSearchCategory}
           currentBoardId={typeof core.projectId === 'string' ? core.projectId : ''}
-          onClose={() => setVaultSearchModalOpen(false)}
+          onClose={() => {
+            setVaultSearchModalOpen(false);
+            setInsertNotePosition(null);
+          }}
           onSelectNote={handleSelectNoteFromVault}
           onSelectAudio={handleSelectAudioFromVault}
           onSelectImage={handleSelectImageFromVault}

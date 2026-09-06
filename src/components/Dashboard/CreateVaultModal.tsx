@@ -3,6 +3,7 @@ import { X, HardDrive, Database, FolderPlus, RefreshCw, ExternalLink } from 'luc
 import { v4 as uuidv4 } from 'uuid';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 import { IDBStorageProvider } from '@/modules/vault/storage/IDBStorageProvider';
+import { SafeIcon } from '@/components/common/SafeIcon';
 
 interface CreateVaultModalProps {
   isOpen: boolean;
@@ -156,7 +157,7 @@ export const CreateVaultModal: React.FC<CreateVaultModalProps> = ({
         <div className="flex items-center justify-between border-b border-black/5 dark:border-white/10 pb-4">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-              <FolderPlus size={18} />
+              <SafeIcon size={20} className="text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold tracking-tight">

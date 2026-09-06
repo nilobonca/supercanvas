@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 interface CanvasQuickAccessDrawerProps {
@@ -245,7 +246,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                   : "text-stone-500 hover:text-stone-900 dark:text-neutral-400 dark:hover:text-white"
               )}
             >
-              <Database size={13} />
+              <SafeIcon size={14} />
               <span>Separados por Vault</span>
             </button>
 
@@ -362,7 +363,7 @@ export const CanvasQuickAccessDrawer: React.FC<CanvasQuickAccessDrawerProps> = (
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                               : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
                         )}>
-                          {isGeneral ? <Folder size={14} /> : vault?.storageType === 'fsa' ? <HardDrive size={14} /> : <Database size={14} />}
+                          {isGeneral ? <Folder size={14} /> : vault?.storageType === 'fsa' ? <HardDrive size={14} /> : <SafeIcon size={14} />}
                         </div>
 
                         <div>

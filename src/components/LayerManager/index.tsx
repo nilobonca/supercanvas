@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Reorder, motion, useDragControls } from 'framer-motion';
 import { Plus, X, GripHorizontal, Box, Edit2, Trash2, ArrowRight, ArrowLeft, Copy, FolderOpen, Eraser, Download, Upload } from 'lucide-react';
 import { useIDB } from '@/utils/indexedDB';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
 import { useViewportResize } from '@/hooks/useViewportResize';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import { LayerItem } from './LayerItem';
@@ -322,6 +323,7 @@ function LayerManagerInner({ onLayerAction, onInteraction, onClose, activeProjec
                     if (window.confirm(`Tem certeza que deseja deletar "${layer.name}"?`)) {
                         if (addToHistory) addToHistory(`Excluir ${layer.name}`);
                         deleteLayer(layer.id);
+                        useVaultStore.getState().closeTab(`canvas:${layer.id}`);
                     }
                     setContextMenu(null);
                 }

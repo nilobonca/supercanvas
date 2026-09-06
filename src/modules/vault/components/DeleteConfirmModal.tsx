@@ -1,12 +1,16 @@
-import React, { useEffect } from 'react';
-import { Trash2, AlertTriangle, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { useIncomingLinks } from '../hooks/useIncomingLinks';
 
-interface DeleteConfirmModalProps {
+export interface DeleteConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
   itemName: string;
+  itemPath?: string;
   isFolder?: boolean;
+  itemType?: 'file' | 'folder' | 'canvas';
+  onNavigateToLink?: (path: string) => void;
 }
 
 export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
@@ -14,9 +18,68 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onClose,
   onConfirm,
   itemName,
-  isFolder = false
+  itemPath,
+  isFolder = false,
+  itemType,
+  onNavigateToLink
 }) => {
-  // Close on Escape or confirm on Enter
+  const [dontAskAgain, setDontAskAgain] = useState(false);
+  const [showLinksDetails, setShowLinksDetails] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Determine effective type & label
+  const effectiveType = itemType || (isFolder ? 'folder' : 'file');
+  const typeTitle = effectiveType === 'folder' 
+    ? 'Excluir pasta' 
+    : effectiveType === 'canvas' 
+      ? 'Excluir canvas' 
+      : 'Excluir arquivo';
+
+  // Format display name (adds .md if missing for markdown files)
+  const displayName = useMemo(() => {
+    if (!itemName) return 'Sem título';
+    if (effectiveType === 'file' && !itemName.includes('.')) {
+      return `${itemName}.md`;
+    }
+    return itemName;
+  }, [itemName, effectiveType]);
+
+  // Hook to detect backlinks / incoming references
+  const effectivePath = itemPath || itemName;
+  const { incomingLinks, totalLinksCount, isScanning } = useIncomingLinks(
+    effectivePath,
+    itemName,
+    isFolder,
+    isOpen
+  );
+
+  // Reset state when opening
+  useEffect(() => {
+    if (isOpen) {
+      setDontAskAgain(false);
+      setShowLinksDetails(false);
+      setIsDeleting(false);
+    }
+  }, [isOpen]);
+
+  // Handle confirmation
+  const handleConfirm = async () => {
+    if (dontAskAgain && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('vault_skip_delete_confirm', 'true');
+      } catch {}
+    }
+
+    try {
+      setIsDeleting(true);
+      await onConfirm();
+    } finally {
+      setIsDeleting(false);
+      onClose();
+    }
+  };
+
+  // Keyboard accessibility: Escape to close, Enter to confirm
   useEffect(() => {
     if (!isOpen) return;
 
@@ -24,78 +87,140 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       if (e.key === 'Escape') {
         e.preventDefault();
         onClose();
+      } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        handleConfirm();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, dontAskAgain, onConfirm]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/40 dark:bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-black/50 dark:bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150 select-none"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150 text-stone-900 dark:text-neutral-100"
+        className="w-full max-w-[440px] bg-white dark:bg-[#1E1E1E] border border-stone-200/90 dark:border-neutral-800 rounded-2xl shadow-2xl p-6 flex flex-col animate-in zoom-in-95 duration-150 text-stone-900 dark:text-neutral-100 font-sans"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header with Close */}
-        <div className="px-5 pt-4 pb-1 flex items-center justify-between">
-          <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
-            <Trash2 className="w-5 h-5" />
-          </div>
+        {/* Header: Title and Close Button */}
+        <div className="flex items-center justify-between pb-1">
+          <h3 className="text-base sm:text-lg font-semibold text-stone-900 dark:text-neutral-100 tracking-tight">
+            {typeTitle}
+          </h3>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 hover:bg-stone-100 dark:hover:bg-white/10 rounded-lg text-stone-400 hover:text-stone-700 dark:hover:text-white transition-colors cursor-pointer"
+            className="p-1 rounded-md text-stone-400 hover:text-stone-700 dark:hover:text-white transition-colors cursor-pointer"
+            aria-label="Fechar"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-5 py-3">
-          <h3 className="text-base font-semibold text-stone-900 dark:text-neutral-100 mb-1">
-            {isFolder ? 'Excluir Pasta?' : 'Excluir Nota?'}
-          </h3>
-          <p className="text-xs text-stone-600 dark:text-neutral-400 leading-relaxed">
-            {isFolder ? (
-              <>
-                Tem certeza que deseja excluir a pasta <strong className="text-stone-900 dark:text-neutral-200 font-semibold">"{itemName}"</strong> e todo o seu conteúdo permanentemente?
-              </>
-            ) : (
-              <>
-                Tem certeza que deseja excluir permanentemente a nota <strong className="text-stone-900 dark:text-neutral-200 font-semibold">"{itemName}"</strong>?
-              </>
-            )}
+        {/* Body Content */}
+        <div className="mt-4 space-y-3.5">
+          <p className="text-sm text-stone-800 dark:text-neutral-200 leading-normal">
+            Tem certeza de que deseja excluir &ldquo;{displayName}&rdquo;?
           </p>
 
-          <div className="mt-3 flex items-center gap-2 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 text-[11px] text-rose-700 dark:text-rose-300 font-medium">
-            <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span>Esta ação não poderá ser desfeita.</span>
-          </div>
+          <p className="text-sm text-stone-600 dark:text-neutral-400 leading-normal">
+            Ele será movido para a lixeira do sistema.
+          </p>
+
+          {/* Incoming Links Warning (Highlighted in Orange/Amber) */}
+          {totalLinksCount > 0 && (
+            <div className="pt-0.5">
+              <div className="flex items-center justify-between text-sm font-medium text-[#E57E24] dark:text-[#F59E0B]">
+                <span>
+                  {totalLinksCount === 1
+                    ? 'Existe atualmente 1 link apontando para este arquivo.'
+                    : `Existem atualmente ${totalLinksCount} links apontando para este arquivo.`}
+                </span>
+
+                {incomingLinks.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowLinksDetails((prev) => !prev)}
+                    className="text-xs underline ml-2 opacity-85 hover:opacity-100 flex items-center gap-0.5 cursor-pointer shrink-0"
+                  >
+                    {showLinksDetails ? (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    )}
+                    <span>{showLinksDetails ? 'ocultar' : 'ver'}</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Expandable list of files containing links */}
+              {showLinksDetails && incomingLinks.length > 0 && (
+                <div className="mt-2 max-h-32 overflow-y-auto custom-scrollbar p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs space-y-1">
+                  <div className="font-semibold text-amber-800 dark:text-amber-300 pb-0.5">
+                    Arquivos com referências:
+                  </div>
+                  {incomingLinks.map((link) => (
+                    <div
+                      key={link.sourcePath}
+                      className="flex items-center justify-between py-0.5 text-stone-700 dark:text-neutral-300"
+                    >
+                      <span className="truncate" title={link.sourcePath}>
+                        • {link.sourceTitle}
+                      </span>
+                      <span className="text-[11px] opacity-75 font-mono ml-2 shrink-0">
+                        {link.linkCount}x
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {isScanning && totalLinksCount === 0 && (
+            <p className="text-xs text-stone-400 dark:text-neutral-500 italic">
+              Verificando referências...
+            </p>
+          )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-5 py-3.5 bg-stone-50 dark:bg-black/30 border-t border-stone-200 dark:border-white/10 flex items-center justify-end gap-2.5">
-          <button
-            onClick={onClose}
-            className="px-3.5 py-1.5 rounded-lg bg-stone-200/80 hover:bg-stone-300/80 dark:bg-white/10 dark:hover:bg-white/15 text-stone-700 dark:text-neutral-200 text-xs font-medium transition-colors cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={async () => {
-              await onConfirm();
-              onClose();
-            }}
-            className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Excluir {isFolder ? 'Pasta' : 'Nota'}</span>
-          </button>
+        {/* Footer: Don't ask again checkbox & Action Buttons */}
+        <div className="mt-8 flex items-center justify-between gap-3 pt-1">
+          <label className="flex items-center gap-2 text-xs sm:text-sm text-stone-600 dark:text-neutral-400 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={dontAskAgain}
+              onChange={(e) => setDontAskAgain(e.target.checked)}
+              className="w-4 h-4 rounded border-stone-300 dark:border-neutral-700 text-rose-600 dark:text-rose-500 focus:ring-rose-500/30 cursor-pointer"
+            />
+            <span>Não perguntar novamente</span>
+          </label>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isDeleting}
+              className="px-3.5 py-1.5 rounded-lg border border-stone-300/90 dark:border-neutral-700 hover:bg-stone-100 dark:hover:bg-neutral-800 text-stone-700 dark:text-neutral-200 text-xs sm:text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              autoFocus
+              disabled={isDeleting}
+              onClick={handleConfirm}
+              className="px-4 py-1.5 rounded-lg bg-[#E11D48] hover:bg-[#BE123C] text-white text-xs sm:text-sm font-medium transition-colors shadow-sm cursor-pointer disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+            >
+              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

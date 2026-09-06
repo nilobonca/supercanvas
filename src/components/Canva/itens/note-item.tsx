@@ -13,10 +13,14 @@ import {
   AlignCenter, 
   AlignRight, 
   Plus, 
-  Minus 
+  Minus,
+  BookOpen 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { cleanLegacyPlaceholder } from '@/utils/cleanLegacyPlaceholder';
+import { useVaultStore } from '@/modules/vault/hooks/useVaultStore';
+import { htmlToMarkdown } from '@/modules/vault/utils/markdownConverter';
+import { useCanvasGlobalStore } from '@/store/canvasStore';
 
 interface NoteItemProps {
   note: ActiveNote;
@@ -67,12 +71,25 @@ export default function NoteItem({
   onContextMenu,
 }: NoteItemProps) {
   const { centerOn } = useCanvas();
+  const setEditingNoteId = useCanvasGlobalStore(state => state.setEditingNoteId);
   const [text, setText] = useState(() => cleanLegacyPlaceholder(note.content));
   const [isEditing, setIsEditing] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const wasSelectedRef = useRef(isSelected);
   const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  // Sincroniza editingNoteId no store global para isolar atalhos e navegação de setas
+  useEffect(() => {
+    if (isEditing) {
+      setEditingNoteId(note.id);
+    } else {
+      setEditingNoteId(null);
+    }
+    return () => {
+      setEditingNoteId(null);
+    };
+  }, [isEditing, note.id, setEditingNoteId]);
 
   // Sincroniza conteúdo externo com estado local (sempre sanitizado)
   useEffect(() => {
@@ -112,10 +129,27 @@ export default function NoteItem({
     }
   }, [text, note.width, note.fontSize]);
 
-  // Mudança de texto
+  // Observa alterações no documento em cache do Vault para sincronização bidirecional em tempo real
+  const vaultCachedDoc = useVaultStore(state => note.vaultPath ? state.documentCache[note.vaultPath] : undefined);
+
+  useEffect(() => {
+    if (!note.vaultPath || isEditing || !vaultCachedDoc?.content) return;
+    const markdownFromVault = htmlToMarkdown(vaultCachedDoc.content);
+    const cleaned = cleanLegacyPlaceholder(markdownFromVault);
+    if (cleaned !== text) {
+      setText(cleaned);
+      onUpdate({ ...note, content: cleaned });
+    }
+  }, [vaultCachedDoc?.content, note.vaultPath, isEditing, text, note, onUpdate]);
+
+  // Mudança de texto com sincronização em tempo real para o Vault
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
-    onUpdate({ ...note, content: e.target.value });
+    const val = e.target.value;
+    setText(val);
+    onUpdate({ ...note, content: val });
+    if (note.vaultPath) {
+      useVaultStore.getState().syncCanvasNote(note.vaultPath, val);
+    }
   };
 
   // Rastreia estado no mousedown
@@ -156,10 +190,16 @@ export default function NoteItem({
 
   // Teclado na textarea
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    e.stopPropagation(); // Evita atalhos do canvas (como delete ou space)
-    if (e.key === 'Escape') {
-      setIsEditing(false);
-      textareaRef.current?.blur();
+    if (isEditing) {
+      // Quando estiver em modo de edição, isola todos os eventos de tecla (incluindo setas direcionais)
+      // para navegar exclusivamente dentro do texto da textarea sem mover a nota no canvas
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation();
+      if (e.key === 'Escape') {
+        setIsEditing(false);
+        textareaRef.current?.blur();
+      }
+      return;
     }
   };
 
@@ -221,6 +261,18 @@ export default function NoteItem({
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onContextMenu={onContextMenu}
+      onKeyDownCapture={(e) => {
+        if (isEditing) {
+          e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
+        }
+      }}
+      onKeyDown={(e) => {
+        if (isEditing) {
+          e.stopPropagation();
+          e.nativeEvent.stopImmediatePropagation();
+        }
+      }}
     >
       {/* ============================================================
           BOTÕES DE OPÇÕES EM CIMA DO RETÂNGULO DA NOTA NO LADO DIREITO
@@ -486,6 +538,12 @@ export default function NoteItem({
           value={text}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
+          onKeyDownCapture={(e) => {
+            if (isEditing) {
+              e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
+            }
+          }}
           onBlur={handleBlur}
           readOnly={!isEditing}
           placeholder="Digite sua nota..."
@@ -502,6 +560,16 @@ export default function NoteItem({
             color: textColor,
           }}
         />
+
+        {note.vaultPath && (
+          <div
+            className="absolute bottom-1.5 right-2.5 flex items-center gap-1 text-[10px] opacity-40 hover:opacity-100 transition-opacity select-none pointer-events-none font-mono"
+            title={`Sincronizado com Vault: ${note.vaultPath}`}
+          >
+            <BookOpen size={10} />
+            <span className="truncate max-w-[130px]">{note.vaultPath.split('/').pop()}</span>
+          </div>
+        )}
       </div>
     </div>
   );

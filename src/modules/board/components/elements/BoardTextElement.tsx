@@ -159,6 +159,14 @@ export const BoardTextElement: React.FC<BoardTextElementProps> = ({
               data: { ...data, text: e.target.value }
             });
           }}
+          onKeyDownCapture={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+          }}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation();
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           className="w-full h-full bg-transparent resize-none outline-none leading-normal placeholder-stone-400 dark:placeholder-neutral-500"
           style={{

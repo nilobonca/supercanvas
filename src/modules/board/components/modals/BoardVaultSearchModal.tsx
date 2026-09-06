@@ -16,6 +16,7 @@ export type UnifiedVaultItem =
 interface BoardVaultSearchModalProps {
   isOpen: boolean;
   currentBoardId: string;
+  initialCategory?: VaultSearchCategory;
   onClose: () => void;
   onSelectNote: (note: { path: string; name: string }) => void;
   onSelectAudio: (audioData: AudioData) => void;
@@ -26,32 +27,33 @@ interface BoardVaultSearchModalProps {
 export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
   isOpen,
   currentBoardId,
+  initialCategory = 'all',
   onClose,
   onSelectNote,
   onSelectAudio,
   onSelectImage,
   onSelectCanvas,
 }) => {
-  const { getAllFiles, createFile, saveMediaFile, getFileUrl } = useVaultStore();
+  const { getAllFiles, createFile, saveMediaFile, getFileUrl, vaultName } = useVaultStore();
   const { savedAudios, savedImages, activeLayers, saveAudio, saveImage } = useIDB();
 
   const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<VaultSearchCategory>('all');
+  const [category, setCategory] = useState<VaultSearchCategory>(initialCategory);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus on open
+  // Focus and initialize category on open
   useEffect(() => {
     if (isOpen) {
       setQuery('');
-      setCategory('all');
+      setCategory(initialCategory || 'all');
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [isOpen]);
+  }, [isOpen, initialCategory]);
 
   // Reset selected index on query/category change
   useEffect(() => {
@@ -352,7 +354,15 @@ export const BoardVaultSearchModal: React.FC<BoardVaultSearchModalProps> = ({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Buscar nota, áudio, imagem ou quadro do vault..."
+            placeholder={
+              category === 'notes'
+                ? `Buscar notas no Vault ${vaultName ? `(${vaultName})` : ''}...`
+                : category === 'audio'
+                ? `Buscar áudios no Vault ${vaultName ? `(${vaultName})` : ''}...`
+                : category === 'image'
+                ? `Buscar imagens no Vault ${vaultName ? `(${vaultName})` : ''}...`
+                : `Buscar nota, áudio, imagem ou quadro do Vault ${vaultName ? `(${vaultName})` : ''}...`
+            }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDownInput}

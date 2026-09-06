@@ -6,8 +6,8 @@ export default function VaultPage() {
   return (
     <>
       <Head>
-        <title>RPGSA — Vault (Obsidian Clone)</title>
-        <meta name="description" content="Editor Markdown e base de conhecimento integrada ao RPGSA com suporte a pastas locais do Windows." />
+        <title>Concha — Vault</title>
+        <meta name="description" content="Editor Markdown e base de conhecimento integrada ao Concha com suporte a pastas locais do Windows." />
       </Head>
       <VaultLayout />
     </>

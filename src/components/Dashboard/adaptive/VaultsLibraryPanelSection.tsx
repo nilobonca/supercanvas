@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 import { isElectron, setWindowMode } from '@/utils/electronHelper';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 export interface VaultsLibraryPanelSectionProps {
@@ -91,8 +92,9 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
           <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-purple-600 dark:text-purple-400 font-bold">
             Bases de Conhecimento
           </span>
-          <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-white">
-            Biblioteca de Vaults
+          <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-white flex items-center gap-2">
+            <SafeIcon size={18} className="text-purple-600 dark:text-purple-400" />
+            <span>Biblioteca de Vaults</span>
           </h3>
         </div>
 

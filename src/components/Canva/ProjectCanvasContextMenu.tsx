@@ -51,6 +51,7 @@ interface ProjectCanvasContextMenuProps {
   createPin: (pos: {x: number, y: number}) => void;
   createNote: (pos: {x: number, y: number}) => void;
   createSoundboardButton: (pos: {x: number, y: number}) => void;
+  onInsertVaultNote?: (pos: {x: number, y: number}) => void;
   setRenamingAreaId: (id: string) => void;
   linkAreaToAudio: (areaId: string, audioId: number) => void;
   setEditingSoundboardItemId: (id: string) => void;
@@ -80,6 +81,7 @@ export function ProjectCanvasContextMenu({
   createPin,
   createNote,
   createSoundboardButton,
+  onInsertVaultNote,
   setRenamingAreaId,
   linkAreaToAudio,
   setEditingSoundboardItemId,
@@ -104,6 +106,7 @@ export function ProjectCanvasContextMenu({
               { label: 'Criar Área', onClick: () => createArea({ x: contextMenu.worldX, y: contextMenu.worldY }), icon: <Hexagon size={18} /> },
               { label: 'Criar Pin', onClick: () => createPin({ x: contextMenu.worldX, y: contextMenu.worldY }), icon: <MapPin size={18} /> },
               { label: 'Criar Texto', onClick: () => createNote({ x: contextMenu.worldX, y: contextMenu.worldY }), icon: <Type size={18} /> },
+              { label: 'Inserir Nota do Vault', onClick: () => { onInsertVaultNote?.({ x: contextMenu.worldX, y: contextMenu.worldY }); setContextMenu(null); }, icon: <BookOpen size={18} /> },
               { label: 'Criar Botão Soundboard', onClick: () => createSoundboardButton({ x: contextMenu.worldX, y: contextMenu.worldY }), icon: <LayoutGrid size={18} /> },
             ]
           },

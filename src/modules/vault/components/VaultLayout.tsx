@@ -27,9 +27,16 @@ export const VaultLayout: React.FC = () => {
     layout,
     templateModalOpen,
     setTemplateModalOpen,
+    setCanvases,
   } = useVaultStore();
 
   const { activeLayers, addLayer } = useIDB();
+
+  // Sincronizar canvases do IDB no store do Vault para resolução de links/citações
+  useEffect(() => {
+    const projectCanvases = activeLayers.filter(l => l.isProjectMetadata || (!l.parentId && l.canvasType));
+    setCanvases(projectCanvases);
+  }, [activeLayers, setCanvases]);
 
   const handleCreateBoardCanvas = () => {
     const newId = uuidv4();

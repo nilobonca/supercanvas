@@ -11,6 +11,7 @@ import {
   FileText 
 } from 'lucide-react';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
+import { SafeIcon } from '@/components/common/SafeIcon';
 import clsx from 'clsx';
 
 interface VaultOptionsGridProps {
@@ -42,8 +43,9 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-extrabold tracking-tight text-stone-900 dark:text-white">
-              Opções de Vault
+            <h3 className="text-lg font-extrabold tracking-tight text-stone-900 dark:text-white flex items-center gap-2">
+              <SafeIcon size={18} className="text-purple-600 dark:text-purple-400" />
+              <span>Opções de Vault</span>
             </h3>
             <p className="text-xs text-[#6B6864] dark:text-[#A0A0B0]">
               Escolha como deseja estruturar, conectar ou criar suas bases de conhecimento
@@ -85,7 +87,7 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
             <div className="surface-bezel-inner h-full flex flex-col justify-between p-6 bg-white dark:bg-[#16161F] hover:border-purple-500/50">
               <div>
                 <div className="w-12 h-12 rounded-2xl bg-purple-100 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <Database size={24} />
+                  <SafeIcon size={24} />
                 </div>
                 <h4 className="text-base font-bold text-stone-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   Novo Vault IndexedDB

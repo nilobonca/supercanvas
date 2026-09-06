@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "com.rpgsa.supercanvas",
-  "productName": "RPGSA Supercanvas",
+  "appId": "com.rpgsa.concha",
+  "productName": "Concha",
   "directories": {
     "output": "dist-electron"
   },
@@ -39,6 +39,6 @@
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "RPGSA Supercanvas"
+    "shortcutName": "Concha"
   }
 }
