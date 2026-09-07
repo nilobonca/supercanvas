@@ -113,7 +113,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
           </div>
         )}
 
-        {/* Localização da Pasta / Caixa Geral */}
+        {/* Localização da Pasta / Baú de Canvas */}
         {folderPath ? (
           <div className="badge-pastel-lavender flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold">
             <Folder className="w-3 h-3" />
@@ -122,7 +122,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
               <button
                 onClick={onMoveToGeneral}
                 className="ml-1 p-0.5 hover:bg-black/10 dark:hover:bg-white/20 rounded transition-colors"
-                title="Mover para a Caixa de Canvas Gerais"
+                title="Mover para o Baú de Canvas"
               >
                 <Box className="w-3 h-3" />
               </button>
@@ -131,7 +131,7 @@ export const BoardHeader: React.FC<BoardHeaderProps> = ({
         ) : (
           <span className="badge-pastel-amber text-[11px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
             <Box className="w-3 h-3" />
-            <span>Caixa Geral</span>
+            <span>Baú de Canvas</span>
           </span>
         )}
 

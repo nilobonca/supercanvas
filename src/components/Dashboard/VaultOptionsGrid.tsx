@@ -104,7 +104,7 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
             </div>
           </div>
 
-          {/* Option 3: Acesso Rápido aos Canvas */}
+          {/* Option 3: Baú de Canvas */}
           <div 
             onClick={onOpenQuickCanvas}
             className="surface-bezel-outer group hover:-translate-y-1 transition-all duration-300 cursor-pointer"
@@ -116,7 +116,7 @@ export const VaultOptionsGrid: React.FC<VaultOptionsGridProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-base font-bold text-stone-900 dark:text-[#F4F0E6] group-hover:text-[#7F95FF] transition-colors">
-                    Acesso Rápido aos Canvas
+                    Baú de Canvas
                   </h4>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#1831D7]/20 text-[#1831D7] dark:text-[#B4D3F1]">
                     {totalCanvasesCount}

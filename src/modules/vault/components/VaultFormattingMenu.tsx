@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Editor } from '@tiptap/react';
-import { MoreVertical, Check, Sparkles, Code, Eye, BookmarkPlus, Trash2 } from 'lucide-react';
+import { MoreVertical, Check, Sparkles, Code, Eye, BookmarkPlus, Trash2, Search } from 'lucide-react';
 import { FORMATTING_COMMANDS, CATEGORY_LABELS, FormattingCommand } from '../utils/formattingCommands';
 
 interface VaultFormattingMenuProps {
   editor: Editor | null;
   viewMode: 'live' | 'source' | 'reading';
   onViewModeChange: (mode: 'live' | 'source' | 'reading') => void;
+  onToggleSearch?: () => void;
   onMakeTemplate?: () => void;
   templateSuccess?: boolean;
   onDeleteNote?: () => void;
@@ -17,6 +18,7 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
   editor,
   viewMode,
   onViewModeChange,
+  onToggleSearch,
   onMakeTemplate,
   templateSuccess = false,
   onDeleteNote,
@@ -55,24 +57,46 @@ export const VaultFormattingMenu: React.FC<VaultFormattingMenuProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled}
-        className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center ${
+        className={`p-1 rounded transition-colors cursor-pointer flex items-center justify-center ${
           isOpen
-            ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
-            : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
+            ? 'bg-stone-200/80 dark:bg-white/15 text-[#1831D7] dark:text-[#7F95FF]'
+            : 'text-stone-400 dark:text-neutral-400 hover:text-stone-700 dark:hover:text-neutral-200 hover:bg-stone-200/60 dark:hover:bg-white/10'
         } disabled:opacity-40 disabled:cursor-not-allowed`}
-        title="Opções de exibição, formatação e ações da nota (...)"
+        title="Mais opções da nota (...)"
         aria-label="Menu de Opções e Formatação"
       >
-        <MoreVertical className="w-4 h-4" />
+        <MoreVertical className="w-3.5 h-3.5" />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1.5 z-50 w-76 max-h-[78vh] overflow-y-auto bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl p-2 custom-scrollbar select-none animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 top-full mt-1 z-50 w-76 max-h-[78vh] overflow-y-auto bg-white dark:bg-[#16161D] border border-stone-200 dark:border-white/10 rounded-xl shadow-2xl p-2 custom-scrollbar select-none animate-in fade-in zoom-in-95 duration-100">
           {/* Header */}
           <div className="px-2.5 py-1 text-[11px] font-semibold text-stone-500 dark:text-neutral-400 border-b border-stone-100 dark:border-white/5 mb-2 flex items-center justify-between">
             <span>Menu da Nota</span>
             <span className="text-[10px] text-stone-400 dark:text-neutral-500 font-normal">Dica: digite / para comandos</span>
           </div>
+
+          {/* Quick Action: Find / Replace in Note */}
+          {onToggleSearch && (
+            <div className="px-1 mb-2">
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  onToggleSearch();
+                }}
+                className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors cursor-pointer hover:bg-stone-100 dark:hover:bg-white/5 text-stone-700 dark:text-neutral-300 group"
+                title="Localizar e Substituir na nota (Ctrl+F / Ctrl+H)"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Search className="w-3.5 h-3.5 text-[#1831D7] dark:text-[#7F95FF] shrink-0" />
+                  <span className="text-xs font-medium">Localizar na Nota</span>
+                </div>
+                <span className="text-[10px] font-mono text-stone-400 dark:text-neutral-500 px-1 py-0.5 rounded bg-stone-100 dark:bg-white/5 group-hover:bg-stone-200/70 dark:group-hover:bg-white/10">
+                  Ctrl+F
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* 1. Mode Switcher (Live Preview | Fonte | Leitura) */}
           <div className="px-1 mb-3">

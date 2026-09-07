@@ -129,7 +129,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
         updateLayer({ ...draggedCanvas, folderPath: null });
       }
     } catch (err) {
-      console.error('Falha ao mover canvas para Caixa Geral:', err);
+      console.error('Falha ao mover canvas para o Baú de Canvas:', err);
     }
     setDraggedCanvas(null);
   };
@@ -190,7 +190,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
       onDragLeave={handlePanelDragLeave}
       onDrop={handlePanelDrop}
     >
-      {/* Header do Painel de Canvas Gerais */}
+      {/* Header do Baú de Canvas */}
       <div className="p-3 border-b border-stone-200/90 dark:border-white/10 flex flex-col gap-2.5 bg-white/70 dark:bg-white/[0.02]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold tracking-tight text-stone-800 dark:text-stone-100">
-                  Canvas Gerais
+                  Baú de Canvas
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-800/50 font-bold">
                   {generalCanvases.length}
@@ -214,14 +214,14 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
             <button
               onClick={() => onCreateBoardCanvas(null)}
               className="p-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 hover:text-[#1831D7] dark:text-neutral-300 dark:hover:text-[#7F95FF] border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
-              title="Novo Quadro de Conexões Geral"
+              title="Novo Quadro de Conexões no Baú"
             >
               <FolderKanban className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onCreateAudioCanvas(null)}
               className="p-1.5 rounded-lg bg-white dark:bg-white/5 hover:bg-stone-100 dark:hover:bg-white/10 text-stone-600 hover:text-sky-600 dark:text-neutral-300 dark:hover:text-sky-300 border border-stone-200/90 dark:border-white/10 shadow-xs transition-colors cursor-pointer"
-              title="Novo Canvas de Áudio Geral"
+              title="Novo Canvas de Áudio no Baú"
             >
               <Music className="w-3.5 h-3.5" />
             </button>
@@ -233,7 +233,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
           <Search className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 absolute left-2.5 top-2.5" />
           <input
             type="text"
-            placeholder="Filtrar canvas gerais..."
+            placeholder="Filtrar no Baú de Canvas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white dark:bg-white/5 border border-stone-200/90 dark:border-white/10 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-stone-800 dark:text-neutral-200 placeholder-stone-400 dark:placeholder-neutral-500 outline-none focus:border-amber-400 dark:focus:border-amber-500/50 shadow-xs"
@@ -245,7 +245,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
       {isDragOverPanel && (
         <div className="mx-2 my-2 py-2 px-3 rounded-xl border-2 border-dashed border-amber-400 dark:border-amber-500 bg-amber-50/80 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 text-xs text-center font-semibold flex items-center justify-center gap-1.5 animate-pulse">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Solte para mover para a Caixa Geral</span>
+          <span>Solte para mover para o Baú de Canvas</span>
         </div>
       )}
 
@@ -263,7 +263,7 @@ export const VaultGeneralCanvasesTab: React.FC<VaultGeneralCanvasesTabProps> = (
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs font-semibold text-stone-700 dark:text-neutral-200">
-                {searchQuery ? 'Nenhum canvas encontrado' : 'Nenhum canvas na Caixa Geral'}
+                {searchQuery ? 'Nenhum canvas encontrado' : 'Nenhum canvas no Baú de Canvas'}
               </span>
               <p className="text-[11px] text-stone-400 dark:text-neutral-500 max-w-[200px] leading-relaxed">
                 {searchQuery 

@@ -19,9 +19,9 @@ import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { Callout } from '../extensions/CalloutExtension';
 import { 
-  Code, CheckCircle2, CloudUpload, FileText, Search, 
-  Check, Sparkles, Edit2, ChevronUp, 
-  ChevronDown, Replace, X, Eye, PanelRight,
+  Code, FileText, Search, 
+  Sparkles, ChevronUp, 
+  ChevronDown, Replace, X, Eye,
   FolderKanban, Music
 } from 'lucide-react';
 import { useRouter } from 'next/router';
@@ -31,7 +31,6 @@ const lowlight = createLowlight(common);
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { PromptInputModal } from './PromptInputModal';
 import { VaultSlashMenu } from './VaultSlashMenu';
-import { VaultFormattingMenu } from './VaultFormattingMenu';
 import { FORMATTING_COMMANDS, FormattingCommand } from '../utils/formattingCommands';
 
 export interface VaultLinkSuggestion {
@@ -60,18 +59,19 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     loadDocumentContent,
     getDocumentContent,
     documentCache,
-    isSaving, 
-    lastSavedAt,
     storageType,
     openOrCreateDocumentByTitle,
     openCanvasTab,
-    backlinksPanelOpen,
-    setBacklinksPanelOpen,
     setCommandPaletteOpen,
     getAllFiles,
     searchNotesFuzzy,
     renameNode,
-    deleteNode
+    deleteNode,
+    viewMode,
+    setViewMode,
+    isNoteSearchOpen,
+    setIsNoteSearchOpen,
+    setActiveEditorRef
   } = useVaultStore();
 
   const router = useRouter();
@@ -83,15 +83,14 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
   const activeContent = cachedDoc?.content ?? globalActiveContent;
 
   const [title, setTitle] = useState('');
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [titleInput, setTitleInput] = useState('');
   const [templateSuccess, setTemplateSuccess] = useState(false);
   const [templatePromptOpen, setTemplatePromptOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const isUpdatingFromStoreRef = useRef(false);
 
-  // In-Note Search & Replace state
-  const [searchOpen, setSearchOpen] = useState(false);
+  // In-Note Search & Replace state (controlled via store)
+  const searchOpen = isNoteSearchOpen;
+  const setSearchOpen = setIsNoteSearchOpen;
   const [replaceMode, setReplaceMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [replaceTerm, setReplaceTerm] = useState('');
@@ -100,8 +99,16 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // View Modes: 'live' (Live Preview) | 'source' (Modo Fonte) | 'reading' (Modo Leitura)
-  const [viewMode, setViewMode] = useState<'live' | 'source' | 'reading'>('live');
+  // Auto-focus search input when search is opened
+  useEffect(() => {
+    if (isNoteSearchOpen) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }, 50);
+    }
+  }, [isNoteSearchOpen]);
+
   const [sourceValue, setSourceValue] = useState('');
 
   // Sync source editor text when switching to source mode or when active document changes
@@ -129,20 +136,22 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
   };
 
   const handleSaveTitle = async () => {
-    const trimmed = titleInput.trim();
-    if (trimmed && trimmed !== title && activePath) {
-      const parts = activePath.split('/');
-      const isTxt = activePath.toLowerCase().endsWith('.txt');
-      const defaultExt = isTxt ? 'txt' : 'md';
-      let finalName = trimmed;
-      if (!finalName.toLowerCase().endsWith('.md') && !finalName.toLowerCase().endsWith('.txt')) {
-        finalName = `${finalName}.${defaultExt}`;
+    const trimmed = title.trim();
+    if (trimmed && activePath) {
+      const currentFileName = activePath.split('/').pop()?.replace(/\.(md|txt)$/i, '') || '';
+      if (trimmed !== currentFileName) {
+        const parts = activePath.split('/');
+        const isTxt = activePath.toLowerCase().endsWith('.txt');
+        const defaultExt = isTxt ? 'txt' : 'md';
+        let finalName = trimmed;
+        if (!finalName.toLowerCase().endsWith('.md') && !finalName.toLowerCase().endsWith('.txt')) {
+          finalName = `${finalName}.${defaultExt}`;
+        }
+        parts[parts.length - 1] = finalName;
+        await renameNode(activePath, parts.join('/'), false);
+        setTitle(finalName.replace(/\.(md|txt)$/i, ''));
       }
-      parts[parts.length - 1] = finalName;
-      await renameNode(activePath, parts.join('/'), false);
-      setTitle(finalName.replace(/\.(md|txt)$/i, ''));
     }
-    setIsEditingTitle(false);
   };
 
   // Autocomplete state for [[
@@ -545,6 +554,16 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
     },
   });
 
+  // Keep active editor reference synced with store
+  useEffect(() => {
+    if (editor) {
+      setActiveEditorRef(editor);
+    }
+    return () => {
+      setActiveEditorRef(null);
+    };
+  }, [editor, setActiveEditorRef]);
+
   const handleExecuteSlashCommand = (cmd: FormattingCommand) => {
     if (!editor) return;
     const { state, dispatch } = editor.view;
@@ -775,152 +794,9 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
 
   return (
     <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#0E0E12] overflow-hidden relative">
-      {/* Top Header & Toolbar (relative z-40 ensures dropdown menus render on top of note content) */}
-      <div className="relative z-40 border-b border-stone-200/90 dark:border-white/10 bg-white/95 dark:bg-[#121216]/95 backdrop-blur-md px-6 py-3 flex flex-col gap-3 shrink-0">
-        {/* Title Bar & Status */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 truncate">
-            {isEditingTitle ? (
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  autoFocus
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveTitle();
-                    if (e.key === 'Escape') setIsEditingTitle(false);
-                  }}
-                  onBlur={handleSaveTitle}
-                  className="bg-stone-50 dark:bg-[#16161D] border border-[#1831D7] rounded-md px-2 py-0.5 text-base font-semibold text-stone-900 dark:text-neutral-100 outline-none w-56"
-                />
-                <button
-                  onClick={handleSaveTitle}
-                  className="p-1 hover:bg-stone-100 dark:hover:bg-white/10 rounded text-emerald-600 dark:text-emerald-400 cursor-pointer"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div
-                onClick={() => {
-                  setTitleInput(title);
-                  setIsEditingTitle(true);
-                }}
-                className="group/title flex items-center gap-1.5 cursor-pointer truncate"
-                title="Clique para renomear esta nota"
-              >
-                <h1 className="text-lg font-bold text-stone-900 dark:text-neutral-100 tracking-tight truncate group-hover/title:text-[#1831D7] dark:group-hover/title:text-[#7F95FF] transition-colors">
-                  {title || 'Sem título'}
-                </h1>
-                <Edit2 className="w-3.5 h-3.5 text-stone-400 dark:text-neutral-500 opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2.5 text-xs text-stone-500 dark:text-neutral-400">
-            {isSaving ? (
-              <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-                <CloudUpload className="w-3.5 h-3.5 animate-pulse" />
-                Salvando...
-              </span>
-            ) : lastSavedAt ? (
-              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Salvo às {new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </span>
-            ) : null}
-
-            <div className="w-px h-4 bg-stone-200 dark:bg-white/10 mx-1" />
-
-            {/* Find & Replace toggle */}
-            <button
-              onClick={() => {
-                setSearchOpen(!searchOpen);
-                if (!searchOpen) {
-                  setTimeout(() => {
-                    searchInputRef.current?.focus();
-                    searchInputRef.current?.select();
-                  }, 50);
-                }
-              }}
-              className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                searchOpen
-                  ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
-                  : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
-              }`}
-              title="Localizar e Substituir na nota (Ctrl+F / Ctrl+H)"
-            >
-              <Search className="w-3.5 h-3.5" />
-            </button>
-
-            {/* 3-dots Context Menu for Options, View Modes, Formatting & Note Actions */}
-            <VaultFormattingMenu
-              editor={editor}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              onMakeTemplate={handleMakeTemplate}
-              templateSuccess={templateSuccess}
-              onDeleteNote={handleDeleteNote}
-            />
-
-            {/* Note Details (Properties & Backlinks) Sidebar Toggle */}
-            <button
-              onClick={() => setBacklinksPanelOpen(!backlinksPanelOpen)}
-              className={`p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center ${
-                backlinksPanelOpen
-                  ? 'bg-[#1831D7]/10 dark:bg-[#1831D7]/20 border-[#7F95FF]/40 text-[#1831D7] dark:text-[#7F95FF]'
-                  : 'bg-stone-100/80 dark:bg-white/5 hover:bg-stone-200/80 dark:hover:bg-white/10 text-stone-600 dark:text-neutral-300 border-stone-200/90 dark:border-white/10'
-              }`}
-              title="Propriedades e Backlinks da Nota"
-              aria-label="Abrir painel lateral de propriedades e backlinks"
-            >
-              <PanelRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Contextual Table Controls (when cursor is inside a table) */}
-        {editor && viewMode === 'live' && editor.isActive('table') && (
-          <div className="flex items-center gap-1 bg-[#1831D7]/10 border border-[#7F95FF]/30 p-1 rounded-lg w-fit animate-in fade-in duration-100 text-xs">
-            <span className="text-[10px] font-semibold text-[#1831D7] dark:text-[#7F95FF] px-1">Tabela:</span>
-            <button
-              onClick={() => editor.chain().focus().addRowAfter().run()}
-              className="px-2 py-0.5 text-[11px] rounded hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
-            >
-              +Linha
-            </button>
-            <button
-              onClick={() => editor.chain().focus().addColumnAfter().run()}
-              className="px-2 py-0.5 text-[11px] rounded hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
-            >
-              +Coluna
-            </button>
-            <button
-              onClick={() => editor.chain().focus().deleteRow().run()}
-              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
-            >
-              -Linha
-            </button>
-            <button
-              onClick={() => editor.chain().focus().deleteColumn().run()}
-              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
-            >
-              -Coluna
-            </button>
-            <button
-              onClick={() => editor.chain().focus().deleteTable().run()}
-              className="px-1.5 py-0.5 text-[11px] rounded hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
-            >
-              Excluir
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Floating In-Note Find & Replace Widget (Ctrl+F / Ctrl+H) */}
       {searchOpen && (
-        <div className="absolute top-26 right-8 z-30 bg-white/95 dark:bg-[#16161D]/95 backdrop-blur-md border border-stone-200/90 dark:border-white/10 rounded-xl shadow-2xl p-2.5 flex flex-col gap-2 w-84 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
+        <div className="absolute top-4 right-8 z-30 bg-white/95 dark:bg-[#16161D]/95 backdrop-blur-md border border-stone-200/90 dark:border-white/10 rounded-xl shadow-2xl p-2.5 flex flex-col gap-2 w-84 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
           <div className="flex items-center gap-1.5">
             <div className="relative flex-1 flex items-center">
               <input
@@ -1036,6 +912,68 @@ export const VaultEditor: React.FC<VaultEditorProps> = ({ paneId, documentPath }
             }
           }}
         >
+          {/* Quick Contextual Table Controls (when cursor is inside a table) */}
+          {editor && viewMode === 'live' && editor.isActive('table') && (
+            <div className="sticky top-0 z-20 mb-4 flex items-center gap-1 bg-white/95 dark:bg-[#16161F]/95 backdrop-blur-md border border-[#7F95FF]/30 p-1.5 rounded-xl shadow-md text-xs animate-in fade-in duration-100 w-fit">
+              <span className="text-[10px] font-semibold text-[#1831D7] dark:text-[#7F95FF] px-1.5">Tabela:</span>
+              <button
+                onClick={() => editor.chain().focus().addRowAfter().run()}
+                className="px-2 py-0.5 text-[11px] rounded-md hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
+              >
+                +Linha
+              </button>
+              <button
+                onClick={() => editor.chain().focus().addColumnAfter().run()}
+                className="px-2 py-0.5 text-[11px] rounded-md hover:bg-[#1831D7]/20 text-[#1831D7] dark:text-[#7F95FF] font-medium cursor-pointer"
+              >
+                +Coluna
+              </button>
+              <button
+                onClick={() => editor.chain().focus().deleteRow().run()}
+                className="px-1.5 py-0.5 text-[11px] rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+              >
+                -Linha
+              </button>
+              <button
+                onClick={() => editor.chain().focus().deleteColumn().run()}
+                className="px-1.5 py-0.5 text-[11px] rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+              >
+                -Coluna
+              </button>
+              <button
+                onClick={() => editor.chain().focus().deleteTable().run()}
+                className="px-1.5 py-0.5 text-[11px] rounded-md hover:bg-rose-100 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium cursor-pointer"
+              >
+                Excluir
+              </button>
+            </div>
+          )}
+
+          {/* Integrated Document Title (Notion/Obsidian style) */}
+          <div className="mb-6 pt-2">
+            {viewMode === 'reading' ? (
+              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900 dark:text-neutral-100 leading-tight">
+                {title || 'Sem título'}
+              </h1>
+            ) : (
+              <input
+                type="text"
+                placeholder="Sem título"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleSaveTitle}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSaveTitle();
+                    editor?.commands.focus('start');
+                  }
+                }}
+                className="w-full text-3xl sm:text-4xl font-extrabold tracking-tight text-stone-900 dark:text-neutral-100 placeholder-stone-300 dark:placeholder-neutral-700 bg-transparent outline-none border-none p-0 focus:ring-0 leading-tight selection:bg-[#1831D7]/20"
+              />
+            )}
+          </div>
+
           {viewMode === 'live' && (
             <EditorContent editor={editor} />
           )}

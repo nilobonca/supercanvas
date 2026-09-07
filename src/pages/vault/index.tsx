@@ -6,7 +6,7 @@ export default function VaultPage() {
   return (
     <>
       <Head>
-        <title>Concha — Vault</title>
+        <title>Concha</title>
         <meta name="description" content="Editor Markdown e base de conhecimento integrada ao Concha com suporte a pastas locais do Windows." />
       </Head>
       <VaultLayout />

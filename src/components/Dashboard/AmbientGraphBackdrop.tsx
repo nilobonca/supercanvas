@@ -1,29 +1,17 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   useAmbientGraphSimulation,
   RealGraphNodeItem,
   RealGraphLinkItem,
 } from './useAmbientGraphSimulation';
-import { FloatingLoreCard } from './FloatingLoreCard';
-import { RotateCcw, Eye, EyeOff, Compass, Loader2 } from 'lucide-react';
+import { GraphControlsOverlay } from './GraphControlsOverlay';
+import { GraphNodeTooltip } from './GraphNodeTooltip';
+import { Compass, Loader2 } from 'lucide-react';
 import { WindowControls } from '@/components/common/WindowControls';
 import { isElectron } from '@/utils/electronHelper';
 import clsx from 'clsx';
 
 export type { RealGraphNodeItem, RealGraphLinkItem };
-
-export interface RealFeaturedCardItem {
-  id: string;
-  title: string;
-  category?: string;
-  tags?: string[];
-  excerpt?: string;
-  connectionsCount?: number;
-  accentColor?: string;
-  defaultPosition?: { x: number; y: number };
-  path?: string;
-  isCanvas?: boolean;
-}
 
 export interface AmbientGraphBackdropProps {
   className?: string;
@@ -31,54 +19,11 @@ export interface AmbientGraphBackdropProps {
   customNodeTitles?: string[];
   realNodes?: RealGraphNodeItem[];
   realLinks?: RealGraphLinkItem[];
-  featuredCards?: RealFeaturedCardItem[];
+  featuredCards?: unknown; // Deprecated: cards removed in favor of real connection graph
   isLoading?: boolean;
   onSelectNode?: (pathOrTitle: string, isCanvas?: boolean) => void;
-  defaultShowCards?: boolean;
+  defaultShowCards?: boolean; // Deprecated
 }
-
-const DEFAULT_FEATURED_CARDS: RealFeaturedCardItem[] = [
-  {
-    id: 'card-ravenloft',
-    title: 'Castelo Ravenloft',
-    category: 'Fortaleza Ancestral',
-    tags: ['#fortaleza', '#catacumbas', '#perigo'],
-    excerpt: 'Erguendo-se sobre um pináculo rochoso de trezentos metros, as torres ancestrais guardam os segredos e as dores da linhagem Zarovich.',
-    connectionsCount: 34,
-    accentColor: '#c084fc',
-    defaultPosition: { x: 36, y: 100 },
-  },
-  {
-    id: 'card-strahd',
-    title: 'Strahd von Zarovich',
-    category: 'Lorde de Baróvia',
-    tags: ['#antagonista', '#lorde', '#vampiro'],
-    excerpt: '«Eu sou o Antigo, eu sou a Terra.» Suas decisões ecoam em cada ruela e floresta, aprisionando o vale sob névoa eterna.',
-    connectionsCount: 52,
-    accentColor: '#f87171',
-    defaultPosition: { x: 260, y: 280 },
-  },
-  {
-    id: 'card-barovia',
-    title: 'Vila de Baróvia',
-    category: 'Povoado & Encontros',
-    tags: ['#povoado', '#ponto-partida', '#névoa'],
-    excerpt: 'Casas em ruínas sob névoa permanente. Os habitantes trancam suas portas antes do crepúsculo sob o olhar vigilante dos corvos.',
-    connectionsCount: 18,
-    accentColor: '#38bdf8',
-    defaultPosition: { x: 50, y: 470 },
-  },
-];
-
-const getDefaultCardPosition = (idx: number): { x: number; y: number } => {
-  const positions = [
-    { x: 36, y: 100 },
-    { x: 260, y: 280 },
-    { x: 48, y: 470 },
-    { x: 280, y: 520 },
-  ];
-  return positions[idx % positions.length];
-};
 
 export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
   className,
@@ -86,22 +31,29 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
   customNodeTitles,
   realNodes,
   realLinks,
-  featuredCards,
   isLoading = false,
   onSelectNode,
-  defaultShowCards = true,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [showCards, setShowCards] = useState(defaultShowCards);
-  const [dismissedCardIds, setDismissedCardIds] = useState<string[]>([]);
   const [isElec, setIsElec] = useState(false);
 
   useEffect(() => {
     setIsElec(isElectron());
   }, []);
 
-  const { resetOrbits } = useAmbientGraphSimulation({
+  const {
+    resetView,
+    zoomIn,
+    zoomOut,
+    isPlaying,
+    togglePlayPause,
+    searchQuery,
+    setSearchQuery,
+    hoveredNode,
+    nodeCount,
+    linkCount,
+  } = useAmbientGraphSimulation({
     canvasRef,
     containerRef,
     customNodeTitles,
@@ -110,45 +62,6 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
     vaultName,
     onSelectNode,
   });
-
-  // Dynamically resolve cards: from props, or auto-derived from realNodes, or default fallback
-  const activeCards: RealFeaturedCardItem[] = useMemo(() => {
-    if (featuredCards !== undefined) {
-      return featuredCards;
-    }
-    // If realNodes is provided without explicit featuredCards, highlight top connected notes
-    if (realNodes && realNodes.length > 0) {
-      return realNodes
-        .slice()
-        .sort((a, b) => (b.connectionsCount ?? 0) - (a.connectionsCount ?? 0))
-        .slice(0, 3)
-        .map((node, idx) => ({
-          id: `card-${node.id}`,
-          title: node.title,
-          category: node.isCanvas ? 'Canvas Infinito' : 'Nota Relevante',
-          tags: node.isCanvas ? ['#canvas', '#mapa'] : ['#grimório', '#nota'],
-          excerpt: node.isCanvas
-            ? 'Quadro de conexões visuais, fluxos conceituais e anotações espaciais.'
-            : 'Registro central do grimório conectado à constelação viva.',
-          connectionsCount: node.connectionsCount ?? 0,
-          accentColor: node.color || (node.isCanvas ? '#818cf8' : '#c084fc'),
-          defaultPosition: getDefaultCardPosition(idx),
-          path: node.path,
-          isCanvas: node.isCanvas,
-        }));
-    }
-    return DEFAULT_FEATURED_CARDS;
-  }, [featuredCards, realNodes]);
-
-  const handleDismissCard = (id: string) => {
-    setDismissedCardIds(prev => [...prev, id]);
-  };
-
-  const handleResetCards = () => {
-    setDismissedCardIds([]);
-    setShowCards(true);
-    resetOrbits();
-  };
 
   return (
     <div
@@ -190,43 +103,14 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
         }}
       />
 
-      {/* High-Performance Canvas for Constellation & Graph */}
+      {/* High-Performance Canvas for Connection Graph (D3 Force Simulation) */}
       <canvas
         ref={canvasRef}
         className="absolute inset-0 z-10 w-full h-full block touch-none"
       />
 
-      {/* Floating Interactive Lore Cards */}
-      {showCards && (
-        <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
-          {activeCards.map((card, idx) => {
-            if (dismissedCardIds.includes(card.id)) return null;
-            return (
-              <div key={card.id} className="pointer-events-auto">
-                <FloatingLoreCard
-                  id={card.id}
-                  title={card.title}
-                  category={card.category || (card.isCanvas ? 'Canvas Infinito' : 'Nota do Grimório')}
-                  tags={card.tags || (card.isCanvas ? ['#canvas', '#mapa'] : ['#nota'])}
-                  excerpt={card.excerpt || (card.isCanvas ? 'Quadro de conexões visuais e diagramas espaciais.' : 'Nota registrada no grimório.')}
-                  connectionsCount={card.connectionsCount ?? 0}
-                  accentColor={card.accentColor || (card.isCanvas ? '#818cf8' : '#c084fc')}
-                  defaultPosition={card.defaultPosition || getDefaultCardPosition(idx)}
-                  path={card.path}
-                  isCanvas={card.isCanvas}
-                  dragConstraintsRef={containerRef}
-                  onSelect={(target, isCanvas) => {
-                    if (onSelectNode) {
-                      onSelectNode(target, isCanvas);
-                    }
-                  }}
-                  onDismiss={handleDismissCard}
-                />
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {/* Node Tooltip on Hover */}
+      <GraphNodeTooltip node={hoveredNode} />
 
       {/* Top Floating Ambient HUD Bar */}
       <header 
@@ -253,44 +137,25 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
                 <span className="font-semibold text-neutral-200 tracking-wide">
                   {vaultName}
                 </span>
-                <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest pl-1 border-l border-white/10">
-                  Constelação Viva
+                <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-widest pl-1 border-l border-white/10">
+                  Grafo de Conexões
                 </span>
               </>
             )}
           </div>
 
-          {/* Action Controls: Cards e Atualizar agrupados no HUD esquerdo */}
-          <div className="flex items-center gap-1 p-1 rounded-full bg-black/40 backdrop-blur-md border border-white/[0.08] shadow-lg">
-            <button
-              type="button"
-              onClick={() => setShowCards(prev => !prev)}
-              className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-xs flex items-center gap-1.5 px-2.5"
-              title={showCards ? 'Ocultar cards flutuantes' : 'Mostrar cards flutuantes'}
-            >
-              {showCards ? (
-                <>
-                  <EyeOff className="w-3.5 h-3.5" />
-                  <span className="text-[11px] font-medium">Cards</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-3.5 h-3.5" />
-                  <span className="text-[11px] font-medium">Cards</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleResetCards}
-              className="p-1.5 px-2.5 rounded-full text-neutral-400 hover:text-white hover:bg-white/[0.08] transition-all cursor-pointer text-xs flex items-center gap-1.5"
-              title="Recalibrar órbitas e atualizar constelação"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span className="text-[11px] font-medium">Atualizar</span>
-            </button>
-          </div>
+          {/* Connection Graph Navigation & Filter Controls */}
+          <GraphControlsOverlay
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onResetView={resetView}
+            isPlaying={isPlaying}
+            onTogglePlayPause={togglePlayPause}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            nodeCount={nodeCount}
+            linkCount={linkCount}
+          />
         </div>
 
         {/* Centro: Área Livre de Drag da Janela */}
@@ -317,11 +182,11 @@ export const AmbientGraphBackdrop: React.FC<AmbientGraphBackdropProps> = ({
       <footer className="absolute bottom-4 inset-x-6 z-30 flex items-center justify-between pointer-events-none text-[11px] text-neutral-500">
         <div className="flex items-center gap-2 pointer-events-auto">
           <Compass className="w-3.5 h-3.5 text-[#7F95FF]/70" />
-          <span className="hidden sm:inline">
-            Arraste os nós estelares e cards para reorganizar a constelação
+          <span className="hidden md:inline">
+            Arraste os nós para interagir • Arraste o fundo para mover • Roda do mouse para zoom • Clique para abrir
           </span>
-          <span className="sm:hidden">
-            Arraste para mover nós
+          <span className="md:hidden">
+            Arraste os nós ou dê zoom no grafo
           </span>
         </div>
 

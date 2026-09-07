@@ -1,4 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import * as d3 from 'd3';
+import { HoveredNodeData } from './GraphNodeTooltip';
 
 export interface RealGraphNodeItem {
   id: string;
@@ -14,29 +16,28 @@ export interface RealGraphLinkItem {
   targetId: string;
 }
 
-export interface SimNode {
+export interface SimNode extends d3.SimulationNodeDatum {
   id: string;
   title: string;
   path?: string;
   isCanvas?: boolean;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  baseX: number;
-  baseY: number;
+  connectionsCount: number;
   radius: number;
   color: string;
   glowColor: string;
   pulseOffset: number;
   pulseSpeed: number;
-  floatAmplitude: number;
-  floatSpeed: number;
-  connections: number[];
+  connections: Set<string>;
+}
+
+export interface SimLink extends d3.SimulationLinkDatum<SimNode> {
+  source: SimNode;
+  target: SimNode;
 }
 
 export interface SimSpark {
-  linkIdx: number;
+  sourceId: string;
+  targetId: string;
   progress: number;
   speed: number;
   color: string;
@@ -62,17 +63,30 @@ export interface UseAmbientGraphProps {
   onSelectNode?: (pathOrTitle: string, isCanvas?: boolean) => void;
 }
 
-// Curated celestial / arcane color palette for uncolored nodes
+export interface UseAmbientGraphReturn {
+  resetView: () => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  isPlaying: boolean;
+  togglePlayPause: () => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  hoveredNode: HoveredNodeData | null;
+  nodeCount: number;
+  linkCount: number;
+  resetOrbits: () => void;
+}
+
+// Curated celestial / arcane color palette
 const LORE_COLOR_PALETTE = [
   '#7F95FF', // soft periwinkle / primary accent
   '#52B1FF', // sky cyan
   '#B4D3F1', // ice blue pastel
   '#1831D7', // royal cobalt
   '#F4F0E6', // warm ivory
-  '#17192A', // midnight navy
+  '#C084FC', // purple nebula
 ];
 
-// Helper to convert hex colors to rgba with desired opacity
 const hexToRgba = (hex: string, alpha: number): string => {
   const cleanHex = hex.replace('#', '');
   if (cleanHex.length === 6) {
@@ -81,26 +95,19 @@ const hexToRgba = (hex: string, alpha: number): string => {
     const b = parseInt(cleanHex.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
-  return `rgba(168, 85, 247, ${alpha})`;
+  return `rgba(127, 149, 255, ${alpha})`;
 };
 
-// Iconic default lore nodes for fallback demonstration
-const DEFAULT_LORE_NODES: { title: string; color: string; glow: string }[] = [
-  { title: 'Castelo Ravenloft', color: '#c084fc', glow: 'rgba(192, 132, 252, 0.45)' },
-  { title: 'Strahd von Zarovich', color: '#f87171', glow: 'rgba(248, 113, 113, 0.5)' },
-  { title: 'Vila de Baróvia', color: '#38bdf8', glow: 'rgba(56, 189, 248, 0.45)' },
-  { title: 'Templo de Âmbar', color: '#fbbf24', glow: 'rgba(251, 191, 36, 0.45)' },
-  { title: 'Espada do Sol', color: '#fef08a', glow: 'rgba(254, 240, 138, 0.55)' },
-  { title: 'Madame Eva', color: '#f472b6', glow: 'rgba(244, 114, 182, 0.45)' },
-  { title: 'Moinho Velho', color: '#a78bfa', glow: 'rgba(167, 139, 250, 0.4)' },
-  { title: 'Floresta de Svalich', color: '#34d399', glow: 'rgba(52, 211, 153, 0.4)' },
-  { title: 'Tomo de Strahd', color: '#818cf8', glow: 'rgba(129, 140, 248, 0.45)' },
-  { title: 'Abadia de S. Markovia', color: '#22d3ee', glow: 'rgba(34, 211, 238, 0.4)' },
-  { title: 'Argynvostholt', color: '#e2e8f0', glow: 'rgba(226, 232, 240, 0.45)' },
-  { title: 'Ruínas de Berez', color: '#94a3b8', glow: 'rgba(148, 163, 184, 0.35)' },
-  { title: 'Passo de Tsolenka', color: '#67e8f9', glow: 'rgba(103, 232, 249, 0.4)' },
-  { title: 'Símbolo de Ravenkind', color: '#facc15', glow: 'rgba(250, 204, 21, 0.5)' },
-  { title: 'Lago Zarovich', color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.4)' },
+const DEFAULT_LORE_NODES: { title: string; color: string }[] = [
+  { title: 'Castelo Ravenloft', color: '#c084fc' },
+  { title: 'Strahd von Zarovich', color: '#f87171' },
+  { title: 'Vila de Baróvia', color: '#38bdf8' },
+  { title: 'Templo de Âmbar', color: '#fbbf24' },
+  { title: 'Espada do Sol', color: '#fef08a' },
+  { title: 'Madame Eva', color: '#f472b6' },
+  { title: 'Moinho Velho', color: '#a78bfa' },
+  { title: 'Floresta de Svalich', color: '#34d399' },
+  { title: 'Tomo de Strahd', color: '#818cf8' },
 ];
 
 export const useAmbientGraphSimulation = ({
@@ -111,42 +118,83 @@ export const useAmbientGraphSimulation = ({
   realLinks,
   vaultName,
   onSelectNode,
-}: UseAmbientGraphProps) => {
+}: UseAmbientGraphProps): UseAmbientGraphReturn => {
+  // State for controls and HUD
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [hoveredNode, setHoveredNode] = useState<HoveredNodeData | null>(null);
+  const [nodeCount, setNodeCount] = useState<number>(0);
+  const [linkCount, setLinkCount] = useState<number>(0);
+
+  // Simulation and animation refs
+  const simulationRef = useRef<d3.Simulation<SimNode, SimLink> | null>(null);
   const nodesRef = useRef<SimNode[]>([]);
-  const linksRef = useRef<[number, number][]>([]);
+  const linksRef = useRef<SimLink[]>([]);
   const sparksRef = useRef<SimSpark[]>([]);
   const dustRef = useRef<SimDust[]>([]);
-  const hoveredNodeIdxRef = useRef<number | null>(null);
-  const draggedNodeIdxRef = useRef<number | null>(null);
-  const isDraggingMoveRef = useRef<boolean>(false);
+
+  // Camera viewport transform: scale, translation (pan)
+  const cameraRef = useRef<{ x: number; y: number; scale: number }>({
+    x: 0,
+    y: 0,
+    scale: 1,
+  });
+
+  // Interaction tracking refs
+  const hoveredNodeIdRef = useRef<string | null>(null);
+  const draggedNodeRef = useRef<SimNode | null>(null);
+  const isPanningRef = useRef<boolean>(false);
+  const panStartRef = useRef<{ x: number; y: number; camX: number; camY: number } | null>(null);
   const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
-  const mousePosRef = useRef<{ x: number; y: number } | null>(null);
+  const hasMovedSignificantlyRef = useRef<boolean>(false);
+  const mouseScreenPosRef = useRef<{ x: number; y: number } | null>(null);
+  const searchQueryRef = useRef<string>('');
   const animFrameIdRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
-  // Initialize or update nodes when container, realNodes, realLinks or titles change
-  const initSimulation = useCallback((width: number, height: number) => {
+  // Sync searchQueryRef with state
+  useEffect(() => {
+    searchQueryRef.current = searchQuery;
+  }, [searchQuery]);
+
+  // Convert screen coordinates to world coordinates considering current camera pan & zoom
+  const screenToWorld = useCallback((screenX: number, screenY: number) => {
+    const cam = cameraRef.current;
+    return {
+      x: (screenX - cam.x) / cam.scale,
+      y: (screenY - cam.y) / cam.scale,
+    };
+  }, []);
+
+  // Convert world coordinates to screen coordinates
+  const worldToScreen = useCallback((worldX: number, worldY: number) => {
+    const cam = cameraRef.current;
+    return {
+      x: worldX * cam.scale + cam.x,
+      y: worldY * cam.scale + cam.y,
+    };
+  }, []);
+
+  // Initialize and build graph data with D3 Force Simulation
+  const initGraph = useCallback((width: number, height: number) => {
     if (width <= 0 || height <= 0) return;
 
-    // 1. Determine raw node items to build the simulation graph from
+    // 1. Resolve raw items
     let sourceItems: RealGraphNodeItem[] = [];
 
     if (realNodes && realNodes.length > 0) {
-      // Prioritize real nodes from vault
       sourceItems = realNodes;
     } else if (customNodeTitles && customNodeTitles.length > 0) {
-      // Backward-compatible fallback from string titles
-      sourceItems = customNodeTitles.slice(0, 20).map((title, idx) => {
+      sourceItems = customNodeTitles.map((title, idx) => {
         const defaultMatch = DEFAULT_LORE_NODES[idx % DEFAULT_LORE_NODES.length];
         return {
           id: `custom-${idx}`,
           title,
           color: defaultMatch.color,
-          connectionsCount: Math.max(1, (idx % 4) + 1),
+          connectionsCount: 0,
         };
       });
     } else {
-      // Vault totally empty: create minimal welcome constellation
       const currentVaultTitle = vaultName && vaultName.trim().length > 0
         ? vaultName.trim()
         : 'Meu Vault';
@@ -180,177 +228,127 @@ export const useAmbientGraphSimulation = ({
       ];
     }
 
-    // Limit maximum simultaneous simulation nodes to maintain silky smooth 60fps GPU rendering
-    const MAX_SIM_NODES = 48;
-    const sortedItems = sourceItems.length > MAX_SIM_NODES
-      ? sourceItems
-          .slice()
-          .sort((a, b) => (b.connectionsCount ?? 0) - (a.connectionsCount ?? 0))
-          .slice(0, MAX_SIM_NODES)
-      : sourceItems.slice();
-
-    const count = sortedItems.length;
-    const nodes: SimNode[] = [];
-    const centerX = width * 0.55; // Offset to give breathing room for left dashboard panels
-    const centerY = height * 0.5;
-    const maxRadius = Math.min(width, height) * 0.42;
-
-    // Cache previous positions to animate transitions seamlessly without abrupt visual jumps
-    const prevPositions = new Map<string, { x: number; y: number; baseX: number; baseY: number }>();
+    // Preserve existing node positions during incremental updates
+    const existingPos = new Map<string, { x: number; y: number; vx: number; vy: number }>();
     nodesRef.current.forEach(n => {
-      prevPositions.set(n.id, { x: n.x, y: n.y, baseX: n.baseX, baseY: n.baseY });
+      if (n.x !== undefined && n.y !== undefined) {
+        existingPos.set(n.id, { x: n.x, y: n.y, vx: n.vx || 0, vy: n.vy || 0 });
+      }
     });
 
-    for (let i = 0; i < count; i++) {
-      const item = sortedItems[i];
+    const centerX = width * 0.5;
+    const centerY = height * 0.5;
+
+    // 2. Build SimNodes
+    const nodes: SimNode[] = sourceItems.map((item, idx) => {
       const connCount = item.connectionsCount ?? 0;
+      const baseR = item.isCanvas ? 6.5 : 5.0;
+      const radius = Math.min(18, Math.max(4.5, baseR + Math.sqrt(connCount) * 2.2));
 
-      let baseX: number;
-      let baseY: number;
-
-      if (count === 1) {
-        baseX = centerX;
-        baseY = centerY;
-      } else {
-        // Golden spiral distribution with celestial harmony
-        const phi = i * 2.39996 + ((i * 11) % 7) * 0.04;
-        const r = (Math.sqrt((i + 0.8) / count) * 0.84 + 0.16) * maxRadius;
-        baseX = Math.max(50, Math.min(width - 50, centerX + Math.cos(phi) * r));
-        baseY = Math.max(50, Math.min(height - 50, centerY + Math.sin(phi) * r));
-      }
-
-      const prev = prevPositions.get(item.id);
-      const x = prev ? prev.x : baseX;
-      const y = prev ? prev.y : baseY;
-
-      // Calibrate node radius proportional to connection density and canvas flag
-      const baseR = item.isCanvas ? 5.2 : 4.0;
-      const radius = Math.min(9.5, Math.max(3.8, baseR + Math.sqrt(connCount) * 1.05));
-
-      // Calibrate node category color & ethereal glow
-      const fallbackColor = LORE_COLOR_PALETTE[i % LORE_COLOR_PALETTE.length];
+      const fallbackColor = LORE_COLOR_PALETTE[idx % LORE_COLOR_PALETTE.length];
       const nodeColor = item.color || (item.isCanvas ? '#818cf8' : fallbackColor);
       const glowColor = hexToRgba(nodeColor, 0.45);
 
-      nodes.push({
+      const cached = existingPos.get(item.id);
+      const initX = cached ? cached.x : centerX + (Math.random() - 0.5) * Math.min(width * 0.6, 400);
+      const initY = cached ? cached.y : centerY + (Math.random() - 0.5) * Math.min(height * 0.6, 400);
+
+      return {
         id: item.id,
         title: item.title,
         path: item.path,
         isCanvas: item.isCanvas,
-        x,
-        y,
-        vx: 0,
-        vy: 0,
-        baseX,
-        baseY,
+        connectionsCount: connCount,
         radius,
         color: nodeColor,
         glowColor,
-        pulseOffset: (i * 0.7) % (Math.PI * 2),
-        pulseSpeed: 0.8 + (i % 5) * 0.25,
-        floatAmplitude: 3.5 + (i % 4) * 2.0,
-        floatSpeed: 0.35 + (i % 3) * 0.2,
-        connections: [],
-      });
-    }
-
-    // 2. Build connection index lookup table
-    const idToIndex = new Map<string, number>();
-    nodes.forEach((n, idx) => {
-      idToIndex.set(n.id, idx);
-      idToIndex.set(n.id.toLowerCase(), idx);
-      if (n.path) {
-        idToIndex.set(n.path, idx);
-        idToIndex.set(n.path.toLowerCase(), idx);
-        idToIndex.set(n.path.replace(/\.md$/, ''), idx);
-        idToIndex.set(n.path.replace(/\.md$/, '').toLowerCase(), idx);
-      }
-      if (n.title) {
-        idToIndex.set(n.title, idx);
-        idToIndex.set(n.title.toLowerCase(), idx);
-      }
+        pulseOffset: (idx * 0.6) % (Math.PI * 2),
+        pulseSpeed: 0.8 + (idx % 4) * 0.2,
+        connections: new Set<string>(),
+        x: initX,
+        y: initY,
+        vx: cached ? cached.vx : 0,
+        vy: cached ? cached.vy : 0,
+      };
     });
-
-    const links: [number, number][] = [];
-    const linkKeySet = new Set<string>();
-
-    const addLink = (a: number, b: number): boolean => {
-      if (a === b || a < 0 || b < 0 || a >= nodes.length || b >= nodes.length) return false;
-      const key = a < b ? `${a}-${b}` : `${b}-${a}`;
-      if (linkKeySet.has(key)) return false;
-      linkKeySet.add(key);
-      links.push([a, b]);
-      nodes[a]?.connections.push(b);
-      nodes[b]?.connections.push(a);
-      return true;
-    };
 
     // 3. Map real links or fallback connections
-    if (realNodes && realNodes.length > 0 && realLinks && realLinks.length > 0) {
-      realLinks.forEach(rl => {
-        const srcIdx = idToIndex.get(rl.sourceId) ?? idToIndex.get(rl.sourceId.toLowerCase());
-        const tgtIdx = idToIndex.get(rl.targetId) ?? idToIndex.get(rl.targetId.toLowerCase());
-        if (srcIdx !== undefined && tgtIdx !== undefined) {
-          addLink(srcIdx, tgtIdx);
-        }
-      });
-    } else if (!realNodes || realNodes.length === 0) {
-      // Empty vault or custom titles fallback
-      if (customNodeTitles && customNodeTitles.length > 0) {
-        if (nodes.length >= 3) {
-          addLink(0, 1);
-          addLink(1, 2);
-          addLink(0, 2);
-        }
-      } else {
-        // Welcome constellation links
-        addLink(0, 1); // Vault <-> Notes
-        addLink(0, 2); // Vault <-> Canvas
-        addLink(0, 3); // Vault <-> Lore
-        addLink(1, 2); // Notes <-> Canvas
+    const nodeMap = new Map<string, SimNode>();
+    nodes.forEach(n => {
+      nodeMap.set(n.id, n);
+      nodeMap.set(n.id.toLowerCase(), n);
+      if (n.path) {
+        nodeMap.set(n.path, n);
+        nodeMap.set(n.path.toLowerCase(), n);
+        nodeMap.set(n.path.replace(/\.md$/, ''), n);
+        nodeMap.set(n.path.replace(/\.md$/, '').toLowerCase(), n);
       }
-    }
-
-    // 4. Softly connect nodes without direct wikilinks to their nearest neighbor for constellation harmony
-    nodes.forEach((node, i) => {
-      if (node.connections.length === 0 && nodes.length > 1) {
-        let nearestIdx = -1;
-        let minDist = Infinity;
-        for (let j = 0; j < nodes.length; j++) {
-          if (i === j) continue;
-          const dx = node.baseX - nodes[j].baseX;
-          const dy = node.baseY - nodes[j].baseY;
-          const distSq = dx * dx + dy * dy;
-          if (distSq < minDist) {
-            minDist = distSq;
-            nearestIdx = j;
-          }
-        }
-        if (nearestIdx !== -1) {
-          addLink(i, nearestIdx);
-        }
+      if (n.title) {
+        nodeMap.set(n.title, n);
+        nodeMap.set(n.title.toLowerCase(), n);
       }
     });
 
-    // 5. Create traveling arcane sparks over the real links
+    const links: SimLink[] = [];
+    const linkSet = new Set<string>();
+
+    const addLink = (srcId: string, tgtId: string) => {
+      const srcNode = nodeMap.get(srcId) || nodeMap.get(srcId.toLowerCase());
+      const tgtNode = nodeMap.get(tgtId) || nodeMap.get(tgtId.toLowerCase());
+      if (!srcNode || !tgtNode || srcNode.id === tgtNode.id) return;
+
+      const key = srcNode.id < tgtNode.id
+        ? `${srcNode.id}->${tgtNode.id}`
+        : `${tgtNode.id}->${srcNode.id}`;
+
+      if (linkSet.has(key)) return;
+      linkSet.add(key);
+
+      links.push({
+        source: srcNode,
+        target: tgtNode,
+      });
+
+      srcNode.connections.add(tgtNode.id);
+      tgtNode.connections.add(srcNode.id);
+    };
+
+    if (realNodes && realNodes.length > 0 && realLinks && realLinks.length > 0) {
+      realLinks.forEach(rl => {
+        addLink(rl.sourceId, rl.targetId);
+      });
+    } else if (!realNodes || realNodes.length === 0) {
+      // Welcome constellation fallback links
+      addLink('welcome-vault', 'welcome-notes');
+      addLink('welcome-vault', 'welcome-canvas');
+      addLink('welcome-vault', 'welcome-lore');
+      addLink('welcome-notes', 'welcome-canvas');
+    }
+
+    // Recalculate true connections count
+    nodes.forEach(n => {
+      n.connectionsCount = n.connections.size;
+    });
+
+    // 4. Traveling arcane sparks along active links
     const sparks: SimSpark[] = [];
     if (links.length > 0) {
-      const sparkCount = Math.min(Math.max(links.length, 6), 16);
+      const sparkCount = Math.min(Math.max(links.length, 6), 24);
       for (let i = 0; i < sparkCount; i++) {
-        const linkIdx = Math.floor(Math.random() * links.length);
-        const sourceNode = nodes[links[linkIdx][0]];
+        const link = links[Math.floor(Math.random() * links.length)];
         sparks.push({
-          linkIdx,
+          sourceId: link.source.id,
+          targetId: link.target.id,
           progress: Math.random(),
           speed: 0.12 + Math.random() * 0.22,
-          color: sourceNode?.color || '#c084fc',
+          color: link.source.color || '#7F95FF',
         });
       }
     }
 
-    // 6. Ambient cosmic dust
+    // 5. Ambient cosmic dust
     const dust: SimDust[] = [];
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 40; i++) {
       dust.push({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -366,9 +364,45 @@ export const useAmbientGraphSimulation = ({
     linksRef.current = links;
     sparksRef.current = sparks;
     dustRef.current = dust;
+
+    setNodeCount(nodes.length);
+    setLinkCount(links.length);
+
+    // 6. Setup D3 Force Simulation
+    if (simulationRef.current) {
+      simulationRef.current.stop();
+    }
+
+    const sim = d3.forceSimulation<SimNode>(nodes)
+      .force(
+        'link',
+        d3.forceLink<SimNode, SimLink>(links)
+          .id(d => d.id)
+          .distance(d => {
+            const hasCanvas = d.source.isCanvas || d.target.isCanvas;
+            return hasCanvas ? 130 : 100;
+          })
+          .strength(0.65)
+      )
+      .force(
+        'charge',
+        d3.forceManyBody<SimNode>()
+          .strength(d => -220 - Math.min(180, d.connectionsCount * 25))
+          .distanceMax(600)
+      )
+      .force('center', d3.forceCenter(centerX, centerY))
+      .force(
+        'collide',
+        d3.forceCollide<SimNode>()
+          .radius(d => d.radius + 16)
+          .strength(0.85)
+      )
+      .alphaDecay(0.022);
+
+    simulationRef.current = sim;
   }, [realNodes, realLinks, customNodeTitles, vaultName]);
 
-  // Main render and animation loop
+  // Main render & animation loop
   useEffect(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -390,7 +424,7 @@ export const useAmbientGraphSimulation = ({
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      initSimulation(width, height);
+      initGraph(width, height);
     };
 
     const resizeObserver = new ResizeObserver(() => {
@@ -422,11 +456,11 @@ export const useAmbientGraphSimulation = ({
         const links = linksRef.current;
         const sparks = sparksRef.current;
         const dust = dustRef.current;
-        const hoveredIdx = hoveredNodeIdxRef.current;
-        const draggedIdx = draggedNodeIdxRef.current;
-        const mouse = mousePosRef.current;
+        const cam = cameraRef.current;
+        const hoveredId = hoveredNodeIdRef.current;
+        const query = searchQueryRef.current.trim().toLowerCase();
 
-        // 1. Draw Dust & Cosmic Grain
+        // 1. Draw Ambient Cosmic Dust in screen space
         dust.forEach(d => {
           d.x += d.vx;
           d.y += d.vy;
@@ -438,132 +472,127 @@ export const useAmbientGraphSimulation = ({
           const twinkle = 0.5 + 0.5 * Math.sin(time * 0.002 + d.phase);
           ctx.beginPath();
           ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${d.alpha * twinkle * 0.4})`;
+          ctx.fillStyle = `rgba(255, 255, 255, ${d.alpha * twinkle * 0.35})`;
           ctx.fill();
         });
 
-        // 2. Physics & Node Movement
-        const tSec = time * 0.001;
-        nodes.forEach((node, i) => {
-          if (i === draggedIdx && mouse) {
-            // Dragging: directly interpolate towards mouse
-            node.x += (mouse.x - node.x) * 0.35;
-            node.y += (mouse.y - node.y) * 0.35;
-            node.baseX = node.x;
-            node.baseY = node.y;
-          } else {
-            // Harmonic floating motion
-            const ox = Math.cos(tSec * node.floatSpeed + node.pulseOffset) * node.floatAmplitude;
-            const oy = Math.sin(tSec * node.floatSpeed + node.pulseOffset) * node.floatAmplitude;
-            const targetX = node.baseX + ox;
-            const targetY = node.baseY + oy;
+        // 2. Apply Camera Viewport Transform (Zoom & Pan)
+        ctx.save();
+        ctx.translate(cam.x, cam.y);
+        ctx.scale(cam.scale, cam.scale);
 
-            // Subtle mouse repulsion/attraction aura
-            let pushX = 0;
-            let pushY = 0;
-            if (mouse && i !== hoveredIdx) {
-              const dx = node.x - mouse.x;
-              const dy = node.y - mouse.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist > 0 && dist < 120) {
-                const force = (1 - dist / 120) * 12;
-                pushX = (dx / dist) * force;
-                pushY = (dy / dist) * force;
-              }
-            }
+        // Find hovered node and its neighbors
+        const hoveredNode = hoveredId ? nodes.find(n => n.id === hoveredId) : null;
+        const neighborIds = hoveredNode ? hoveredNode.connections : null;
 
-            node.x += (targetX + pushX - node.x) * 0.1;
-            node.y += (targetY + pushY - node.y) * 0.1;
+        // 3. Render Graph Links
+        links.forEach(link => {
+          const src = link.source;
+          const tgt = link.target;
+          if (!src || !tgt || src.x === undefined || src.y === undefined || tgt.x === undefined || tgt.y === undefined) {
+            return;
           }
 
-          // Screen bounds constraints
-          node.x = Math.max(30, Math.min(width - 30, node.x));
-          node.y = Math.max(30, Math.min(height - 30, node.y));
-        });
+          const isConnectedToHovered = hoveredId
+            ? (src.id === hoveredId || tgt.id === hoveredId)
+            : false;
 
-        // 3. Render Constellation Links
-        links.forEach(([a, b]) => {
-          const nodeA = nodes[a];
-          const nodeB = nodes[b];
-          if (!nodeA || !nodeB) return;
+          const isHoverActive = hoveredId !== null;
 
-          const isConnectedToHovered = hoveredIdx === a || hoveredIdx === b;
-          const dx = nodeB.x - nodeA.x;
-          const dy = nodeB.y - nodeA.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          let strokeStyle = 'rgba(180, 211, 241, 0.22)';
+          let lineWidth = 1.2;
 
-          // Ethereal line alpha based on distance & hover state
-          let baseAlpha = Math.max(0.08, 0.32 - (dist / Math.max(width, height)) * 0.28);
-          if (isConnectedToHovered) {
-            baseAlpha = 0.75;
+          if (isHoverActive) {
+            if (isConnectedToHovered) {
+              strokeStyle = 'rgba(127, 149, 255, 0.9)';
+              lineWidth = 2.2;
+            } else {
+              strokeStyle = 'rgba(180, 211, 241, 0.05)';
+              lineWidth = 0.8;
+            }
           }
 
           ctx.beginPath();
-          ctx.moveTo(nodeA.x, nodeA.y);
-          ctx.lineTo(nodeB.x, nodeB.y);
-
-          if (isConnectedToHovered) {
-            ctx.strokeStyle = `rgba(127, 149, 255, ${baseAlpha})`;
-            ctx.lineWidth = 1.8;
-          } else {
-            ctx.strokeStyle = `rgba(180, 211, 241, ${baseAlpha * 0.75})`;
-            ctx.lineWidth = 1.0;
-          }
+          ctx.moveTo(src.x, src.y);
+          ctx.lineTo(tgt.x, tgt.y);
+          ctx.strokeStyle = strokeStyle;
+          ctx.lineWidth = lineWidth;
           ctx.stroke();
         });
 
-        // 4. Render Traveling Arcane Sparks along Real Links
+        // 4. Render Traveling Arcane Sparks along Links
         if (links.length > 0) {
           sparks.forEach(spark => {
             spark.progress += spark.speed * dt;
             if (spark.progress > 1) {
               spark.progress = 0;
-              spark.linkIdx = Math.floor(Math.random() * links.length);
-              const sourceNode = nodes[links[spark.linkIdx]?.[0]];
-              spark.color = sourceNode?.color || '#c084fc';
+              const link = links[Math.floor(Math.random() * links.length)];
+              spark.sourceId = link.source.id;
+              spark.targetId = link.target.id;
+              spark.color = link.source.color || '#7F95FF';
             }
 
-            const link = links[spark.linkIdx];
-            if (!link) return;
-            const nodeA = nodes[link[0]];
-            const nodeB = nodes[link[1]];
-            if (!nodeA || !nodeB) return;
+            const src = nodes.find(n => n.id === spark.sourceId);
+            const tgt = nodes.find(n => n.id === spark.targetId);
+            if (!src || !tgt || src.x === undefined || src.y === undefined || tgt.x === undefined || tgt.y === undefined) {
+              return;
+            }
 
-            const sx = nodeA.x + (nodeB.x - nodeA.x) * spark.progress;
-            const sy = nodeA.y + (nodeB.y - nodeA.y) * spark.progress;
+            const sx = src.x + (tgt.x - src.x) * spark.progress;
+            const sy = src.y + (tgt.y - src.y) * spark.progress;
 
-            // Spark radial glow
-            const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, 5);
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.4, spark.color);
-            grad.addColorStop(1, 'transparent');
+            const isHoverActive = hoveredId !== null;
+            const isSparkOnHovered = hoveredId && (src.id === hoveredId || tgt.id === hoveredId);
+            const sparkAlpha = isHoverActive ? (isSparkOnHovered ? 1.0 : 0.15) : 0.8;
 
             ctx.beginPath();
-            ctx.arc(sx, sy, 3.5, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
+            ctx.arc(sx, sy, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = spark.color;
+            ctx.globalAlpha = sparkAlpha;
             ctx.fill();
+            ctx.globalAlpha = 1.0;
           });
         }
 
-        // 5. Render Nodes and Typographic Labels
-        nodes.forEach((node, i) => {
-          const isHovered = hoveredIdx === i;
-          const isConnected = hoveredIdx !== null && node.connections.includes(hoveredIdx);
+        // 5. Render Nodes and Labels
+        const tSec = time * 0.001;
+        nodes.forEach(node => {
+          if (node.x === undefined || node.y === undefined) return;
+
+          const isHovered = hoveredId === node.id;
+          const isNeighbor = neighborIds ? neighborIds.has(node.id) : false;
+          const isHoverActive = hoveredId !== null;
+
+          const matchesQuery = query.length > 0 && (
+            node.title.toLowerCase().includes(query) ||
+            (node.path && node.path.toLowerCase().includes(query))
+          );
+
+          // Calculate opacity based on focus state
+          let nodeAlpha = 1.0;
+          if (isHoverActive) {
+            nodeAlpha = (isHovered || isNeighbor) ? 1.0 : 0.22;
+          } else if (query.length > 0) {
+            nodeAlpha = matchesQuery ? 1.0 : 0.25;
+          }
+
+          ctx.globalAlpha = nodeAlpha;
+
           const pulse = Math.sin(tSec * node.pulseSpeed + node.pulseOffset);
           const currentRadius = isHovered
-            ? node.radius * 1.5
-            : isConnected
-              ? node.radius * 1.2
-              : node.radius + pulse * 0.6;
+            ? node.radius * 1.35
+            : isNeighbor
+              ? node.radius * 1.15
+              : node.radius + pulse * 0.4;
 
           // Outer Glow
-          const glowMultiplier = isHovered ? 4.5 : isConnected ? 3.0 : 2.5;
+          const glowMultiplier = isHovered ? 4.0 : isNeighbor ? 2.8 : 2.2;
           const glowGrad = ctx.createRadialGradient(
             node.x, node.y, 0,
             node.x, node.y, currentRadius * glowMultiplier
           );
           glowGrad.addColorStop(0, node.glowColor);
-          glowGrad.addColorStop(0.5, `${node.color}20`);
+          glowGrad.addColorStop(0.5, `${node.color}25`);
           glowGrad.addColorStop(1, 'transparent');
 
           ctx.beginPath();
@@ -574,15 +603,24 @@ export const useAmbientGraphSimulation = ({
           // Canvas node orbital ring
           if (node.isCanvas) {
             ctx.beginPath();
-            ctx.arc(node.x, node.y, currentRadius + 3.5, 0, Math.PI * 2);
-            ctx.strokeStyle = isHovered ? '#ffffff' : `${node.color}85`;
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 2]);
+            ctx.arc(node.x, node.y, currentRadius + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = isHovered ? '#ffffff' : `${node.color}90`;
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([3, 3]);
             ctx.stroke();
-            ctx.setLineDash([]); // reset line dash
+            ctx.setLineDash([]);
           }
 
-          // Star Core
+          // Search match spotlight ring
+          if (matchesQuery) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, currentRadius + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+
+          // Node Circle
           ctx.beginPath();
           ctx.arc(node.x, node.y, currentRadius, 0, Math.PI * 2);
           ctx.fillStyle = isHovered ? '#ffffff' : node.color;
@@ -590,25 +628,31 @@ export const useAmbientGraphSimulation = ({
 
           // Center bright pinpoint
           ctx.beginPath();
-          ctx.arc(node.x, node.y, Math.max(1.2, currentRadius * 0.45), 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, Math.max(1.2, currentRadius * 0.42), 0, Math.PI * 2);
           ctx.fillStyle = '#ffffff';
           ctx.fill();
 
           // Typographic Label
           const labelText = node.title;
-          ctx.font = isHovered
-            ? '600 11.5px Inter, sans-serif'
-            : '500 10.5px Inter, sans-serif';
+          const shouldShowLabel = isHovered || isNeighbor || matchesQuery || cam.scale > 0.8 || node.connectionsCount > 2;
 
-          const textWidth = ctx.measureText(labelText).width;
-          const labelX = node.x;
-          const labelY = node.y + currentRadius + 14;
+          if (shouldShowLabel) {
+            ctx.font = isHovered
+              ? '600 11.5px Inter, -apple-system, sans-serif'
+              : '500 10.5px Inter, -apple-system, sans-serif';
 
-          // Label pill background on hover or connected
-          if (isHovered || isConnected) {
+            const textWidth = ctx.measureText(labelText).width;
+            const labelX = node.x;
+            const labelY = node.y + currentRadius + 14;
+
+            // Background pill for label contrast
             const padX = 6;
             const padY = 3;
-            ctx.fillStyle = isHovered ? 'rgba(18, 16, 28, 0.92)' : 'rgba(18, 16, 28, 0.75)';
+            ctx.fillStyle = isHovered 
+              ? 'rgba(19, 21, 36, 0.95)' 
+              : isNeighbor 
+                ? 'rgba(19, 21, 36, 0.85)' 
+                : 'rgba(19, 21, 36, 0.65)';
             ctx.beginPath();
             ctx.roundRect(
               labelX - textWidth / 2 - padX,
@@ -618,32 +662,33 @@ export const useAmbientGraphSimulation = ({
               5
             );
             ctx.fill();
-            ctx.strokeStyle = isHovered ? node.color : 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+
+            if (isHovered || isNeighbor) {
+              ctx.strokeStyle = isHovered ? node.color : 'rgba(255, 255, 255, 0.15)';
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = isHovered
+              ? '#ffffff'
+              : isNeighbor
+                ? '#f1f5f9'
+                : 'rgba(226, 232, 240, 0.85)';
+            ctx.fillText(labelText, labelX, labelY);
           }
 
-          // Text rendering with subtle shadow
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-          ctx.shadowBlur = 4;
-          ctx.fillStyle = isHovered
-            ? '#ffffff'
-            : isConnected
-              ? '#e2e8f0'
-              : 'rgba(226, 232, 240, 0.65)';
-          ctx.fillText(labelText, labelX, labelY);
-          ctx.shadowBlur = 0; // reset
+          ctx.globalAlpha = 1.0;
         });
 
-        ctx.restore();
+        ctx.restore(); // Restore world camera transform
+        ctx.restore(); // Restore DPR scale
       }
 
       animFrameIdRef.current = requestAnimationFrame(render);
     };
 
-    // Pause when page is hidden
     const handleVisibilityChange = () => {
       if (document.hidden) {
         if (animFrameIdRef.current) {
@@ -667,9 +712,9 @@ export const useAmbientGraphSimulation = ({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [initSimulation, canvasRef, containerRef]);
+  }, [initGraph, canvasRef, containerRef]);
 
-  // Pointer event listeners for hover and dragging
+  // Pointer event listeners: Dragging, Zooming, Panning, and Node Selection
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -682,81 +727,179 @@ export const useAmbientGraphSimulation = ({
       };
     };
 
+    // Find node under screen coordinates
+    const findNodeAt = (screenX: number, screenY: number): SimNode | null => {
+      const world = screenToWorld(screenX, screenY);
+      const nodes = nodesRef.current;
+      const hitPadding = 14 / cameraRef.current.scale;
+
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        const n = nodes[i];
+        if (n.x === undefined || n.y === undefined) continue;
+        const dx = n.x - world.x;
+        const dy = n.y - world.y;
+        const hitRadius = n.radius + hitPadding;
+        if (dx * dx + dy * dy < hitRadius * hitRadius) {
+          return n;
+        }
+      }
+      return null;
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
       const { x, y } = getCanvasCoords(e);
-      mousePosRef.current = { x, y };
+      mouseScreenPosRef.current = { x, y };
 
-      if (draggedNodeIdxRef.current !== null) {
+      // 1. Handling Pan
+      if (isPanningRef.current && panStartRef.current) {
+        const dx = x - panStartRef.current.x;
+        const dy = y - panStartRef.current.y;
+        if (dx * dx + dy * dy > 9) {
+          hasMovedSignificantlyRef.current = true;
+        }
+        cameraRef.current.x = panStartRef.current.camX + dx;
+        cameraRef.current.y = panStartRef.current.camY + dy;
+        canvas.style.cursor = 'grabbing';
+        return;
+      }
+
+      // 2. Handling Node Drag
+      if (draggedNodeRef.current) {
         if (dragStartPosRef.current) {
           const dx = x - dragStartPosRef.current.x;
           const dy = y - dragStartPosRef.current.y;
-          if (dx * dx + dy * dy > 16) {
-            isDraggingMoveRef.current = true;
+          if (dx * dx + dy * dy > 9) {
+            hasMovedSignificantlyRef.current = true;
           }
+        }
+        const world = screenToWorld(x, y);
+        draggedNodeRef.current.fx = world.x;
+        draggedNodeRef.current.fy = world.y;
+        if (simulationRef.current) {
+          simulationRef.current.alphaTarget(0.3).restart();
         }
         canvas.style.cursor = 'grabbing';
         return;
       }
 
-      const nodes = nodesRef.current;
-      let foundHover: number | null = null;
-      for (let i = 0; i < nodes.length; i++) {
-        const n = nodes[i];
-        const dx = n.x - x;
-        const dy = n.y - y;
-        const hitRadius = n.radius + 16;
-        if (dx * dx + dy * dy < hitRadius * hitRadius) {
-          foundHover = i;
-          break;
-        }
-      }
+      // 3. Hover Detection
+      const hitNode = findNodeAt(x, y);
+      if (hitNode) {
+        hoveredNodeIdRef.current = hitNode.id;
+        canvas.style.cursor = 'pointer';
 
-      hoveredNodeIdxRef.current = foundHover;
-      canvas.style.cursor = foundHover !== null ? 'pointer' : 'default';
+        if (hitNode.x !== undefined && hitNode.y !== undefined) {
+          const screenPos = worldToScreen(hitNode.x, hitNode.y);
+          setHoveredNode({
+            id: hitNode.id,
+            title: hitNode.title,
+            isCanvas: hitNode.isCanvas,
+            connectionsCount: hitNode.connectionsCount,
+            path: hitNode.path,
+            color: hitNode.color,
+            screenX: screenPos.x,
+            screenY: screenPos.y,
+          });
+        }
+      } else {
+        hoveredNodeIdRef.current = null;
+        setHoveredNode(null);
+        canvas.style.cursor = 'default';
+      }
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return; // only left click
+      if (e.button !== 0) return; // Left click only
       const { x, y } = getCanvasCoords(e);
       dragStartPosRef.current = { x, y };
-      isDraggingMoveRef.current = false;
+      hasMovedSignificantlyRef.current = false;
 
-      if (hoveredNodeIdxRef.current !== null) {
-        draggedNodeIdxRef.current = hoveredNodeIdxRef.current;
+      const hitNode = findNodeAt(x, y);
+      if (hitNode) {
+        draggedNodeRef.current = hitNode;
+        const world = screenToWorld(x, y);
+        hitNode.fx = world.x;
+        hitNode.fy = world.y;
+        canvas.style.cursor = 'grabbing';
+      } else {
+        // Pan background
+        isPanningRef.current = true;
+        panStartRef.current = {
+          x,
+          y,
+          camX: cameraRef.current.x,
+          camY: cameraRef.current.y,
+        };
         canvas.style.cursor = 'grabbing';
       }
     };
 
     const handleMouseUp = () => {
-      if (draggedNodeIdxRef.current !== null) {
-        draggedNodeIdxRef.current = null;
-        canvas.style.cursor = hoveredNodeIdxRef.current !== null ? 'pointer' : 'default';
+      if (draggedNodeRef.current) {
+        draggedNodeRef.current.fx = null;
+        draggedNodeRef.current.fy = null;
+        draggedNodeRef.current = null;
+        if (simulationRef.current) {
+          simulationRef.current.alphaTarget(0);
+        }
       }
+
+      isPanningRef.current = false;
+      panStartRef.current = null;
+      canvas.style.cursor = hoveredNodeIdRef.current ? 'pointer' : 'default';
     };
 
-    const handleClick = () => {
-      if (isDraggingMoveRef.current) {
-        isDraggingMoveRef.current = false;
+    const handleClick = (e: MouseEvent) => {
+      if (hasMovedSignificantlyRef.current) {
+        hasMovedSignificantlyRef.current = false;
         return;
       }
 
-      if (hoveredNodeIdxRef.current !== null && onSelectNode) {
-        const node = nodesRef.current[hoveredNodeIdxRef.current];
-        if (node) {
-          const target = node.isCanvas
-            ? (node.id || node.path || node.title)
-            : (node.path || node.title);
-          onSelectNode(target, node.isCanvas);
+      const { x, y } = getCanvasCoords(e);
+      const hitNode = findNodeAt(x, y);
+      if (hitNode && onSelectNode) {
+        const target = hitNode.isCanvas
+          ? (hitNode.id || hitNode.path || hitNode.title)
+          : (hitNode.path || hitNode.title);
+        onSelectNode(target, hitNode.isCanvas);
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const { x, y } = getCanvasCoords(e);
+      const cam = cameraRef.current;
+
+      const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+      const newScale = Math.min(4.0, Math.max(0.18, cam.scale * zoomFactor));
+
+      const worldX = (x - cam.x) / cam.scale;
+      const worldY = (y - cam.y) / cam.scale;
+
+      cam.x = x - worldX * newScale;
+      cam.y = y - worldY * newScale;
+      cam.scale = newScale;
+
+      // Update hovered node position if any
+      if (hoveredNodeIdRef.current) {
+        const hitNode = nodesRef.current.find(n => n.id === hoveredNodeIdRef.current);
+        if (hitNode && hitNode.x !== undefined && hitNode.y !== undefined) {
+          const screenPos = worldToScreen(hitNode.x, hitNode.y);
+          setHoveredNode(prev => prev ? { ...prev, screenX: screenPos.x, screenY: screenPos.y } : null);
         }
       }
     };
 
     const handleMouseLeave = () => {
-      mousePosRef.current = null;
-      hoveredNodeIdxRef.current = null;
-      draggedNodeIdxRef.current = null;
-      isDraggingMoveRef.current = false;
-      dragStartPosRef.current = null;
+      if (draggedNodeRef.current) {
+        draggedNodeRef.current.fx = null;
+        draggedNodeRef.current.fy = null;
+        draggedNodeRef.current = null;
+      }
+      isPanningRef.current = false;
+      panStartRef.current = null;
+      hoveredNodeIdRef.current = null;
+      setHoveredNode(null);
       canvas.style.cursor = 'default';
     };
 
@@ -764,6 +907,7 @@ export const useAmbientGraphSimulation = ({
     canvas.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
     canvas.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
@@ -771,17 +915,78 @@ export const useAmbientGraphSimulation = ({
       canvas.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
       canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('wheel', handleWheel);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [canvasRef, onSelectNode]);
+  }, [canvasRef, onSelectNode, screenToWorld, worldToScreen]);
+
+  // Controls Actions
+  const zoomIn = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const cam = cameraRef.current;
+    const newScale = Math.min(4.0, cam.scale * 1.25);
+    const worldX = (centerX - cam.x) / cam.scale;
+    const worldY = (centerY - cam.y) / cam.scale;
+    cam.x = centerX - worldX * newScale;
+    cam.y = centerY - worldY * newScale;
+    cam.scale = newScale;
+  }, [canvasRef]);
+
+  const zoomOut = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const cam = cameraRef.current;
+    const newScale = Math.max(0.18, cam.scale * 0.8);
+    const worldX = (centerX - cam.x) / cam.scale;
+    const worldY = (centerY - cam.y) / cam.scale;
+    cam.x = centerX - worldX * newScale;
+    cam.y = centerY - worldY * newScale;
+    cam.scale = newScale;
+  }, [canvasRef]);
+
+  const resetView = useCallback(() => {
+    cameraRef.current = { x: 0, y: 0, scale: 1 };
+    if (simulationRef.current) {
+      simulationRef.current.alpha(0.4).restart();
+    }
+  }, []);
+
+  const togglePlayPause = useCallback(() => {
+    setIsPlaying(prev => {
+      const next = !prev;
+      if (simulationRef.current) {
+        if (next) {
+          simulationRef.current.alpha(0.3).restart();
+        } else {
+          simulationRef.current.stop();
+        }
+      }
+      return next;
+    });
+  }, []);
 
   const resetOrbits = useCallback(() => {
-    const container = containerRef.current;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      initSimulation(rect.width, rect.height);
-    }
-  }, [containerRef, initSimulation]);
+    resetView();
+  }, [resetView]);
 
-  return { resetOrbits };
+  return {
+    resetView,
+    zoomIn,
+    zoomOut,
+    isPlaying,
+    togglePlayPause,
+    searchQuery,
+    setSearchQuery,
+    hoveredNode,
+    nodeCount,
+    linkCount,
+    resetOrbits,
+  };
 };

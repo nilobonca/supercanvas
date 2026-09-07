@@ -6,7 +6,8 @@ import {
   Image as ImageIcon, 
   X, 
   Plus, 
-  XSquare 
+  XSquare,
+  PanelRight
 } from 'lucide-react';
 import { VaultPaneLeaf, VaultTab } from '../../interfaces/layout';
 import { useVaultStore } from '../../hooks/useVaultStore';
@@ -38,7 +39,9 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
     setDraggedTab, 
     setDropPreview,
     moveTabToPane,
-    draggedTab
+    draggedTab,
+    backlinksPanelOpen,
+    setBacklinksPanelOpen
   } = useVaultStore();
 
   const handleTabDragStart = (e: React.DragEvent, tab: VaultTab) => {
@@ -169,13 +172,33 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
         </button>
       </div>
 
-      {/* Window Controls / Split pane controls */}
-      {totalPanesCount > 1 && (
-        <div 
-          className="flex items-center gap-1 text-stone-400 dark:text-neutral-400 shrink-0 pl-2 app-region-no-drag"
-          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+      {/* Window & Pane Controls */}
+      <div 
+        className="flex items-center gap-1 text-stone-400 dark:text-neutral-400 shrink-0 px-1.5 app-region-no-drag"
+        style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* Note Details (Properties & Backlinks) Sidebar Toggle */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setBacklinksPanelOpen(!backlinksPanelOpen);
+          }}
           onMouseDown={(e) => e.stopPropagation()}
+          style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
+          className={`p-1.5 rounded-md transition-colors cursor-pointer flex items-center justify-center app-region-no-drag ${
+            backlinksPanelOpen
+              ? 'bg-[#1831D7]/15 dark:bg-[#7F95FF]/20 text-[#1831D7] dark:text-[#7F95FF]'
+              : 'text-stone-400 dark:text-neutral-400 hover:text-stone-700 dark:hover:text-neutral-200 hover:bg-stone-200/60 dark:hover:bg-white/10'
+          }`}
+          title="Propriedades e Backlinks da Nota"
+          aria-label="Abrir painel lateral de propriedades e backlinks"
         >
+          <PanelRight className="w-3.5 h-3.5" />
+        </button>
+
+        {totalPanesCount > 1 && (
           <button
             type="button"
             onClick={onClosePane}
@@ -186,8 +209,8 @@ export const VaultPaneTabBar: React.FC<VaultPaneTabBarProps> = ({
           >
             <XSquare className="w-3.5 h-3.5" />
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Espaço reservado para os botões de janela do Windows (.exe Electron) com NO-DRAG estrito */}
       {isElec && (

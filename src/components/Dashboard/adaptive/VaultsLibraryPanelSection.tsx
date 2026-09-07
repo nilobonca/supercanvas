@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 import { isElectron, setWindowMode } from '@/utils/electronHelper';
-import { SafeIcon } from '@/components/common/SafeIcon';
+import { FilingCabinetIcon } from '@/components/common/FilingCabinetIcon';
 import clsx from 'clsx';
 
 export interface VaultsLibraryPanelSectionProps {
@@ -93,7 +93,7 @@ export const VaultsLibraryPanelSection: React.FC<VaultsLibraryPanelSectionProps>
             Bases de Conhecimento
           </span>
           <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-[#F4F0E6] flex items-center gap-2">
-            <SafeIcon size={18} className="text-[#1831D7] dark:text-[#7F95FF]" />
+            <FilingCabinetIcon size={18} className="text-[#1831D7] dark:text-[#7F95FF]" />
             <span>Biblioteca de Vaults</span>
           </h3>
         </div>

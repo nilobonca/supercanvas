@@ -21,7 +21,6 @@ import { ExportModal } from '@/components/ExportModal';
 import { ImportConflictModal } from '@/components/ImportConflictModal';
 import { parseBackupFile, ParsedImportData } from '@/utils/exportSystem/importUtils';
 import { isElectron, setWindowMode } from '@/utils/electronHelper';
-import { Trash2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import clsx from 'clsx';
 
@@ -51,6 +50,18 @@ export default function Dashboard() {
   // Active Dashboard Tab (Default: 'active-vault')
   const [activeTab, setActiveTab] = useState<DashboardTab>('active-vault');
 
+  // Sync tab from URL parameter if present
+  useEffect(() => {
+    if (router.isReady && router.query.tab) {
+      const tab = router.query.tab as string;
+      if (tab === 'canvases') {
+        setActiveTab('canvases');
+      } else {
+        setActiveTab('active-vault');
+      }
+    }
+  }, [router.isReady, router.query.tab]);
+
   // Initialize vault storage on mount
   useEffect(() => {
     initializeStorage();
@@ -64,7 +75,6 @@ export default function Dashboard() {
   const {
     nodes: realGraphNodes,
     links: realGraphLinks,
-    featuredCards: realFeaturedCards,
     isLoading: isGraphLoading,
   } = useVaultRealGraphData(activeVault, projects);
 
@@ -265,7 +275,7 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>Concha — Central de Vaults & Canvas</title>
+        <title>Concha</title>
         <meta name="description" content="Editor Markdown, base de conhecimento integrada e quadros de conexões do Concha." />
       </Head>
 
@@ -328,7 +338,6 @@ export default function Dashboard() {
             vaultName={activeVault.name}
             realNodes={realGraphNodes}
             realLinks={realGraphLinks}
-            featuredCards={realFeaturedCards}
             isLoading={isGraphLoading}
             onSelectNode={(pathOrTitle, isCanvas) => {
               if (isElectron()) {

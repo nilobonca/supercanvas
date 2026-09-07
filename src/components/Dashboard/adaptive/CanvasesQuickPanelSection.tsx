@@ -115,7 +115,7 @@ export const CanvasesQuickPanelSection: React.FC<CanvasesQuickPanelSectionProps>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h3 className="text-base font-black tracking-tight text-stone-900 dark:text-white">
-            Acesso Rápido aos Canvas
+            Baú de Canvas
           </h3>
           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-black/5 dark:bg-white/10 text-stone-700 dark:text-neutral-300">
             {canvases.length}

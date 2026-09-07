@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import Router from 'next/router';
+import type { Editor } from '@tiptap/react';
 import { Layer } from '@/interfaces/utils/indexedDB';
 import { IVaultStorageProvider } from '../storage/VaultStorageAdapter';
 import { FSAStorageProvider } from '../storage/FSAStorageProvider';
@@ -71,6 +72,9 @@ interface VaultState {
   activePath: string | null;
   activeContent: string;
   isEditing: boolean;
+  viewMode: 'live' | 'source' | 'reading';
+  isNoteSearchOpen: boolean;
+  activeEditorRef: Editor | null;
 
   // UI state
   sidebarOpen: boolean;
@@ -99,6 +103,10 @@ interface VaultState {
   setSidebarWidth: (width: number) => void;
   setIsEditing: (isEditing: boolean) => void;
   toggleIsEditing: () => void;
+  setViewMode: (mode: 'live' | 'source' | 'reading') => void;
+  setIsNoteSearchOpen: (open: boolean) => void;
+  toggleNoteSearch: () => void;
+  setActiveEditorRef: (editor: Editor | null) => void;
 
   // Multi-window actions
   setActivePane: (paneId: string) => void;
@@ -261,6 +269,9 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   activePath: null,
   activeContent: '',
   isEditing: false,
+  viewMode: 'live',
+  isNoteSearchOpen: false,
+  activeEditorRef: null,
 
   sidebarOpen: true,
   sidebarWidth: typeof window !== 'undefined' 
@@ -293,8 +304,21 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     set({ sidebarWidth: clamped });
   },
 
-  setIsEditing: (isEditing: boolean) => set({ isEditing }),
-  toggleIsEditing: () => set(state => ({ isEditing: !state.isEditing })),
+  setIsEditing: (isEditing: boolean) => set({ isEditing, viewMode: isEditing ? 'live' : 'reading' }),
+  toggleIsEditing: () => set(state => {
+    const nextIsEditing = !state.isEditing;
+    return {
+      isEditing: nextIsEditing,
+      viewMode: nextIsEditing ? 'live' : 'reading'
+    };
+  }),
+  setViewMode: (viewMode: 'live' | 'source' | 'reading') => set({
+    viewMode,
+    isEditing: viewMode !== 'reading'
+  }),
+  setIsNoteSearchOpen: (isNoteSearchOpen: boolean) => set({ isNoteSearchOpen }),
+  toggleNoteSearch: () => set(state => ({ isNoteSearchOpen: !state.isNoteSearchOpen })),
+  setActiveEditorRef: (activeEditorRef: Editor | null) => set({ activeEditorRef }),
 
   initializeStorage: async () => {
     set({ isLoading: true });

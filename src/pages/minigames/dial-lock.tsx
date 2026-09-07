@@ -9,7 +9,7 @@ export default function DialLockDemoPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
       <Head>
-        <title>Minigame: Lockpicker de Precisão | Concha</title>
+        <title>Concha</title>
       </Head>
 
       <div className="max-w-xl w-full flex flex-col items-center gap-6">

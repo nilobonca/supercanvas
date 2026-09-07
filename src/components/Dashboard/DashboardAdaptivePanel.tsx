@@ -3,7 +3,6 @@ import { Layer } from '@/interfaces/utils/indexedDB';
 import { RegisteredVault } from '@/modules/vault/hooks/useVaultRegistry';
 import { DashboardTab } from './DashboardSidebarRibbon';
 import { ActiveVaultPanelSection } from './adaptive/ActiveVaultPanelSection';
-import { VaultsLibraryPanelSection } from './adaptive/VaultsLibraryPanelSection';
 import { CanvasesQuickPanelSection } from './adaptive/CanvasesQuickPanelSection';
 import { WindowControls } from '@/components/common/WindowControls';
 import { ConchaLogo } from '@/components/common/ConchaLogo';
@@ -103,23 +102,15 @@ export const DashboardAdaptivePanel: React.FC<DashboardAdaptivePanelProps> = ({
       {activeTab === 'active-vault' && (
         <ActiveVaultPanelSection
           activeVault={activeVault}
+          vaults={vaults}
+          onSwitchVault={onSwitchVault}
+          onCreateVault={onCreateVault}
+          onRemoveVault={onRemoveVault}
           onRenameVault={onRenameVault}
           onConnectFSA={onConnectFSA}
           onOpenSettings={onOpenSettings}
           onExportBackup={onExportBackup}
           onImportBackup={onImportBackup}
-          isConnectingFSA={isConnectingFSA}
-        />
-      )}
-
-      {activeTab === 'vaults-library' && (
-        <VaultsLibraryPanelSection
-          vaults={vaults}
-          activeVaultId={activeVault.id}
-          onSwitchVault={onSwitchVault}
-          onCreateVault={onCreateVault}
-          onConnectFSA={onConnectFSA}
-          onRemoveVault={onRemoveVault}
           isConnectingFSA={isConnectingFSA}
         />
       )}
